@@ -21,6 +21,8 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
 
 
+
+
 /**
  * This Enumeration shows the status of a more or less currently processed document.
  * The several status act on three levels:
