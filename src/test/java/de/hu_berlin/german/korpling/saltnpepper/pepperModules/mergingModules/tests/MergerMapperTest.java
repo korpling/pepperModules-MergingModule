@@ -26,9 +26,17 @@ public class MergerMapperTest {
 	public void setUp(){
 		setFixture(new MergerMapper());
 	}
-	
+	/**
+	 * Tests the mapping of three documents containing the same primary data and same tokenization, but
+	 * different annotation layers:
+	 * <ol>
+	 * 	<li>document1: anaphoric relations (pointing relations)</li>
+	 * 	<li>document2: syntactic annotations </li>
+	 * 	<li>document3: morphological annotations (POS and lemma)</li>
+	 * </ol>
+	 */
 	@Test
-	public void testMap() {
+	public void testMap3Documents_sameTokenization() {
 		SDocument sDoc1= SaltFactory.eINSTANCE.createSDocument();
 		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		SDocument sDoc2= SaltFactory.eINSTANCE.createSDocument();
