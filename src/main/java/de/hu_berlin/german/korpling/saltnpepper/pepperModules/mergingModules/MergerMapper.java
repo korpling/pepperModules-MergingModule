@@ -268,7 +268,7 @@ public class MergerMapper {
 		this.escapeTable.put('>', "");
 	}
 	
-	protected SDocument mapDocumentContent(SDocument base, SDocument other){
+	protected SDocument mergeDocumentContent(SDocument base, SDocument other){
 		
 		return base;
 	}
@@ -311,13 +311,13 @@ public class MergerMapper {
 									}
 								}
 								// there are texts. Now we can merge the document content
-								this.mapDocumentContent(baseDocPair.sDocument,sDocPair.sDocument);
+								this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument);
 								// we are finished with the document. Free the memory
 								this.container.finishDocument(sDocPair.sDocument);
 								sDocPair.status = DOCUMENT_STATUS.COMPLETED;
 							} else {
 								// there are no texts. So, just copy everything into the base document graph
-								this.mapDocumentContent(baseDocPair.sDocument,sDocPair.sDocument);
+								this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument);
 								// we are finished with the document. Free the memory
 								this.container.finishDocument(sDocPair.sDocument);
 								sDocPair.status = DOCUMENT_STATUS.COMPLETED;
