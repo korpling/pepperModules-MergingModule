@@ -268,6 +268,11 @@ public class MergerMapper {
 		this.escapeTable.put('>', "");
 	}
 	
+	protected SDocument mapDocumentContent(SDocument base, SDocument other){
+		
+		return base;
+	}
+	
 	/**
 	 * Maps all documents.
 	 */
@@ -276,6 +281,14 @@ public class MergerMapper {
 			this.container = new TokenMergeContainer();
 		}
 		if (this.getSDocuments() != null){
+			DocumentStatusPair baseDocPair = null;
+			for (DocumentStatusPair sDocPair : this.getDocumentPairs()){
+				if (sDocPair.sDocument.equals(container.getBaseDocument())){
+					baseDocPair = sDocPair;
+					baseDocPair.status = DOCUMENT_STATUS.IN_PROGRESS;
+				}
+			} 
+			
 			if (this.getSDocuments().size() >= 2){
 				this.initialize();
 				
@@ -290,20 +303,31 @@ public class MergerMapper {
 					{// ignore the base document
 						if (sDocPair.sDocument.getSDocumentGraph().getSTextualDSs() != null)
 						{ // assure that there are texts
+							sDocPair.status = DOCUMENT_STATUS.IN_PROGRESS;
 							if (sDocPair.sDocument.getSDocumentGraph().getSTextualDSs().size() > 0){
 								for (STextualDS otherText : sDocPair.sDocument.getSDocumentGraph().getSTextualDSs()){
 									for (STextualDS baseText : container.getBaseDocument().getSDocumentGraph().getSTextualDSs()){
 										this.alignTexts(baseText, otherText);
 									}
 								}
-								// TODO there are texts. Now we can merge the document content
+								// there are texts. Now we can merge the document content
+								this.mapDocumentContent(baseDocPair.sDocument,sDocPair.sDocument);
+								// we are finished with the document. Free the memory
+								this.container.finishDocument(sDocPair.sDocument);
+								sDocPair.status = DOCUMENT_STATUS.COMPLETED;
 							} else {
-								// TODO there are no texts. So, just copy everything into the base document graph
+								// there are no texts. So, just copy everything into the base document graph
+								this.mapDocumentContent(baseDocPair.sDocument,sDocPair.sDocument);
+								// we are finished with the document. Free the memory
+								this.container.finishDocument(sDocPair.sDocument);
+								sDocPair.status = DOCUMENT_STATUS.COMPLETED;
 							}
 						}
-					}
+					} 
 				}
 			}
+			this.container.finishDocument(baseDocPair.sDocument);
+			baseDocPair.status = DOCUMENT_STATUS.COMPLETED;
 		}
 		
 		
