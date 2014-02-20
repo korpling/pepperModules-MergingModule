@@ -19,6 +19,9 @@ package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
 import java.util.Hashtable;
 
+import org.eclipse.emf.common.util.BasicEList;
+import org.eclipse.emf.common.util.EList;
+
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
@@ -40,6 +43,10 @@ public class TokenMergeContainer {
 			private Hashtable<SToken,Integer> tokenLeftMap=null;
 			private Hashtable<SToken,Integer> tokenRightMap=null;
 			private Hashtable<Integer,SToken> tokensByStart=null;
+			
+			public EList<SToken> getTokens(){
+				return new BasicEList(tokenLeftMap.keySet());
+			}
 			
 			/**
 			 * This method adds a {@link SToken} with its left and right index to the internal structures.
@@ -68,7 +75,7 @@ public class TokenMergeContainer {
 			 * @return the length or -1 on failure
 			 */
 			public int getLength(SToken tok){
-				if (this.tokenLeftMap.contains(tok) && this.tokenRightMap.contains(tok)){
+				if (this.tokenLeftMap.containsKey(tok) && this.tokenRightMap.containsKey(tok)){
 					return this.tokenRightMap.get(tok) - this.tokenLeftMap.get(tok);
 				} else {
 					return -1;
@@ -82,7 +89,7 @@ public class TokenMergeContainer {
 			 * @return the start index or -1 on failure
 			 */
 			public int getStart(SToken tok){
-				if (this.tokenLeftMap.contains(tok)){
+				if (this.tokenLeftMap.containsKey(tok)){
 					return this.tokenLeftMap.get(tok);
 				} else {
 					return -1;
@@ -96,7 +103,7 @@ public class TokenMergeContainer {
 			 * @return the end index or -1 on failure
 			 */
 			public int getEnd(SToken tok){
-				if (this.tokenRightMap.contains(tok)){
+				if (this.tokenRightMap.containsKey(tok)){
 					return this.tokenRightMap.get(tok);
 				} else {
 					return -1;
@@ -116,6 +123,12 @@ public class TokenMergeContainer {
 		
 		int countOfChangedChars = -1;
 		
+		int maximumNormalizedTextLength = -1;
+		
+		public EList<SToken> getBaseTextToken(){
+			return this.alignedTextsMap.get(this.baseText).getTokens();
+		}
+		
 		public TokenMergeContainer(){
 			this.equivalentToken = new Hashtable<SToken, Hashtable<STextualDS,SToken>>();
 			this.alignedTextsMap = new Hashtable<STextualDS, AlignedTokensMap>();
@@ -131,14 +144,14 @@ public class TokenMergeContainer {
 		}
 		
 		public void addNormalizedText(SDocument doc, STextualDS sTextualDS, String normalizedText, int countOfChangedChars){
-			if (countOfChangedChars == -1){
-				this.countOfChangedChars = countOfChangedChars;
+			if (maximumNormalizedTextLength == -1){
+				this.maximumNormalizedTextLength = normalizedText.length();
 				this.baseText = sTextualDS;
 				this.baseDocument = doc;
 			} else {
-				if (countOfChangedChars < this.countOfChangedChars)
+				if (normalizedText.length() > this.maximumNormalizedTextLength)
 				{ // We found a new minimum
-					this.countOfChangedChars = countOfChangedChars;
+					this.maximumNormalizedTextLength = normalizedText.length();
 					this.baseText = sTextualDS;
 					this.baseDocument = doc;
 				}
@@ -156,15 +169,15 @@ public class TokenMergeContainer {
 		
 		public SToken getAlignedTokenByStart(STextualDS sTextualDS, int start){
 			SToken tok = null;
-			if (this.alignedTextsMap.contains(sTextualDS)){
-				this.alignedTextsMap.get(sTextualDS).getTokenByStart(start);
+			if (this.alignedTextsMap.containsKey(sTextualDS)){
+				tok = this.alignedTextsMap.get(sTextualDS).getTokenByStart(start);
 			}
 			return tok;
 		}
 		
 		public int getAlignedTokenStart(STextualDS sTextualDS,SToken sToken){
 			int returnVal = -1;
-			if (this.alignedTextsMap.contains(sTextualDS)){
+			if (this.alignedTextsMap.containsKey(sTextualDS)){
 				AlignedTokensMap map = this.alignedTextsMap.get(sTextualDS);
 				returnVal = map.getStart(sToken);
 			}
@@ -173,7 +186,7 @@ public class TokenMergeContainer {
 		
 		public int getAlignedTokenLength(STextualDS sTextualDS,SToken sToken){
 			int returnVal = -1;
-			if (this.alignedTextsMap.contains(sTextualDS)){
+			if (this.alignedTextsMap.containsKey(sTextualDS)){
 				AlignedTokensMap map = this.alignedTextsMap.get(sTextualDS);
 				returnVal = map.getLength(sToken);
 			}
@@ -181,7 +194,8 @@ public class TokenMergeContainer {
 		}
 		
 		public void addAlignedToken(STextualDS text, SToken tok, int left, int right){
-			if (this.alignedTextsMap.contains(text)){
+			//System.out.println("Aligned Token "+tok.getSName() + " with start/end:"+left+"/"+right);
+			if (this.alignedTextsMap.containsKey(text)){
 				this.alignedTextsMap.get(text).addToken(tok, left, right);
 			} else {
 				AlignedTokensMap map = new AlignedTokensMap();
@@ -192,9 +206,10 @@ public class TokenMergeContainer {
 		}
 		
 		public void addTokenMapping(SToken baseTextToken, SToken otherTextToken, STextualDS otherSText){
+			System.out.println("Adding mapping for base text token "+baseTextToken.getSName()+ " and token "+otherTextToken.getSName());
 			if (this.equivalentToken.get(baseTextToken) != null)
 			{// there is a mapping for the base text token
-				if (! this.equivalentToken.get(baseTextToken).contains(otherSText))
+				if (! this.equivalentToken.get(baseTextToken).containsKey(otherSText))
 				{ // there is no mapping for the base text token in the other document. Add the mapping
 					this.equivalentToken.get(baseTextToken).put(otherSText, otherTextToken);
 				}
@@ -216,7 +231,7 @@ public class TokenMergeContainer {
 		 */
 		public SToken getTokenMapping(SToken baseTextToken, STextualDS otherSText){
 			SToken equivalentToken = null;
-			if (this.equivalentToken.contains(baseTextToken))
+			if (this.equivalentToken.containsKey(baseTextToken))
 			{// the base text token has an equivalent in SOME other document
 				/// get the equivalent token of the other document if there is one
 				equivalentToken = this.equivalentToken.get(baseTextToken).get(otherSText);
@@ -229,14 +244,14 @@ public class TokenMergeContainer {
 		 * @param sDocument The {@SDocument}
 		 */
 		public void finishDocument(SDocument sDocument){
-			if (this.alignedTextsMap.contains(sDocument)){
+			if (this.alignedTextsMap.containsKey(sDocument)){
 				this.alignedTextsMap.remove(sDocument);
 			}
-			if (this.normalizedTextMap.contains(sDocument)){
+			if (this.normalizedTextMap.containsKey(sDocument)){
 				this.normalizedTextMap.remove(sDocument);
 			}
 			for (SToken tok : this.equivalentToken.keySet()){
-				if (this.equivalentToken.get(tok).contains(sDocument)){
+				if (this.equivalentToken.get(tok).containsKey(sDocument)){
 					this.equivalentToken.get(tok).remove(sDocument);
 				}
 			}

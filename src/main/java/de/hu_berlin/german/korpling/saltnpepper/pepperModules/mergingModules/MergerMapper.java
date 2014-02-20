@@ -105,6 +105,7 @@ public class MergerMapper {
 		if (offset != -1)
 		{// if the normalized other text is conatined in the normalized base text
 			returnVal = true;
+			//System.out.println("Text to merge has an offset of "+offset);
 			// get the tokens of the other text.
 			EList<SToken> textTokens = new BasicEList<SToken>();
 			for (Edge e : otherText.getSDocumentGraph().getInEdges(otherText.getSId())){
@@ -113,17 +114,26 @@ public class MergerMapper {
 				}
 			}
 			
+			for (SToken baseTextToken : this.container.getBaseTextToken()){
+				System.out.println("Base text token ("+baseTextToken.getSName()+") start and length: "+this.container.getAlignedTokenStart(this.container.baseText, baseTextToken)+"/"+this.container.getAlignedTokenLength(this.container.baseText, baseTextToken));
+			}
+			
 			for (SToken otherTextToken : textTokens)
 			{
 				// get the aligned token start and length
 				int otherTokenStart = this.container.getAlignedTokenStart(otherText, otherTextToken);
 				int otherTokenLength = this.container.getAlignedTokenLength(otherText, otherTextToken);
+				
 				if (otherTokenStart != -1 && otherTokenLength != -1)
 				{ // get the base text token:
 					// get the aligned token from the base document which has the start of offset+startOfOtherToken
+					System.out.println("Other token ("+otherTextToken.getSName()+") start and length: "+otherTokenStart+"/"+otherTokenLength);
 					SToken baseTextToken = this.container.getAlignedTokenByStart(baseText, (otherTokenStart+offset));
+					
 					if (baseTextToken != null)
 					{// there is some baseTextToken which has the same start
+						//System.out.println("Base Token "+ baseTextToken.getSName() + " and other token "+otherTextToken.getSName()+ "have the same start");
+						//System.out.println("Lengths are: "+this.container.getAlignedTokenLength(baseText, baseTextToken)+ " and "+otherTokenLength);
 						if (this.container.getAlignedTokenLength(baseText, baseTextToken) == otherTokenLength)
 						{ // start and lengths are identical. We found an equivalence class
 							this.container.addTokenMapping(baseTextToken, otherTextToken, otherText);
@@ -183,6 +193,8 @@ public class MergerMapper {
 			int currentLeft = 0;
 			int currentOffset = 0;
 			int countOfChangedChars = 0;
+			int currentTokenLength = 1;
+			int currentNormalizedLeft = 0;
 			
 			// normalize the text
 			for (char c : sTextualDS.getSText().toCharArray()){
@@ -192,12 +204,14 @@ public class MergerMapper {
 					// set new offset: 
 					// for whitespaces and punctuation, it is offset += 1
 					// for Umlauts, it is offset -= 1
+					/*
 					if (stringToEscape.length() == 0){
+						// some char was erased --> normalized text is shorter by one 
 						currentOffset += 1;
 					} else if (stringToEscape.length() == 2){
-						// an Umlaut was unfold --> offset += 1
-						currentOffset += 1;
-					}
+						// an Umlaut was unfold --> normalized text is longer by one
+						currentOffset -= 1;
+					}*/
 					currentOffset = currentOffset + (1 - stringToEscape.length());
 					countOfChangedChars += 1;
 				} else {
@@ -209,18 +223,32 @@ public class MergerMapper {
 					currentToken = tokensMappedByLeft.get(currentLeft);
 					if (currentToken != null)
 					{// if a token interval begins at the current left value
+						//System.out.println("Starting alignment of Token "+currentToken.getSName());
 						normalizedTokenLeft = currentLeft + currentOffset;
+						currentTokenLength = 1;
 					}
 				} 
 				else 
 				{// If we ARE currently iterating over a token's interval
-					if (tokensMappedByRight.contains((currentLeft+1)))
+					//System.out.println("Aligning Token "+currentToken.getSName()+ " . Current left: "+currentLeft);
+					if (tokensMappedByRight.containsKey(currentLeft))
 					{// if we reached the original end-char of the token
+						//System.out.println("Ending alignment of Token "+currentToken.getSName());
 						// beware: the SEnd value of a STextalRelation is the last char index of the token +1
-						container.addAlignedToken(sTextualDS, currentToken, normalizedTokenLeft, (currentLeft+currentOffset) );
+						//container.addAlignedToken(sTextualDS, currentToken, normalizedTokenLeft, normalizedTokenLeft+currentTokenLength );
+						container.addAlignedToken(sTextualDS, currentToken, currentNormalizedLeft, currentNormalizedLeft+currentTokenLength );
 						// reinitialize the normalizedTokenLeft and unmark the now processed token
 						normalizedTokenLeft = 0;
 						currentToken = null;
+					} else {
+						currentTokenLength += 1;
+					}
+				}
+				if (stringToEscape == null){
+					currentNormalizedLeft += 1;
+				} else {
+					if (stringToEscape.length() > 0){
+						currentNormalizedLeft += stringToEscape.length();
 					}
 				}
 				currentLeft += 1;
@@ -240,32 +268,40 @@ public class MergerMapper {
 		if (this.pairs == null){
 			this.pairs = new Vector<DocumentStatusPair>();
 		}
-		this.escapeTable = new Hashtable<Character, String>();
-		this.escapeTable.put(' ', "");
-		this.escapeTable.put('\t', "");
-		this.escapeTable.put('\n', "");
-		this.escapeTable.put('\r', "");
 		
-		this.escapeTable.put('ä', "ae");
-		this.escapeTable.put('ö', "oe");
-		this.escapeTable.put('ü', "ue");
-		this.escapeTable.put('ß', "ss");
-		this.escapeTable.put('Ä', "Ae");
-		this.escapeTable.put('Ö', "Oe");
-		this.escapeTable.put('Ü', "Ue");
+		if (this.container == null){
+			this.container = new TokenMergeContainer();
+		}
 		
-		this.escapeTable.put('.', "");
-		this.escapeTable.put(',', "");
-		this.escapeTable.put(':', "");
-		this.escapeTable.put(';', "");
-		this.escapeTable.put('!', "");
-		this.escapeTable.put('?', "");
-		this.escapeTable.put('(', "");
-		this.escapeTable.put(')', "");
-		this.escapeTable.put('{', "");
-		this.escapeTable.put('}', "");
-		this.escapeTable.put('<', "");
-		this.escapeTable.put('>', "");
+		if (this.escapeTable == null){
+			this.escapeTable = new Hashtable<Character, String>();
+			this.escapeTable.put(' ', "");
+			this.escapeTable.put('\t', "");
+			this.escapeTable.put('\n', "");
+			this.escapeTable.put('\r', "");
+		
+			this.escapeTable.put('ä', "ae");
+			this.escapeTable.put('ö', "oe");
+			this.escapeTable.put('ü', "ue");
+			this.escapeTable.put('ß', "ss");
+			this.escapeTable.put('Ä', "Ae");
+			this.escapeTable.put('Ö', "Oe");
+			this.escapeTable.put('Ü', "Ue");
+		
+			/*
+			this.escapeTable.put('.', "");
+			this.escapeTable.put(',', "");
+			this.escapeTable.put(':', "");
+			this.escapeTable.put(';', "");
+			this.escapeTable.put('!', "");
+			this.escapeTable.put('?', "");
+			this.escapeTable.put('(', "");
+			this.escapeTable.put(')', "");
+			this.escapeTable.put('{', "");
+			this.escapeTable.put('}', "");
+			this.escapeTable.put('<', "");
+			this.escapeTable.put('>', "");*/
+		}
 	}
 	
 	protected void mergeTokenContent(SDocument base, SDocument other){
@@ -291,17 +327,11 @@ public class MergerMapper {
 	 * Maps all documents.
 	 */
 	public void map(){
-		if (this.container == null){
-			this.container = new TokenMergeContainer();
-		}
+		this.initialize();
+		
 		if (this.getSDocuments() != null){
 			DocumentStatusPair baseDocPair = null;
-			for (DocumentStatusPair sDocPair : this.getDocumentPairs()){
-				if (sDocPair.sDocument.equals(container.getBaseDocument())){
-					baseDocPair = sDocPair;
-					baseDocPair.status = DOCUMENT_STATUS.IN_PROGRESS;
-				}
-			} 
+			
 			
 			if (this.getSDocuments().size() >= 2){
 				this.initialize();
@@ -311,10 +341,20 @@ public class MergerMapper {
 					this.normalizeTextualLayer(sDoc);
 				}
 				
+				for (DocumentStatusPair sDocPair : this.getDocumentPairs()){
+					if (sDocPair.sDocument.equals(container.getBaseDocument())){
+						System.out.println("Chose base document. It is document with id ");
+						baseDocPair = sDocPair;
+						baseDocPair.status = DOCUMENT_STATUS.IN_PROGRESS;
+					}
+				} 
+				
 				// allign all texts
 				for (DocumentStatusPair sDocPair : this.getDocumentPairs()){
+					
 					if (! sDocPair.sDocument.equals(container.getBaseDocument()))
 					{// ignore the base document
+						System.out.println("Merging document");
 						if (sDocPair.sDocument.getSDocumentGraph().getSTextualDSs() != null)
 						{ // assure that there are texts
 							sDocPair.status = DOCUMENT_STATUS.IN_PROGRESS;
@@ -327,6 +367,7 @@ public class MergerMapper {
 								// there are texts. Now we can merge the document content
 								this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument);
 								// we are finished with the document. Free the memory
+								System.out.println("Finishing document");
 								this.container.finishDocument(sDocPair.sDocument);
 								sDocPair.status = DOCUMENT_STATUS.DELETED;
 							} else {
@@ -334,6 +375,7 @@ public class MergerMapper {
 								this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument);
 								// we are finished with the document. Free the memory
 								this.container.finishDocument(sDocPair.sDocument);
+								System.out.println("Finishing document");
 								sDocPair.status = DOCUMENT_STATUS.DELETED;
 							}
 						}

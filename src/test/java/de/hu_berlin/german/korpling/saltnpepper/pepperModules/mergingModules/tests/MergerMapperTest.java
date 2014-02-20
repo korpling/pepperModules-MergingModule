@@ -3,8 +3,10 @@ package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.te
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import org.eclipse.emf.common.util.EList;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -14,6 +16,8 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDocumentGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltSample.SaltSample;
 
 public class MergerMapperTest extends MergerMapper{
@@ -28,7 +32,8 @@ public class MergerMapperTest extends MergerMapper{
 	}
 	@Before
 	public void setUp(){
-		setFixture(new MergerMapper());
+		setFixture(this);
+		this.initialize();
 	}
 	/**
 	 * Tests the mapping of three documents containing the same primary data and same tokenization, but
@@ -77,8 +82,8 @@ public class MergerMapperTest extends MergerMapper{
 		SaltSample.createSyntaxAnnotations(template);
 		SaltSample.createMorphologyAnnotations(template);
 		
-		getFixture().map();
-		
+		this.map();
+		// TODO real tests
 		assertEquals(DOCUMENT_STATUS.COMPLETED, pair1.status);
 		assertEquals(DOCUMENT_STATUS.DELETED, pair2.status);
 		assertEquals(DOCUMENT_STATUS.DELETED, pair3.status);
@@ -105,23 +110,36 @@ public class MergerMapperTest extends MergerMapper{
 	 */
 	@Test
 	public void testNormalize(){
-		//@Mario, das soll so, der erste Test ist, ob wir mit leeren Texten zurecht kommen
 		String origText="";
 		String normText="";
 		
 		//test 1
-		fail("check origText vs normText");
+		SDocument doc1 = SaltFactory.eINSTANCE.createSDocument();
+		doc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		doc1.getSDocumentGraph().createSTextualDS(origText);
+		this.normalizeTextualLayer(doc1);
 		
+		assertEquals(normText, this.container.getNormalizedText(doc1.getSDocumentGraph().getSTextualDSs().get(0)));
+		this.container.finishDocument(doc1);
 		
 		//test2 
 		origText= "Is this sample more complicated, than it appears to be?";
 		normText= "Isthissamplemorecomplicatedthanitappearstobe";
-		fail("check origText vs normText");
+		doc1.getSDocumentGraph().getSTextualDSs().get(0).setSText(origText);
+		this.normalizeTextualLayer(doc1);
+		
+		assertEquals(normText, this.container.getNormalizedText(doc1.getSDocumentGraph().getSTextualDSs().get(0)));
+		this.container.finishDocument(doc1);
 		
 		//test3 
 		origText= "Das wäre überaus schön";
 		normText= "Daswaereueberausschoen";
-		fail("check origText vs normText");
+		
+		doc1.getSDocumentGraph().getSTextualDSs().get(0).setSText(origText);
+		this.normalizeTextualLayer(doc1);
+		
+		assertEquals(normText, this.container.getNormalizedText(doc1.getSDocumentGraph().getSTextualDSs().get(0)));
+		this.container.finishDocument(doc1);
 	}
 	
 	/**
@@ -131,14 +149,15 @@ public class MergerMapperTest extends MergerMapper{
 	 * The test case uses two texts:
 	 * 
 	 * <ol>
-	 * 	<li>{@link SaltSample#PRIMARY_TEXT_EN}</li>
-	 *  <li>Well. {@link SaltSample#PRIMARY_TEXT_EN} I am not sure!</li>
+	 * 	<li>{@value SaltSample#PRIMARY_TEXT_EN}</li>
+	 *  <li>Well. {@value SaltSample#PRIMARY_TEXT_EN} I am not sure!</li>
 	 * </ol> 
 	 */
 	@Test
 	public void testAlignTexts_case1(){
 		SDocument sDoc1= SaltFactory.eINSTANCE.createSDocument();
 		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		SaltSample.createPrimaryData(sDoc1);
 		SaltSample.createTokens(sDoc1);
 		
 		SDocument sDoc2= SaltFactory.eINSTANCE.createSDocument();
@@ -146,7 +165,49 @@ public class MergerMapperTest extends MergerMapper{
 		sDoc2.getSDocumentGraph().createSTextualDS("Well. "+SaltSample.PRIMARY_TEXT_EN+" I am not sure!");
 		sDoc2.getSDocumentGraph().tokenize();
 		
+		/*
+		for (STextualRelation rel : sDoc2.getSDocumentGraph().getSTextualRelations()){
+			System.out.println("Base Token: " + rel.getSToken().getSName()+" : String : "+sDoc2.getSDocumentGraph().getSTextualDSs().get(0).getSText().substring(rel.getSStart(),rel.getSEnd()));
+		}
+		
+		for (STextualRelation rel : sDoc1.getSDocumentGraph().getSTextualRelations()){
+			System.out.println("Other Token: " + rel.getSToken().getSName()+" : String : "+sDoc1.getSDocumentGraph().getSTextualDSs().get(0).getSText().substring(rel.getSStart(),rel.getSEnd()));
+		}*/
+		
+		EList<SToken> baseTextToken = sDoc2.getSDocumentGraph().getSortedSTokenByText();
+		EList<SToken> otherTextToken = sDoc1.getSDocumentGraph().getSortedSTokenByText();
+		
+		//System.out.println("Testing Alignment");
+		
 		//TODO check alignTests
+		this.normalizeTextualLayer(sDoc1);
+		//System.out.println("Testing Alignment");
+		this.normalizeTextualLayer(sDoc2);
+		
+		// test 1 : sDoc2 must be the base document
+		assertEquals(sDoc2, this.container.getBaseDocument());
+		
+		// test 2 : align must return true
+		assertTrue(this.alignTexts(sDoc2.getSDocumentGraph().getSTextualDSs().get(0), sDoc1.getSDocumentGraph().getSTextualDSs().get(0)));
+		
+		
+		
+		// test 3 : the token alignment is correct : the equivalence classes are correct
+		int j = 0;
+		for (int i = 2 ; i < 11 ; i++){
+			SToken base = baseTextToken.get(i);
+			SToken otherToken = otherTextToken.get(j);
+			STextualDS otherText = sDoc1.getSDocumentGraph().getSTextualDSs().get(0); 
+			assertEquals("Base Token "+base.getSName() + 
+					" (start: "
+					+this.container.getAlignedTokenStart(this.container.getBaseText(), base)+
+					") and other token "+otherToken.getSName()+ " (start: "+
+					this.container.getAlignedTokenStart(otherText, otherToken)
+					+") should be equal.",this.container.getTokenMapping(base, otherText),otherToken);
+			j++;
+		}
+		
+		
 		
 	}
 	
@@ -164,10 +225,12 @@ public class MergerMapperTest extends MergerMapper{
 		String norm= "Die deutschen Namen, die dann oft daneben stehen, tragen meist ein solches Gepräge der Unklarheit, dass sie jeden zurückschrecken müssen, der sie statt der lateinischen einführen möchte.";
 		String dipl= "Die deutſchen Namen, die dann oft daneben ſtehen, tragen meiſt ein ſolches Gepräge der Unklarheit, daſz ſie jeden zurückſchrecken müſſen, der ſie ſtatt der lateiniſchen einführen möchte.";
 		STextualDS sTextDS1= sDoc1.getSDocumentGraph().createSTextualDS(norm);
-		//TODO tokenize
+		//TODO tokenize ALL
+		
 		
 		STextualDS sTextDS2= sDoc1.getSDocumentGraph().createSTextualDS(dipl);
 		//TODO tokenize
+		// TODO tokenize : Die Deutschen Unklarheit möchte
 		
 		//create document2
 		SDocument sDoc2= SaltFactory.eINSTANCE.createSDocument();
@@ -209,6 +272,8 @@ public class MergerMapperTest extends MergerMapper{
 		
 		//TODO call align method (or whatever)
 		//test the result
+		
+		// TODO assert baseText = norm
 	}
 
 }
