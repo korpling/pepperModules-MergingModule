@@ -268,8 +268,22 @@ public class MergerMapper {
 		this.escapeTable.put('>', "");
 	}
 	
-	protected SDocument mergeDocumentContent(SDocument base, SDocument other){
+	protected void mergeTokenContent(SDocument base, SDocument other){
 		
+	}
+	
+	protected void mergeSpanContent(SDocument base, SDocument other){
+		
+	}
+	
+	protected void mergeStructureContent(SDocument base, SDocument other){
+		
+	}
+	
+	protected SDocument mergeDocumentContent(SDocument base, SDocument other){
+		mergeTokenContent(base, other);
+		mergeSpanContent(base, other);
+		mergeStructureContent(base, other);
 		return base;
 	}
 	
@@ -314,13 +328,13 @@ public class MergerMapper {
 								this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument);
 								// we are finished with the document. Free the memory
 								this.container.finishDocument(sDocPair.sDocument);
-								sDocPair.status = DOCUMENT_STATUS.COMPLETED;
+								sDocPair.status = DOCUMENT_STATUS.DELETED;
 							} else {
 								// there are no texts. So, just copy everything into the base document graph
 								this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument);
 								// we are finished with the document. Free the memory
 								this.container.finishDocument(sDocPair.sDocument);
-								sDocPair.status = DOCUMENT_STATUS.COMPLETED;
+								sDocPair.status = DOCUMENT_STATUS.DELETED;
 							}
 						}
 					} 
