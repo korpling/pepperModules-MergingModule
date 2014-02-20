@@ -1,18 +1,20 @@
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.tests;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.DOCUMENT_STATUS;
 import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.MergerMapper;
-import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.MergerMapper.DocumentStatusPair;
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltSample.SaltSample;
 
-public class MergerMapperTest {
+public class MergerMapperTest extends MergerMapper{
 
 	private MergerMapper fixture= null;
 	public MergerMapper getFixture() {
@@ -89,9 +91,42 @@ public class MergerMapperTest {
 		assertEquals(template.getSDocumentGraph().getSTokens().size(), pair1.sDocument.getSDocumentGraph().getSTokens().size());
 		assertEquals(template.getSDocumentGraph().getSSpans().size(), pair1.sDocument.getSDocumentGraph().getSSpans().size());
 		assertEquals(template.getSDocumentGraph().getSStructures().size(), pair1.sDocument.getSDocumentGraph().getSStructures().size());
+	}
+	
+	/**
+	 * Tests the normalization function with different texts.
+	 * <ol>
+	 * 	<li>empty texts</li>
+	 * 	<li>english text containing whitespaces and punctuations</li>
+	 * 	<li>german text containing whitespaces and umlauts</li>
+	 * </ol>
+	 */
+	@Test
+	public void testNormalize(){
+		String origText="";
+		String normText="";
+		
+		//test 1
+		fail("check origText vs normText");
+		
+		
+		//test2 
+		origText= "Is this sample more complicated, than it appears to be?";
+		normText= "Isthissamplemorecomplicatedthanitappearstobe";
+		fail("check origText vs normText");
+		
+		//test3 
+		origText= "Das wäre überaus schön";
+		normText= "Daswaereueberausschoen";
+		fail("check origText vs normText");
+	}
+	/**
+	 * Tests the method {@link #alignTexts(de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS, de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS)} against some real data excerpts and
+	 * checks if the creation of equivalence classes works correctly. 
+	 */
+	@Test
+	public void testAlignTexts_case1(){
 		
 	}
-
-	
 
 }
