@@ -22,7 +22,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
 
-import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
 
 import de.hu_berlin.german.korpling.saltnpepper.pepper.pepperExceptions.PepperModuleException;
@@ -57,8 +56,22 @@ public class MergerMapper {
 		}
 		return(pairs);
 	}
+	/** 
+	 * Returns a list of {@link SDocument} objects to be merged, retrived from {@link #pairs}.
+	 * @return a list of {@link SDocument} objects
+	**/
+	private List<SDocument> getSDocuments(){
+		List<SDocument> retVal= null;
+		if (pairs!= null){
+			retVal= new Vector<SDocument>();
+			for (DocumentStatusPair pair: pairs){
+				retVal.add(pair.sDocument);
+			}
+		}
+		return(retVal);
+	}
 	
-	// the {@link TokenMergeContainer} instance
+	/** the {@link TokenMergeContainer} instance **/
 	private TokenMergeContainer container =null;
 		
 	/**
@@ -69,7 +82,7 @@ public class MergerMapper {
 		this.container = container;
 	}	
 	
-	// This table contains the escape sequences for all characters
+	/** This table contains the escape sequences for all characters **/
 	private Hashtable<Character,String> escapeTable= null;
 	
 	/**
