@@ -72,15 +72,8 @@ public class MergerMapper {
 	}
 	
 	/** the {@link TokenMergeContainer} instance **/
-	private TokenMergeContainer container =null;
-		
-	/**
-	 * This method sets the {@link TokenMergeContainer} for this mapper.
-	 * @param container the {@link TokenMergeContainer}
-	 */
-	public void setTokenMergeContainer(TokenMergeContainer container){
-		this.container = container;
-	}	
+	protected TokenMergeContainer container =null;
+	
 	
 	/** This table contains the escape sequences for all characters **/
 	private Hashtable<Character,String> escapeTable= null;
@@ -94,7 +87,7 @@ public class MergerMapper {
 	 * @return true on success and false on failure
 	 * @author eladrion
 	 */
-	private boolean alignTexts(STextualDS baseText, STextualDS otherText){
+	protected boolean alignTexts(STextualDS baseText, STextualDS otherText){
 		if (baseText == null)
 			throw new PepperModuleException("Cannot align the Text of the documents since the base SDocument reference is NULL");
 		if (otherText == null)
@@ -150,7 +143,7 @@ public class MergerMapper {
 	 * @param sDocument the {@link SDocument} for which the textual layer should be normalized.
 	 * @author eladrion
 	 */
-	private void normalizeTextualLayer(SDocument sDocument){
+	protected void normalizeTextualLayer(SDocument sDocument){
 		if (sDocument == null)
 			throw new PepperModuleException("Cannot normalize Text of the document since the SDocument reference is NULL");
 		
@@ -233,10 +226,9 @@ public class MergerMapper {
 	
 	/**
 	 * This method initializes the mapping.
-	 * @param documents the {@link SDocument} objects to merge
 	 * @author eladrion
 	 */
-	private void initialize(EList<SDocument> documents){
+	protected void initialize(){
 		if (this.pairs == null){
 			this.pairs = new Vector<DocumentStatusPair>();
 		}
@@ -266,17 +258,31 @@ public class MergerMapper {
 		this.escapeTable.put('}', "");
 		this.escapeTable.put('<', "");
 		this.escapeTable.put('>', "");
-		
-		// normalize all documents
-		for (SDocument doc : documents){
-			this.normalizeTextualLayer(doc);
-		}
 	}
 	
 	/**
 	 * Maps all documents.
 	 */
 	public void map(){
+		if (this.container == null){
+			this.container = new TokenMergeContainer();
+		}
+		if (this.getSDocuments() != null){
+			if (this.getSDocuments().size() >= 2){
+				this.initialize();
+				
+				// normalize all texts
+				for (SDocument sDoc : this.getSDocuments()){
+					this.normalizeTextualLayer(sDoc);
+				}
+				
+				for (DocumentStatusPair sDocPair : this.getDocumentPairs()){
+					if (! sDocPair.sDocument.equals(container.getBaseDocument())){
+						
+					}
+				}
+			}
+		}
 		
 		
 		
