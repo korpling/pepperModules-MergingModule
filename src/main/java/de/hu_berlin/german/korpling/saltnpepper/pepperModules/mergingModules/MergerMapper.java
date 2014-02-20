@@ -22,9 +22,11 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
 
+import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
 
 import de.hu_berlin.german.korpling.saltnpepper.pepper.pepperExceptions.PepperModuleException;
+import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Edge;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
@@ -102,10 +104,16 @@ public class MergerMapper {
 		int offset = normalizedBaseText.indexOf(normalizedOtherText);
 		if (offset != -1)
 		{// if the normalized other text is conatined in the normalized base text
-			// get the tokens of the other document sorted by the text.
-			// TODO: do not use the SORT FUNCTION
-			EList<SToken> sortedTokens = otherText.getSDocumentGraph().getSortedSTokenByText();
-			for (SToken otherTextToken : sortedTokens)
+			returnVal = true;
+			// get the tokens of the other text.
+			EList<SToken> textTokens = new BasicEList<SToken>();
+			for (Edge e : otherText.getSDocumentGraph().getInEdges(otherText.getSId())){
+				if (e instanceof STextualRelation){
+					textTokens.add(((STextualRelation)e).getSToken());
+				}
+			}
+			
+			for (SToken otherTextToken : textTokens)
 			{
 				// get the aligned token start and length
 				int otherTokenStart = this.container.getAlignedTokenStart(otherText, otherTextToken);
@@ -276,9 +284,23 @@ public class MergerMapper {
 					this.normalizeTextualLayer(sDoc);
 				}
 				
+				// allign all texts
 				for (DocumentStatusPair sDocPair : this.getDocumentPairs()){
-					if (! sDocPair.sDocument.equals(container.getBaseDocument())){
-						
+					if (! sDocPair.sDocument.equals(container.getBaseDocument()))
+					{// ignore the base document
+						if (sDocPair.sDocument.getSDocumentGraph().getSTextualDSs() != null)
+						{ // assure that there are texts
+							if (sDocPair.sDocument.getSDocumentGraph().getSTextualDSs().size() > 0){
+								for (STextualDS otherText : sDocPair.sDocument.getSDocumentGraph().getSTextualDSs()){
+									for (STextualDS baseText : container.getBaseDocument().getSDocumentGraph().getSTextualDSs()){
+										this.alignTexts(baseText, otherText);
+									}
+								}
+								// TODO there are texts. Now we can merge the document content
+							} else {
+								// TODO there are no texts. So, just copy everything into the base document graph
+							}
+						}
 					}
 				}
 			}
