@@ -5,6 +5,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import java.util.Hashtable;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -103,9 +105,9 @@ public class MergerMapperTest extends MergerMapper{
 	 */
 	@Test
 	public void testNormalize(){
-		String origText="";
-		String normText="";
-		
+		String origText="Dies ist ein ähnlicher Test";
+		String normText="DiesisteinaehnlicherTest";
+		Hashtable<String, String> test;
 		//test 1
 		fail("check origText vs normText");
 		
