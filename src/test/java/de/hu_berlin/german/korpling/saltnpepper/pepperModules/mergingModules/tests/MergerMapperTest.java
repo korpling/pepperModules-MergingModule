@@ -6,6 +6,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.List;
+import java.util.Vector;
+
 import org.eclipse.emf.common.util.EList;
 import org.junit.Before;
 import org.junit.Test;
@@ -124,7 +127,7 @@ public class MergerMapperTest extends MergerMapper{
 		
 		//test2 
 		origText= "Is this sample more complicated, than it appears to be?";
-		normText= "Isthissamplemorecomplicatedthanitappearstobe";
+		normText= "Isthissamplemorecomplicated,thanitappearstobe?";
 		doc1.getSDocumentGraph().getSTextualDSs().get(0).setSText(origText);
 		this.normalizeTextualLayer(doc1);
 		
@@ -140,6 +143,40 @@ public class MergerMapperTest extends MergerMapper{
 		
 		assertEquals(normText, this.container.getNormalizedText(doc1.getSDocumentGraph().getSTextualDSs().get(0)));
 		this.container.finishDocument(doc1);
+	}
+	
+	/**
+	 *
+	 * 
+	 */
+	@Test
+	public void textCreateBaseTextNormOriginalMapping(){
+		String origText=" thäs is";
+		
+		//test 1
+		SDocument doc1 = SaltFactory.eINSTANCE.createSDocument();
+		doc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		doc1.getSDocumentGraph().createSTextualDS(origText);
+		this.normalizeTextualLayer(doc1);
+		
+		List<Integer> template = new Vector<Integer>();
+		
+		/**
+		 * Example2: dipl: " thäs is"
+	     *                  01234567
+	     *           norm: "thaesis"
+	     *                  0123456
+	     *                 0->1
+	     *                 1->2
+	     *                 2->3
+	     *                 3->3
+	     *                 4->4
+	     *                 5->6
+	     *                 6->7
+		 */
+		template.add(1);template.add(2);template.add(3);template.add(3);template.add(4);template.add(6);template.add(7);
+		assertEquals(template, this.createBaseTextNormOriginalMapping(doc1.getSDocumentGraph().getSTextualDSs().get(0)));
+		
 	}
 	
 	/**

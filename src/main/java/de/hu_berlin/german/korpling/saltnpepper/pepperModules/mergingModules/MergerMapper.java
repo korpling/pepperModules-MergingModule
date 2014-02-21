@@ -18,12 +18,14 @@
 
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
 
 import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
+import org.junit.Test.None;
 
 import de.hu_berlin.german.korpling.saltnpepper.pepper.pepperExceptions.PepperModuleException;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Edge;
@@ -80,6 +82,21 @@ public class MergerMapper {
 	/** This table contains the escape sequences for all characters **/
 	private Hashtable<Character,String> escapeTable= null;
 	
+	private char[] punctuations = {'.',',',':',';','!','?','(',')','{','}','<','>'};
+	/*
+	this.escapeTable.put('.', "");
+	this.escapeTable.put(',', "");
+	this.escapeTable.put(':', "");
+	this.escapeTable.put(';', "");
+	this.escapeTable.put('!', "");
+	this.escapeTable.put('?', "");
+	this.escapeTable.put('(', "");
+	this.escapeTable.put(')', "");
+	this.escapeTable.put('{', "");
+	this.escapeTable.put('}', "");
+	this.escapeTable.put('<', "");
+	this.escapeTable.put('>', "");*/
+	
 	/**
 	 * This method aligns the normalized texts of the given {@link STextualDS} objects
 	 * and <b>also</b> aligns the {@link SToken} including the creation of equivalent {@link SToken}
@@ -89,19 +106,25 @@ public class MergerMapper {
 	 * @return true on success and false on failure
 	 * @author eladrion
 	 */
-	protected boolean alignTexts(STextualDS baseText, STextualDS otherText){
+	protected boolean alignTexts(STextualDS baseText, STextualDS otherText, HashSet<SToken> nonEquivalentTokenInOtherTexts){
 		if (baseText == null)
 			throw new PepperModuleException("Cannot align the Text of the documents since the base SDocument reference is NULL");
 		if (otherText == null)
 			throw new PepperModuleException("Cannot align the Text of the documents since the other SDocument reference is NULL");
 		
-		
-		
 		boolean returnVal = false;
 		// first we need the two normalized texts
 		String normalizedBaseText = this.container.getNormalizedText(baseText);
 		String normalizedOtherText = this.container.getNormalizedText(otherText);
-		int offset = normalizedBaseText.indexOf(normalizedOtherText);
+		
+		// set the mapping of the normalized base text to the original base text
+		if (this.container.getBaseTextPositionByNormalizedTextPosition(this.container.getBaseText(), 0) == -1){
+			this.container.setBaseTextPositionByNormalizedTextPosition(baseText,this.createBaseTextNormOriginalMapping(this.container.getBaseText()));
+		}
+		
+		// TODO @eladrion index of with punctuation skipping
+		//int offset = normalizedBaseText.toLowerCase().indexOfAnyBut(normalizedOtherText.toLowerCase(),this.punctuations);
+		int offset = normalizedBaseText.toLowerCase().indexOf(normalizedOtherText.toLowerCase());
 		if (offset != -1)
 		{// if the normalized other text is conatined in the normalized base text
 			returnVal = true;
@@ -114,9 +137,10 @@ public class MergerMapper {
 				}
 			}
 			
+			/*
 			for (SToken baseTextToken : this.container.getBaseTextToken()){
 				System.out.println("Base text token ("+baseTextToken.getSName()+") start and length: "+this.container.getAlignedTokenStart(this.container.baseText, baseTextToken)+"/"+this.container.getAlignedTokenLength(this.container.baseText, baseTextToken));
-			}
+			}*/
 			
 			for (SToken otherTextToken : textTokens)
 			{
@@ -127,7 +151,7 @@ public class MergerMapper {
 				if (otherTokenStart != -1 && otherTokenLength != -1)
 				{ // get the base text token:
 					// get the aligned token from the base document which has the start of offset+startOfOtherToken
-					System.out.println("Other token ("+otherTextToken.getSName()+") start and length: "+otherTokenStart+"/"+otherTokenLength);
+					//System.out.println("Other token ("+otherTextToken.getSName()+") start and length: "+otherTokenStart+"/"+otherTokenLength);
 					SToken baseTextToken = this.container.getAlignedTokenByStart(baseText, (otherTokenStart+offset));
 					
 					if (baseTextToken != null)
@@ -142,7 +166,7 @@ public class MergerMapper {
 						}
 						
 					} else {
-						// Nothing to do since there is no equivalent token in the base text
+						nonEquivalentTokenInOtherTexts.add(otherTextToken);
 					}
 				} else {
 					//TODO: ERROR CATCHING
@@ -152,6 +176,49 @@ public class MergerMapper {
 		}
 		// get base text
 		return returnVal;
+	}
+	
+	protected List<Integer> createBaseTextNormOriginalMapping(STextualDS sTextualDS){
+		/**
+		 * Example1: dipl: " this is"
+		 *                  01234567
+		 *           norm: "thisis"
+		 *                  012345
+		 *                 0->1
+		 *                 1->2,...
+		 * Example2: dipl: " thäs is"
+		 *                  01234567
+		 *           norm: "thaesis"
+		 *                  0123456
+		 *                 0->1
+		 *                 1->2
+		 *                 2->3
+		 *                 3->3
+		 *                 4->4
+		 *                 5->6
+		 *                 6->7
+		 */
+		List<Integer> normalizedToOriginalMapping = new Vector<Integer>();
+		int start = 0;
+		for (char c : sTextualDS.getSText().toCharArray()){
+			String stringToEscape = this.escapeTable.get(c);
+			if (stringToEscape == null){
+				normalizedToOriginalMapping.add(start);
+			} else {
+				if (stringToEscape.length() > 0){
+					for (char x : stringToEscape.toCharArray())
+					{// one char is mapped to many. all chars have the same index in the original text
+						normalizedToOriginalMapping.add(start);
+					}
+				} 
+				else 
+				{ // one char is mapped to the empty string. 
+					// do nothing
+				}
+			}
+			start += 1;
+		}
+		return normalizedToOriginalMapping;
 	}
 	
 	/**
@@ -188,10 +255,8 @@ public class MergerMapper {
 			StringBuilder normalizedTextBuilder = new StringBuilder();
 			
 			SToken currentToken= null;
-			int normalizedTokenLeft=0;
 			
 			int currentLeft = 0;
-			int currentOffset = 0;
 			int countOfChangedChars = 0;
 			int currentTokenLength = 1;
 			int currentNormalizedLeft = 0;
@@ -199,23 +264,21 @@ public class MergerMapper {
 			// normalize the text
 			for (char c : sTextualDS.getSText().toCharArray()){
 				String stringToEscape = this.escapeTable.get(c);
+				// fill the StringBuilder
 				if (stringToEscape != null){
 					normalizedTextBuilder.append(stringToEscape);
-					// set new offset: 
-					// for whitespaces and punctuation, it is offset += 1
-					// for Umlauts, it is offset -= 1
-					/*
-					if (stringToEscape.length() == 0){
-						// some char was erased --> normalized text is shorter by one 
-						currentOffset += 1;
-					} else if (stringToEscape.length() == 2){
-						// an Umlaut was unfold --> normalized text is longer by one
-						currentOffset -= 1;
-					}*/
-					currentOffset = currentOffset + (1 - stringToEscape.length());
 					countOfChangedChars += 1;
 				} else {
 					normalizedTextBuilder.append(c);
+				}
+				
+				// set the normalized start value
+				if (stringToEscape == null){
+					currentNormalizedLeft += 1;
+				} else {
+					if (stringToEscape.length() > 0){
+						currentNormalizedLeft += stringToEscape.length();
+					}
 				}
 				
 				if (currentToken == null)
@@ -224,7 +287,6 @@ public class MergerMapper {
 					if (currentToken != null)
 					{// if a token interval begins at the current left value
 						//System.out.println("Starting alignment of Token "+currentToken.getSName());
-						normalizedTokenLeft = currentLeft + currentOffset;
 						currentTokenLength = 1;
 					}
 				} 
@@ -238,23 +300,16 @@ public class MergerMapper {
 						//container.addAlignedToken(sTextualDS, currentToken, normalizedTokenLeft, normalizedTokenLeft+currentTokenLength );
 						container.addAlignedToken(sTextualDS, currentToken, currentNormalizedLeft, currentNormalizedLeft+currentTokenLength );
 						// reinitialize the normalizedTokenLeft and unmark the now processed token
-						normalizedTokenLeft = 0;
 						currentToken = null;
 					} else {
 						currentTokenLength += 1;
-					}
-				}
-				if (stringToEscape == null){
-					currentNormalizedLeft += 1;
-				} else {
-					if (stringToEscape.length() > 0){
-						currentNormalizedLeft += stringToEscape.length();
 					}
 				}
 				currentLeft += 1;
 			}
 			// now we have the normalized text
 			normalizedText = normalizedTextBuilder.toString();
+			System.out.println("Normalize: "+sTextualDS.getSText()+" becomes "+normalizedText);
 			// add it to the tokenMergeContainer
 			this.container.addNormalizedText(sDocument, sTextualDS, normalizedText, countOfChangedChars);
 		}
@@ -316,7 +371,21 @@ public class MergerMapper {
 		
 	}
 	
-	protected SDocument mergeDocumentContent(SDocument base, SDocument other){
+	protected void chooseFinalBaseText(){
+		
+	}
+	
+	/**
+	 * This method merges the Document content of the other {@link SDocument} to the base {@link SDocument} and
+	 * uses the set of {@link SToken} which are contained in the other {@link SDocument} but not in the base {@link SDocument}
+	 * to determine which {@link SToken} has no equivalent in the base {@link SDocument}.
+	 * @param base
+	 * @param other
+	 * @param nonEquivalentTokenInOtherTexts
+	 * @return
+	 */
+	protected SDocument mergeDocumentContent(SDocument base, SDocument other, HashSet<SToken> nonEquivalentTokenInOtherTexts){
+		//chooseFinalBaseText();
 		mergeTokenContent(base, other);
 		mergeSpanContent(base, other);
 		mergeStructureContent(base, other);
@@ -359,20 +428,25 @@ public class MergerMapper {
 						{ // assure that there are texts
 							sDocPair.status = DOCUMENT_STATUS.IN_PROGRESS;
 							if (sDocPair.sDocument.getSDocumentGraph().getSTextualDSs().size() > 0){
+								HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 								for (STextualDS otherText : sDocPair.sDocument.getSDocumentGraph().getSTextualDSs()){
 									for (STextualDS baseText : container.getBaseDocument().getSDocumentGraph().getSTextualDSs()){
-										this.alignTexts(baseText, otherText);
+										this.alignTexts(baseText, otherText,nonEquivalentTokenInOtherTexts);
 									}
 								}
 								// there are texts. Now we can merge the document content
-								this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument);
+								this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument, nonEquivalentTokenInOtherTexts);
 								// we are finished with the document. Free the memory
 								System.out.println("Finishing document");
 								this.container.finishDocument(sDocPair.sDocument);
 								sDocPair.status = DOCUMENT_STATUS.DELETED;
 							} else {
 								// there are no texts. So, just copy everything into the base document graph
-								this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument);
+								HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+								if (sDocPair.sDocument.getSDocumentGraph().getSTokens() != null){
+									nonEquivalentTokenInOtherTexts.addAll(sDocPair.sDocument.getSDocumentGraph().getSTokens());
+								}
+								this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument, nonEquivalentTokenInOtherTexts);
 								// we are finished with the document. Free the memory
 								this.container.finishDocument(sDocPair.sDocument);
 								System.out.println("Finishing document");

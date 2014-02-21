@@ -18,6 +18,7 @@
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
 import java.util.Hashtable;
+import java.util.List;
 
 import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
@@ -124,6 +125,31 @@ public class TokenMergeContainer {
 		int countOfChangedChars = -1;
 		
 		int maximumNormalizedTextLength = -1;
+		
+		private Hashtable<STextualDS,List<Integer>> normalizedBaseTextToOriginalBaseText = null;
+		
+		public void setBaseTextPositionByNormalizedTextPosition(STextualDS sTextualDS, List<Integer> posMapping){
+			if (this.normalizedBaseTextToOriginalBaseText == null){
+				this.normalizedBaseTextToOriginalBaseText = new Hashtable<STextualDS, List<Integer>>();
+				this.normalizedBaseTextToOriginalBaseText.put(sTextualDS, posMapping);
+			} else {
+				if (! this.normalizedBaseTextToOriginalBaseText.containsKey(sTextualDS)){
+					this.normalizedBaseTextToOriginalBaseText.put(sTextualDS, posMapping);
+				}
+			}
+		}
+		
+		public int getBaseTextPositionByNormalizedTextPosition(STextualDS sTextualDS, int position){
+			int baseTextPosition = -1;
+			if (this.normalizedBaseTextToOriginalBaseText != null){
+				if (this.normalizedBaseTextToOriginalBaseText.containsKey(sTextualDS)){
+					if (this.normalizedBaseTextToOriginalBaseText.get(sTextualDS).size() > position){
+						baseTextPosition = this.normalizedBaseTextToOriginalBaseText.get(sTextualDS).get(position);
+					}
+				}
+			}
+			return baseTextPosition;
+		}
 		
 		public EList<SToken> getBaseTextToken(){
 			return this.alignedTextsMap.get(this.baseText).getTokens();
@@ -249,6 +275,9 @@ public class TokenMergeContainer {
 			}
 			if (this.normalizedTextMap.containsKey(sDocument)){
 				this.normalizedTextMap.remove(sDocument);
+			}
+			if (sDocument.equals(this.baseDocument)){
+				this.normalizedBaseTextToOriginalBaseText.clear();
 			}
 			for (SToken tok : this.equivalentToken.keySet()){
 				if (this.equivalentToken.get(tok).containsKey(sDocument)){
