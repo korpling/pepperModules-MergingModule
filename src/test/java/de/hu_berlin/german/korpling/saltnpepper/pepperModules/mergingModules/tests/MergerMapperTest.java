@@ -22,6 +22,8 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotatableElement;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltSample.SaltSample;
 
 public class MergerMapperTest extends MergerMapper{
@@ -310,9 +312,45 @@ public class MergerMapperTest extends MergerMapper{
 		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 159, 160);	//.
 		
 		//TODO call align method (or whatever)
+		MergerMapper mm = new MergerMapper();
+		
 		//test the result
 		
 		// TODO assert baseText = norm
+	}
+	
+	@Test
+	public void testAnnotationCopy() throws Exception {
+		SToken tok1 = SaltFactory.eINSTANCE.createSToken();
+		SToken tok2 = SaltFactory.eINSTANCE.createSToken();
+		
+		// identical annotation --> no need to copy
+		SAnnotation anno1 = SaltFactory.eINSTANCE.createSAnnotation();
+		anno1.setName("anno1");
+		anno1.setSValue("annotext1");
+		
+		// new annotation --> should be copied
+		SAnnotation anno2 = SaltFactory.eINSTANCE.createSAnnotation();
+		anno2.setName("anno2");
+		anno2.setSValue("annotext2");
+		
+		// annotation with different value --> name will be changed
+		SAnnotation anno3 = SaltFactory.eINSTANCE.createSAnnotation();
+		anno3.setName("anno2");
+		anno3.setSValue("annotext22");
+		
+		SAnnotation[] annos = {anno1,anno2, anno3};
+		
+		tok1.addSAnnotation(anno1);
+		tok1.addSAnnotation(anno2);
+		tok2.addSAnnotation(anno3);
+		
+		MergerMapper mm = new MergerMapper();
+		mm.copyAnnotation(tok1,tok2);
+		
+		assertEquals("annotext1",tok2.getSAnnotation("anno1").getSValueSTEXT());
+		assertEquals("annotext22",tok2.getSAnnotation("anno2").getSValueSTEXT());
+		assertEquals("annotext2",tok2.getSAnnotation("anno2" +  MergerMapper.ANNO_NAME_EXTENSION).getSValueSTEXT());
 	}
 
 }

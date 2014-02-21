@@ -23,6 +23,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
 
+import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
 
@@ -32,8 +33,14 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotatableElement;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotation;
 
 public class MergerMapper {
+	
+	public static final String ANNO_NAME_EXTENSION = "_1";
+
+	static private Logger log = Logger.getLogger(MergerMapper.class);
 
 	public static class DocumentStatusPair{
 		public DocumentStatusPair(SDocument sDocument){
@@ -78,6 +85,10 @@ public class MergerMapper {
 	protected TokenMergeContainer container =null;
 	
 	
+	public TokenMergeContainer getContainer() {
+		return container;
+	}
+
 	/** This table contains the escape sequences for all characters **/
 	private Hashtable<Character,String> escapeTable= null;
 	
@@ -359,7 +370,7 @@ public class MergerMapper {
 	}
 	
 	protected void mergeTokenContent(SDocument base, SDocument other){
-		
+		 
 	}
 	
 	protected void mergeSpanContent(SDocument base, SDocument other){
@@ -462,5 +473,33 @@ public class MergerMapper {
 		
 		
 		
+	}
+	
+	/**
+	 * Copies annotations from one element to another. If two annotations have
+	 * different values, than the method will extend the annotation name to make
+	 * coping possible. Existing annotations will not be copied.
+	 * 
+	 * @param from
+	 * @param to
+	 */
+	public void copyAnnotation(SAnnotatableElement from, SAnnotatableElement to) {
+		for (SAnnotation fromAnno : from.getSAnnotations()) {
+			SAnnotation toAnno = to.getSAnnotation(fromAnno.getQName());
+			if (toAnno == null) {
+				toAnno = (SAnnotation) fromAnno.clone();
+				to.addSAnnotation(toAnno);
+				System.out.println("copied anno: " + toAnno);
+			} else if (!toAnno.getSValue().equals(fromAnno.getSValue())) {
+				toAnno = (SAnnotation) fromAnno.clone();
+				toAnno.setName(toAnno.getName() + ANNO_NAME_EXTENSION);
+				to.addSAnnotation(toAnno);
+				log.warn(String.format(
+						"Changed annotation name \"%s\" to \"%s\"",
+						fromAnno.getName(), toAnno.getName()));
+			} else {
+				// identical annotations
+			}
+		}
 	}
 }
