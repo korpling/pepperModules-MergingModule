@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Vector;
 
@@ -225,7 +226,8 @@ public class MergerMapperTest extends MergerMapper{
 		assertEquals(sDoc2, this.container.getBaseDocument());
 		
 		// test 2 : align must return true
-		assertTrue(this.alignTexts(sDoc2.getSDocumentGraph().getSTextualDSs().get(0), sDoc1.getSDocumentGraph().getSTextualDSs().get(0)));
+		HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+		assertTrue(this.alignTexts(sDoc2.getSDocumentGraph().getSTextualDSs().get(0), sDoc1.getSDocumentGraph().getSTextualDSs().get(0),nonEquivalentTokenInOtherTexts));
 		
 		
 		
