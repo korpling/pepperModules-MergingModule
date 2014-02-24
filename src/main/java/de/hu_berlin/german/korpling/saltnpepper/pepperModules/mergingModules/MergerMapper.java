@@ -94,7 +94,7 @@ public class MergerMapper {
 	/** This table contains the escape sequences for all characters **/
 	private Hashtable<Character,String> escapeTable= null;
 	
-	private char[] punctuations = {'.',',',':',';','!','?','(',')','{','}','<','>'};
+	protected char[] punctuations = {'.',',',':',';','!','?','(',')','{','}','<','>'};
 	/*
 	this.escapeTable.put('.', "");
 	this.escapeTable.put(',', "");
@@ -108,6 +108,64 @@ public class MergerMapper {
 	this.escapeTable.put('}', "");
 	this.escapeTable.put('<', "");
 	this.escapeTable.put('>', "");*/
+	
+	protected int indexOfOmitChars(String stringToSearchIn, String stringToSearchFor, char[] omitCharArray) {
+
+		HashSet<Character> omitChars = new HashSet<Character>();
+		for (char c : omitCharArray){
+			omitChars.add(c);
+		}
+		
+		/*remove all omit chars from the stringToSearchFor*/
+		StringBuilder builder = new StringBuilder();
+		for (char sourceChar : stringToSearchFor.toCharArray()){
+			if (!omitChars.contains(sourceChar)){
+				builder.append(sourceChar);
+			}
+		}
+		String sourceString = builder.toString();
+		
+		/* search for the first char*/
+		char c = sourceString.toCharArray()[0];
+		int position = 0;
+		int retVal = -1;
+		boolean found = false;
+		
+		char[] charsToSearchIn = stringToSearchIn.toCharArray();
+		while (true)
+		{
+			// the start position of the string to search
+			position = stringToSearchIn.indexOf(c,position);
+			retVal = position;
+			if (position == -1){ // stop, if the first char could not be found
+				break;
+			} 
+			found = true;
+			for (char sourceChar : sourceString.toCharArray()){
+				/// search the char in the target string and omit all omit chars in the target string
+				boolean foundChar = false;
+				for (int i = position ; i < stringToSearchIn.length() ; i++){
+					char targetChar = charsToSearchIn[i];
+					if (omitChars.contains(targetChar)){
+						continue;
+					} else {
+						if (targetChar == sourceChar){
+							foundChar = true;
+							position++;
+							break;
+						}
+					}
+				}
+				if (! foundChar){ // if a char could not be found, stop the search in the current subString
+					retVal = -1;
+					break;
+				}
+			}
+		}
+		
+		return retVal;
+	}
+
 	
 	/**
 	 * This method aligns the normalized texts of the given {@link STextualDS} objects
@@ -136,7 +194,7 @@ public class MergerMapper {
 		
 		// TODO @eladrion index of with punctuation skipping
 		//int offset = normalizedBaseText.toLowerCase().indexOfAnyBut(normalizedOtherText.toLowerCase(),this.punctuations);
-		int offset = normalizedBaseText.toLowerCase().indexOf(normalizedOtherText.toLowerCase());
+		int offset = indexOfOmitChars(normalizedBaseText.toLowerCase(),normalizedOtherText.toLowerCase(),this.punctuations);
 		if (offset != -1)
 		{// if the normalized other text is conatined in the normalized base text
 			returnVal = true;
@@ -173,6 +231,7 @@ public class MergerMapper {
 						if (this.container.getAlignedTokenLength(baseText, baseTextToken) == otherTokenLength)
 						{ // start and lengths are identical. We found an equivalence class
 							this.container.addTokenMapping(baseTextToken, otherTextToken, otherText);
+							nonEquivalentTokenInOtherTexts.remove(otherTextToken);
 						} else {
 							//TODO: ERROR CATCHING
 						}
@@ -468,6 +527,8 @@ public class MergerMapper {
 					} 
 				}
 			}
+			
+			
 			this.container.finishDocument(baseDocPair.sDocument);
 			baseDocPair.status = DOCUMENT_STATUS.COMPLETED;
 		}

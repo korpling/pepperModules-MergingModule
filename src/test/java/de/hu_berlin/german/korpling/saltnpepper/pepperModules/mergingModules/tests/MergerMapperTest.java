@@ -148,6 +148,29 @@ public class MergerMapperTest extends MergerMapper{
 		this.container.finishDocument(doc1);
 	}
 	
+	@test
+	public void testIndexOfOmitChars(){
+		String baseText ="This,isasmallExample!";
+		String otherText ="Thisisno";
+		
+		assertEquals(this.indexOfOmitChars(baseText, otherText, this.punctuations),-1);
+		
+		otherText ="This;is";
+		assertEquals(this.indexOfOmitChars(baseText, otherText, punctuations),0);
+		
+		baseText ="Thisisnosmallexample.Itisasmallerexample!";
+		otherText = "exampleItis";
+		assertEquals(this.indexOfOmitChars(baseText, otherText, punctuations),13);
+		
+		otherText = ".exampleItis";
+		assertEquals(this.indexOfOmitChars(baseText, otherText, punctuations),13);
+		
+		baseText ="Thisisnosmallexampl.Itisasmallerexampl!";
+		otherText = "example";
+		assertEquals(this.indexOfOmitChars(baseText, otherText, punctuations),-1);
+				
+	}
+	
 	/**
 	 *
 	 * 
