@@ -582,7 +582,7 @@ public class MergerMapper {
 				STextualDS baseText = null;
 				int minimalNonEquivalentTokens = -1;
 				
-				for (StextualDS text : baseDoc.getSDocumentGraph().getSTextualDSs())
+				for (STextualDS text : baseDoc.getSDocumentGraph().getSTextualDSs())
 				{ // for all texts of the base document
 					Hashtable<SDocument,HashSet<SToken>> nonEQTokensInOtherDoc = nonEquivalentTokenSets.get(text);
 					if (nonEQTokensInOtherDoc != null)

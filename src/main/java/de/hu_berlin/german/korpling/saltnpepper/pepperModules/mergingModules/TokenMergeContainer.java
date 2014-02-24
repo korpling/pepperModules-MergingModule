@@ -193,7 +193,7 @@ public class TokenMergeContainer {
 			return this.baseText;
 		}
 		
-		public STextualDS setBaseText(STextualDS text){
+		public void setBaseText(STextualDS text){
 			this.baseText = text;
 		}
 		
