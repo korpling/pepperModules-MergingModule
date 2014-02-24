@@ -489,6 +489,9 @@ public class MergerMapper {
 					}
 				} 
 				
+				/// base text -- < Other Document -- nonEquivalentTokens >
+				Hashtable<STextualDS, Hashtable<SDocument,HashSet<SToken>>> nonEquivalentTokenSets = new Hashtable<STextualDS, Hashtable<SDocument,HashSet<SToken>>>();
+				
 				// allign all texts
 				for (DocumentStatusPair sDocPair : this.getDocumentPairs()){
 					
@@ -498,33 +501,90 @@ public class MergerMapper {
 						if (sDocPair.sDocument.getSDocumentGraph().getSTextualDSs() != null)
 						{ // assure that there are texts
 							sDocPair.status = DOCUMENT_STATUS.IN_PROGRESS;
-							if (sDocPair.sDocument.getSDocumentGraph().getSTextualDSs().size() > 0){
+							if (sDocPair.sDocument.getSDocumentGraph().getSTextualDSs().size() > 0)
+							{ // more than one text
 								HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-								for (STextualDS otherText : sDocPair.sDocument.getSDocumentGraph().getSTextualDSs()){
-									for (STextualDS baseText : container.getBaseDocument().getSDocumentGraph().getSTextualDSs()){
+								for (STextualDS baseText : container.getBaseDocument().getSDocumentGraph().getSTextualDSs()){
+									nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+									for (STextualDS otherText : sDocPair.sDocument.getSDocumentGraph().getSTextualDSs()){
 										this.alignTexts(baseText, otherText,nonEquivalentTokenInOtherTexts);
 									}
+									if (nonEquivalentTokenSets.containsKey(baseText)){
+										nonEquivalentTokenSets.get(baseText).put(sDocPair.sDocument, nonEquivalentTokenInOtherTexts);
+									} else {
+										Hashtable<SDocument,HashSet<SToken>> newTab = new Hashtable<SDocument, HashSet<SToken>>();
+										newTab.put(sDocPair.sDocument, nonEquivalentTokenInOtherTexts);
+										nonEquivalentTokenSets.put(baseText, newTab);
+									}
 								}
-								// there are texts. Now we can merge the document content
-								this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument, nonEquivalentTokenInOtherTexts);
-								// we are finished with the document. Free the memory
-								System.out.println("Finishing document");
-								this.container.finishDocument(sDocPair.sDocument);
-								sDocPair.status = DOCUMENT_STATUS.DELETED;
-							} else {
-								// there are no texts. So, just copy everything into the base document graph
-								HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-								if (sDocPair.sDocument.getSDocumentGraph().getSTokens() != null){
-									nonEquivalentTokenInOtherTexts.addAll(sDocPair.sDocument.getSDocumentGraph().getSTokens());
-								}
-								this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument, nonEquivalentTokenInOtherTexts);
-								// we are finished with the document. Free the memory
-								this.container.finishDocument(sDocPair.sDocument);
-								System.out.println("Finishing document");
-								sDocPair.status = DOCUMENT_STATUS.DELETED;
-							}
+							} 
 						}
 					} 
+				}
+				/// choose the perfect STextualDS of the base Document
+				SDocument baseDoc = this.container.getBaseDocument();
+				
+				STextualDS baseText = null;
+				int minimalNonEquivalentTokens = -1;
+				
+				for (StextualDS text : baseDoc.getSDocumentGraph().getSTextualDSs())
+				{
+					Hashtable<SDocument,HashSet<SToken>> nonEQTokensInOtherDoc = nonEquivalentTokenSets.get(text);
+					if (nonEQTokensInOtherDoc != null){
+						int countOfNonEquivalentTokens = 0;
+						for (SDocument otherDoc : nonEQTokensInOtherDoc.keySet()){
+							countOfNonEquivalentTokens += nonEQTokensInOtherDoc.get(otherDoc).size();
+						}
+						if (minimalNonEquivalentTokens == -1){
+							minimalNonEquivalentTokens = countOfNonEquivalentTokens;
+							baseText = text;
+						} else {
+							if (minimalNonEquivalentTokens > countOfNonEquivalentTokens){
+								minimalNonEquivalentTokens = countOfNonEquivalentTokens;
+								baseText = text;
+							}
+						}
+					}
+					
+				}
+				this.container.setBaseText(baseText);
+				// clear the nonEquivalentTokensMap
+				for (STextualDS text : this.container.getBaseDocument().getSDocumentGraph().getSTextualDSs()){
+					if (! text.equals(this.container.getBaseText())){
+						nonEquivalentTokenSets.remove(text);
+					}
+				}
+				
+				for (DocumentStatusPair sDocPair : this.getDocumentPairs()){
+					if (! sDocPair.sDocument.equals(container.getBaseDocument()))
+					{// ignore the base document
+						if (sDocPair.sDocument.getSDocumentGraph().getSTextualDSs() != null){
+							// there are texts. Now we can merge the document content
+							HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+							if (nonEquivalentTokenSets.get(this.container.getBaseText()) != null){
+								if (nonEquivalentTokenSets.get(this.container.getBaseText()).get(sDocPair.sDocument) != null){
+									nonEquivalentTokenInOtherTexts = nonEquivalentTokenSets.get(this.container.getBaseText()).get(sDocPair.sDocument);
+								}
+							}
+							nonEquivalentTokenSets.get(this.container.getBaseText());
+							this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument, nonEquivalentTokenInOtherTexts);
+							// we are finished with the document. Free the memory
+							System.out.println("Finishing document");
+							this.container.finishDocument(sDocPair.sDocument);
+							sDocPair.status = DOCUMENT_STATUS.DELETED;
+						} else {
+							// there are no texts. So, just copy everything into the base document graph
+							HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+							if (sDocPair.sDocument.getSDocumentGraph().getSTokens() != null){
+								nonEquivalentTokenInOtherTexts.addAll(sDocPair.sDocument.getSDocumentGraph().getSTokens());
+							}
+							this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument, nonEquivalentTokenInOtherTexts);
+							// we are finished with the document. Free the memory
+							this.container.finishDocument(sDocPair.sDocument);
+							System.out.println("Finishing document");
+							sDocPair.status = DOCUMENT_STATUS.DELETED;
+						}
+					}
 				}
 			}
 			

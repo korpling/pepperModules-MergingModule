@@ -193,6 +193,10 @@ public class TokenMergeContainer {
 			return this.baseText;
 		}
 		
+		public STextualDS setBaseText(STextualDS text){
+			this.baseText = text;
+		}
+		
 		public SToken getAlignedTokenByStart(STextualDS sTextualDS, int start){
 			SToken tok = null;
 			if (this.alignedTextsMap.containsKey(sTextualDS)){
