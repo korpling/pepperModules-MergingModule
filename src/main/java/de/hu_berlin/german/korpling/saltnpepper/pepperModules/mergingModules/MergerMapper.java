@@ -109,14 +109,23 @@ public class MergerMapper {
 	this.escapeTable.put('<', "");
 	this.escapeTable.put('>', "");*/
 	
+	/**
+	 * This method searches for the first occurence of the stringToSearchFor in the stringToSearchIn and ommits all chars
+	 * in the omitCharArray. The index of the first occurence is returned.
+	 * @param stringToSearchIn
+	 * @param stringToSearchFor
+	 * @param omitCharArray
+	 * @return the index on success and -1 on failure
+	 */
 	protected int indexOfOmitChars(String stringToSearchIn, String stringToSearchFor, char[] omitCharArray) {
 
+		/* put all omit characters into a hashset */
 		HashSet<Character> omitChars = new HashSet<Character>();
 		for (char c : omitCharArray){
 			omitChars.add(c);
 		}
 		
-		/*remove all omit chars from the stringToSearchFor*/
+		/* remove all omit chars from the stringToSearchFor */
 		StringBuilder builder = new StringBuilder();
 		for (char sourceChar : stringToSearchFor.toCharArray()){
 			if (!omitChars.contains(sourceChar)){
@@ -125,12 +134,13 @@ public class MergerMapper {
 		}
 		String sourceString = builder.toString();
 		
-		/* search for the first char*/
+		/* Initialize needed structures */
 		char c = sourceString.toCharArray()[0];
 		int position = 0;
 		int retVal = -1;
 		boolean found = false;
 		
+		// transform the base text into a char array
 		char[] charsToSearchIn = stringToSearchIn.toCharArray();
 		while (true)
 		{
@@ -141,25 +151,43 @@ public class MergerMapper {
 				break;
 			} 
 			found = true;
-			for (char sourceChar : sourceString.toCharArray()){
+			for (char sourceChar : sourceString.toCharArray())
+			{ // for all chars of the string to search
 				/// search the char in the target string and omit all omit chars in the target string
 				boolean foundChar = false;
-				for (int i = position ; i < stringToSearchIn.length() ; i++){
+				for (int i = position ; i < stringToSearchIn.length() ; i++)
+				{ // search the current char and ignore all chars to omit in the target string
 					char targetChar = charsToSearchIn[i];
-					if (omitChars.contains(targetChar)){
+					if (omitChars.contains(targetChar))
+					{ // ignore
+						position++;
 						continue;
-					} else {
-						if (targetChar == sourceChar){
+					} // ignore
+					else 
+					{ // do not ignore
+						if (targetChar == sourceChar)
+						{ // we found the matching char
 							foundChar = true;
 							position++;
 							break;
-						}
-					}
-				}
-				if (! foundChar){ // if a char could not be found, stop the search in the current subString
+						} // we found the matching char
+						else
+						{ // the char is wrong
+							foundChar = false;
+							//position++;
+							break;
+						} // the char is wrong
+					} // do not ignore
+				} // search the current char and ignore all chars to omit in the target string
+				if (! foundChar)
+				{ // if a char could not be found, stop the search in the current subString
 					retVal = -1;
 					break;
-				}
+				} // if a char could not be found, stop the search in the current subString
+			}
+			if (found)
+			{ // if the found flag is still set, we are finished
+				break;
 			}
 		}
 		
@@ -442,9 +470,6 @@ public class MergerMapper {
 		
 	}
 	
-	protected void chooseFinalBaseText(){
-		
-	}
 	
 	/**
 	 * This method merges the Document content of the other {@link SDocument} to the base {@link SDocument} and
@@ -494,79 +519,119 @@ public class MergerMapper {
 				
 				// allign all texts
 				for (DocumentStatusPair sDocPair : this.getDocumentPairs()){
-					
+					boolean hasTexts = true;
 					if (! sDocPair.sDocument.equals(container.getBaseDocument()))
-					{// ignore the base document
+					{// ignore the base document and align all other
 						System.out.println("Merging document");
 						if (sDocPair.sDocument.getSDocumentGraph().getSTextualDSs() != null)
-						{ // assure that there are texts
+						{ // there are possibly texts
 							sDocPair.status = DOCUMENT_STATUS.IN_PROGRESS;
 							if (sDocPair.sDocument.getSDocumentGraph().getSTextualDSs().size() > 0)
-							{ // more than one text
+							{ // The other document has at least one text
 								HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-								for (STextualDS baseText : container.getBaseDocument().getSDocumentGraph().getSTextualDSs()){
+								for (STextualDS baseText : container.getBaseDocument().getSDocumentGraph().getSTextualDSs())
+								{ // for all texts of the base document
 									nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-									for (STextualDS otherText : sDocPair.sDocument.getSDocumentGraph().getSTextualDSs()){
+									for (STextualDS otherText : sDocPair.sDocument.getSDocumentGraph().getSTextualDSs())
+									{ // allign the current base text with all texts of the other document
 										this.alignTexts(baseText, otherText,nonEquivalentTokenInOtherTexts);
 									}
-									if (nonEquivalentTokenSets.containsKey(baseText)){
+									/// save all unique token of the other document
+									if (nonEquivalentTokenSets.containsKey(baseText))
+									{
 										nonEquivalentTokenSets.get(baseText).put(sDocPair.sDocument, nonEquivalentTokenInOtherTexts);
-									} else {
+									} 
+									else 
+									{
 										Hashtable<SDocument,HashSet<SToken>> newTab = new Hashtable<SDocument, HashSet<SToken>>();
 										newTab.put(sDocPair.sDocument, nonEquivalentTokenInOtherTexts);
 										nonEquivalentTokenSets.put(baseText, newTab);
 									}
+								} // for all texts of the base document
+							} // The other document has at least one text 
+							else 
+							{ // The other document has NO text
+								hasTexts = false;
+							} // The other document has NO text
+						} // there are possibly texts
+						else 
+						{ // The other document has NO text
+							hasTexts = false;
+						} // The other document has NO text
+						if (! hasTexts){
+							HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+							for (STextualDS baseText : container.getBaseDocument().getSDocumentGraph().getSTextualDSs()){
+								nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+								if (sDocPair.sDocument.getSDocumentGraph().getSTokens() != null)
+								{ // mark all tokens of the other document as unique
+									nonEquivalentTokenInOtherTexts.addAll(sDocPair.sDocument.getSDocumentGraph().getSTokens());
 								}
-							} 
+								if (nonEquivalentTokenSets.containsKey(baseText)){
+									nonEquivalentTokenSets.get(baseText).put(sDocPair.sDocument, nonEquivalentTokenInOtherTexts);
+								} else {
+									Hashtable<SDocument,HashSet<SToken>> newTab = new Hashtable<SDocument, HashSet<SToken>>();
+									newTab.put(sDocPair.sDocument, nonEquivalentTokenInOtherTexts);
+									nonEquivalentTokenSets.put(baseText, newTab);
+								}
+							}
 						}
 					} 
 				}
 				/// choose the perfect STextualDS of the base Document
 				SDocument baseDoc = this.container.getBaseDocument();
-				
 				STextualDS baseText = null;
 				int minimalNonEquivalentTokens = -1;
 				
 				for (StextualDS text : baseDoc.getSDocumentGraph().getSTextualDSs())
-				{
+				{ // for all texts of the base document
 					Hashtable<SDocument,HashSet<SToken>> nonEQTokensInOtherDoc = nonEquivalentTokenSets.get(text);
-					if (nonEQTokensInOtherDoc != null){
+					if (nonEQTokensInOtherDoc != null)
+					{ // there is a set of non-equivalent token for the current base text
 						int countOfNonEquivalentTokens = 0;
-						for (SDocument otherDoc : nonEQTokensInOtherDoc.keySet()){
+						for (SDocument otherDoc : nonEQTokensInOtherDoc.keySet())
+						{ // count the number of tokens of all documents which do not have an equivalent in the current base text
 							countOfNonEquivalentTokens += nonEQTokensInOtherDoc.get(otherDoc).size();
-						}
-						if (minimalNonEquivalentTokens == -1){
+						} // count the number of tokens of all documents which do not have an equivalent in the current base text
+						if (minimalNonEquivalentTokens == -1)
+						{ // if the minimalNonEquivalentTokens value is -1, we did not process a document, yet. initialize
 							minimalNonEquivalentTokens = countOfNonEquivalentTokens;
 							baseText = text;
-						} else {
-							if (minimalNonEquivalentTokens > countOfNonEquivalentTokens){
+						} // if the minimalNonEquivalentTokens value is -1, we did not process a document, yet. initialize
+						else 
+						{ // there is some base text
+							if (minimalNonEquivalentTokens > countOfNonEquivalentTokens)
+							{ // if there are less non-equivalent tokens for this base text than for some other, set this text as base text
 								minimalNonEquivalentTokens = countOfNonEquivalentTokens;
 								baseText = text;
-							}
+							} // if there are less non-equivalent tokens for this base text than for some other, set this text as base text
 						}
-					}
+					} // there is a set of non-equivalent token for the current base text
 					
 				}
+				// set the base text
 				this.container.setBaseText(baseText);
-				// clear the nonEquivalentTokensMap
+				// clear the nonEquivalentTokensMap from all base text candidates which were not approved
 				for (STextualDS text : this.container.getBaseDocument().getSDocumentGraph().getSTextualDSs()){
 					if (! text.equals(this.container.getBaseText())){
 						nonEquivalentTokenSets.remove(text);
 					}
 				}
 				
-				for (DocumentStatusPair sDocPair : this.getDocumentPairs()){
+				// merge!
+				for (DocumentStatusPair sDocPair : this.getDocumentPairs())
+				{ // for all documents
 					if (! sDocPair.sDocument.equals(container.getBaseDocument()))
-					{// ignore the base document
-						if (sDocPair.sDocument.getSDocumentGraph().getSTextualDSs() != null){
-							// there are texts. Now we can merge the document content
+					{// ignore the base document and merge the others
+						if (sDocPair.sDocument.getSDocumentGraph().getSTextualDSs() != null)
+						{ // there should be texts
+							// get the set of tokens in the document which do not have an equivalent in the base text
 							HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 							if (nonEquivalentTokenSets.get(this.container.getBaseText()) != null){
 								if (nonEquivalentTokenSets.get(this.container.getBaseText()).get(sDocPair.sDocument) != null){
 									nonEquivalentTokenInOtherTexts = nonEquivalentTokenSets.get(this.container.getBaseText()).get(sDocPair.sDocument);
 								}
 							}
-							nonEquivalentTokenSets.get(this.container.getBaseText());
+							// merge the document content
 							this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument, nonEquivalentTokenInOtherTexts);
 							// we are finished with the document. Free the memory
 							System.out.println("Finishing document");
@@ -576,8 +641,10 @@ public class MergerMapper {
 							// there are no texts. So, just copy everything into the base document graph
 							HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 							if (sDocPair.sDocument.getSDocumentGraph().getSTokens() != null){
+								// all tokens are unique
 								nonEquivalentTokenInOtherTexts.addAll(sDocPair.sDocument.getSDocumentGraph().getSTokens());
 							}
+							// merge the document content
 							this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument, nonEquivalentTokenInOtherTexts);
 							// we are finished with the document. Free the memory
 							this.container.finishDocument(sDocPair.sDocument);
@@ -586,6 +653,8 @@ public class MergerMapper {
 						}
 					}
 				}
+				// clear the table of non-equivalent tokens
+				nonEquivalentTokenSets.clear();
 			}
 			
 			
