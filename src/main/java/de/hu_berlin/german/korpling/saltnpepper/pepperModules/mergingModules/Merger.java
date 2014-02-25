@@ -32,6 +32,7 @@ import org.osgi.service.component.annotations.Component;
 
 import de.hu_berlin.german.korpling.saltnpepper.pepper.exceptions.PepperFWException;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.DocumentController;
+import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.MappingSubject;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperManipulator;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperMapper;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperMapperController;
@@ -288,6 +289,16 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 	@Override
 	public PepperMapper createPepperMapper(SElementId sElementId) {
 		MergerMapper mapper= new MergerMapper();
+		List<SElementId> givenSlot= givenSlots.get(sElementId.getSId());
+		if (	(givenSlots== null)||
+				(givenSlots.size()== 0)){
+			throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that 'givenSlot' is null or empty in method 'createPepperMapper()'");	
+		}
+		for (SElementId id: givenSlot){
+			MappingSubject mappingSubject= new MappingSubject();
+			mappingSubject.setSElementId(id);
+			mapper.getMappingSubjects().add(mappingSubject);
+		}
 		
 		return(mapper);
 	}

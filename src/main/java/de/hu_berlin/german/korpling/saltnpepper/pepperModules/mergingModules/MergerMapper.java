@@ -211,9 +211,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	/**
 	 * This method aligns the normalized texts of the given {@link STextualDS} objects
 	 * and <b>also</b> aligns the {@link SToken} including the creation of equivalent {@link SToken}
-	 * information.
+	 * information. If a {@link SToken} has an equivalent {@link SToken} in the base text, it is removed from
+	 * the nonEquivalentTokenInOtherTexts set.
 	 * @param baseText the base {@link STextualDS}
 	 * @param otherText the other {@link STextualDS}
+	 * @param nonEquivalentTokenInOtherTexts A HashSet which contains all tokens which do not have an equivalent in the base text
 	 * @return true on success and false on failure
 	 * @author eladrion
 	 */
@@ -277,9 +279,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 							//TODO: ERROR CATCHING
 						}
 						
-					} else {
-						nonEquivalentTokenInOtherTexts.add(otherTextToken);
-					}
+					} 
 				} else {
 					//TODO: ERROR CATCHING
 				}
@@ -682,6 +682,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 								for (STextualDS baseText : container.getBaseDocument().getSDocumentGraph().getSTextualDSs())
 								{ // for all texts of the base document
 									nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+									// initialize the set of nonEquivalent token. Initially, all token do not have an equivalent.
+									// in alignTexts, tokens which DO have an equivalent are removed from the set
+									if (sDocPair.sDocument.getSDocumentGraph().getSTokens() != null){
+										nonEquivalentTokenInOtherTexts.addAll(sDocPair.sDocument.getSDocumentGraph().getSTokens());
+									}
 									for (STextualDS otherText : sDocPair.sDocument.getSDocumentGraph().getSTextualDSs())
 									{ // allign the current base text with all texts of the other document
 										this.alignTexts(baseText, otherText,nonEquivalentTokenInOtherTexts);
