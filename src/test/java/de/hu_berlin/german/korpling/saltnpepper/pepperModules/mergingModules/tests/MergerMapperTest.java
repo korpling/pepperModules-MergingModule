@@ -48,38 +48,51 @@ public class MergerMapperTest extends MergerMapper{
 	 */
 	@Test
 	public void testMap3Documents_sameTokenization() {
+		// set up empty documents
 		SDocument sDoc1= SaltFactory.eINSTANCE.createSDocument();
-		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		SDocument sDoc2= SaltFactory.eINSTANCE.createSDocument();
-		sDoc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		SDocument sDoc3= SaltFactory.eINSTANCE.createSDocument();
+		
+		sDoc1.setSId("sdoc1");
+		sDoc2.setSId("sdoc2");
+		sDoc3.setSId("sdoc3");
+
+		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		sDoc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		sDoc3.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		
 		DocumentStatusPair pair1= new DocumentStatusPair(sDoc1);
-		getFixture().getDocumentStatusPairs().add(pair1);
 		DocumentStatusPair pair2= new DocumentStatusPair(sDoc2);
-		getFixture().getDocumentStatusPairs().add(pair2);
 		DocumentStatusPair pair3= new DocumentStatusPair(sDoc3);
+
+		getFixture().getDocumentStatusPairs().add(pair1);
+		getFixture().getDocumentStatusPairs().add(pair2);
 		getFixture().getDocumentStatusPairs().add(pair3);
 		
-			SaltSample.createPrimaryData(sDoc1);
-			SaltSample.createTokens(sDoc1);
+		// document data
+		// doc 1 
+		SaltSample.createPrimaryData(sDoc1);
+		SaltSample.createTokens(sDoc1);
 		SaltSample.createAnaphoricAnnotations(sDoc1);
 			
-			SaltSample.createPrimaryData(sDoc2);
-			SaltSample.createTokens(sDoc2);
-			SaltSample.createSyntaxStructure(sDoc2);
+		// doc 2
+		SaltSample.createPrimaryData(sDoc2);
+		SaltSample.createTokens(sDoc2);
+		SaltSample.createSyntaxStructure(sDoc2);
 		SaltSample.createSyntaxAnnotations(sDoc2);
 		
-			SaltSample.createPrimaryData(sDoc3);
-			SaltSample.createTokens(sDoc3);
+		// doc 3
+		SaltSample.createPrimaryData(sDoc3);
+		SaltSample.createTokens(sDoc3);
 		SaltSample.createMorphologyAnnotations(sDoc3);
 		
+		// template document contains all annotations
 		SDocument template= SaltFactory.eINSTANCE.createSDocument();
-			template.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-			SaltSample.createPrimaryData(template);
-			SaltSample.createTokens(template);
-			SaltSample.createSyntaxStructure(template);
+		template.setSId("template");
+		template.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		SaltSample.createPrimaryData(template);
+		SaltSample.createTokens(template);
+		SaltSample.createSyntaxStructure(template);
 		SaltSample.createAnaphoricAnnotations(template);
 		SaltSample.createSyntaxAnnotations(template);
 		SaltSample.createMorphologyAnnotations(template);
@@ -117,6 +130,7 @@ public class MergerMapperTest extends MergerMapper{
 		
 		//test 1
 		SDocument doc1 = SaltFactory.eINSTANCE.createSDocument();
+		doc1.setSId("doc1");
 		doc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		doc1.getSDocumentGraph().createSTextualDS(origText);
 		this.normalizeTextualLayer(doc1);
@@ -177,6 +191,7 @@ public class MergerMapperTest extends MergerMapper{
 		
 		//test 1
 		SDocument doc1 = SaltFactory.eINSTANCE.createSDocument();
+		doc1.setSId("doc1");
 		doc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		doc1.getSDocumentGraph().createSTextualDS(origText);
 		this.normalizeTextualLayer(doc1);
@@ -215,11 +230,13 @@ public class MergerMapperTest extends MergerMapper{
 	@Test
 	public void testAlignTexts_case1(){
 		SDocument sDoc1= SaltFactory.eINSTANCE.createSDocument();
+		sDoc1.setSId("doc1");
 		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		SaltSample.createPrimaryData(sDoc1);
 		SaltSample.createTokens(sDoc1);
 		
 		SDocument sDoc2= SaltFactory.eINSTANCE.createSDocument();
+		sDoc2.setSId("doc2");
 		sDoc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		sDoc2.getSDocumentGraph().createSTextualDS("Well. "+SaltSample.PRIMARY_TEXT_EN+" I am not sure!");
 		sDoc2.getSDocumentGraph().tokenize();
@@ -281,6 +298,7 @@ public class MergerMapperTest extends MergerMapper{
 	public void testAlignTexts_caseRidges1(){
 		// create document 1
 		SDocument sDoc1= SaltFactory.eINSTANCE.createSDocument();
+		sDoc1.setSId("doc1");
 		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		String norm= "Die deutschen Namen, die dann oft daneben stehen, tragen meist ein solches Gepräge der Unklarheit, dass sie jeden zurückschrecken müssen, der sie statt der lateinischen einführen möchte.";
 		String dipl= "Die deutſchen Namen, die dann oft daneben ſtehen, tragen meiſt ein ſolches Gepräge der Unklarheit, daſz ſie jeden zurückſchrecken müſſen, der ſie ſtatt der lateiniſchen einführen möchte.";
@@ -294,6 +312,7 @@ public class MergerMapperTest extends MergerMapper{
 		
 		//create document2
 		SDocument sDoc2= SaltFactory.eINSTANCE.createSDocument();
+		sDoc2.setSId("doc2");
 		sDoc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		String tokenizer= "DiedeutschenNamen,diedannoftdanebenstehen,tragenmeisteinsolchesGeprägederUnklarheit,dasssiejedenzurückschreckenmüssen,dersiestattderlateinischeneinführenmöchte.";
 		STextualDS sTextDS3= sDoc2.getSDocumentGraph().createSTextualDS(tokenizer);
