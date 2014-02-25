@@ -18,14 +18,24 @@
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
 
 import org.osgi.service.component.annotations.Component;
 
+import de.hu_berlin.german.korpling.saltnpepper.pepper.exceptions.PepperFWException;
+import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.DocumentController;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperManipulator;
+import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperMapper;
+import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperMapperController;
+import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.exceptions.PepperModuleException;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.impl.PepperManipulatorImpl;
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpus;
@@ -174,7 +184,10 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 			}
 		}
 	}
-	
+	/**
+	 * Creates an import order for each {@link SCorpusGraph} object. The order for given {@link SCorpusGraph} objects
+	 * is very similar or equal, in case they contain the same {@link SDocument}s (the ones to be merged).
+	 */
 	@Override
 	public List<SElementId> proposeImportOrder(SCorpusGraph sCorpusGraph) {
 		List<SElementId> retVal= null;
@@ -191,4 +204,91 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 		}
 		return(retVal);
 	}
-}
+	/** This table stores all corresponding mergable {@link SElementId}.*/
+	private Map<String, List<SElementId>> givenSlots= null; 
+	
+	/**
+	 * {@inheritDoc PepperModule#start()}
+	 * Overrides parent method, to enable the parallel working in more than one {@link DocumentController} objects
+	 * at a time.
+	 */
+	@Override
+	public void start() throws PepperModuleException
+	{
+		if (getSaltProject()== null)
+			throw new PepperFWException("No salt project was set in module '"+getName()+", "+getVersion()+"'.");
+		//creating new thread group for mapper threads
+		setMapperThreadGroup(new ThreadGroup(Thread.currentThread().getThreadGroup(), this.getName()+"_mapperGroup"));
+		givenSlots= new Hashtable<String, List<SElementId>>();
+		boolean isStart= true;
+		SElementId sElementId= null;
+		DocumentController documentController= null;
+		while ((isStart) || (sElementId!= null))
+		{	
+			isStart= false;
+			documentController= this.getModuleController().next();
+			if (documentController== null){
+				break;
+			}
+			sElementId= documentController.getsDocumentId();
+			getDocumentId2DC().put(SaltFactory.eINSTANCE.getGlobalId(sElementId), documentController);
+			
+			
+			List<SNode> mappableSlot= mappingTable.get(sElementId.getSId());
+			List<SElementId> givenSlot= givenSlots.get(sElementId.getSId());
+			if (givenSlot== null){
+				givenSlot= new Vector<SElementId>();
+				givenSlots.put(sElementId.getSId(), givenSlot);
+			}
+			givenSlot.add(sElementId);
+			if (givenSlot.size() < mappableSlot.size()){
+				documentController.sendToSleep();
+			}else if (givenSlot.size()== mappableSlot.size()){
+				try{
+					start(sElementId);
+				}catch (Exception e){
+					throw new PepperModuleException("",e);
+				}
+			}else throw new PepperModuleException(this, "This should not have beeen happend and is a bug of module. The problem is, 'givenSlot.size()' is higher than 'mappableSlot.size()'.");
+		}	
+		Collection<PepperMapperController> controllers=null;
+		HashSet<PepperMapperController> alreadyWaitedFor= new HashSet<PepperMapperController>();
+		//wait for all SDocuments to be finished
+		controllers= Collections.synchronizedCollection(this.getMapperControllers().values());
+		for (PepperMapperController controller: controllers)
+		{
+			try {
+				controller.join();
+				alreadyWaitedFor.add(controller);
+			} catch (InterruptedException e) {
+				throw new PepperFWException("Cannot wait for mapper thread '"+controller+"' in "+this.getName()+" to end. ", e);
+			}
+			this.done(controller);
+		}
+		
+		this.end();
+		//only wait for  controllers which have been added by end()
+		for (PepperMapperController controller: this.getMapperControllers().values())
+		{
+			if (!alreadyWaitedFor.contains(controller)){
+				try {
+					controller.join();
+				} catch (InterruptedException e) {
+					throw new PepperFWException("Cannot wait for mapper thread '"+controller+"' in "+this.getName()+" to end. ", e);
+				}
+				this.done(controller);
+			}
+		}
+	}
+	/** 
+	 * Creates a {@link PepperMapper} of type {@link MergerMapper}. Therefore the table {@link #givenSlots} 
+	 * must contain an entry for the given {@link SElementId}. The create methods passes all documents 
+	 * and corpora given in the entire slot to the {@link MergerMapper}. 
+	 **/
+	@Override
+	public PepperMapper createPepperMapper(SElementId sElementId) {
+		MergerMapper mapper= new MergerMapper();
+		
+		return(mapper);
+	}
+}	
