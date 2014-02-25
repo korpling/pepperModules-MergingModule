@@ -293,25 +293,38 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 	 **/
 	@Override
 	public PepperMapper createPepperMapper(SElementId sElementId) {
-		if (	(givenSlots== null)||
-				(givenSlots.size()== 0)){
-			throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that 'givenSlots' is null or empty in method 'createPepperMapper()'");	
-		}
-		List<SElementId> givenSlot= givenSlots.get(sElementId.getSId());
-		if (givenSlot== null){
-			throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that a 'givenSlot' in 'givenSlots' is null or empty in method 'createPepperMapper()'. The sElementId '"+sElementId+"' was not contained in list: "+ givenSlots);
-		}
 		MergerMapper mapper= new MergerMapper();	
-		for (SElementId id: givenSlot){
-			System.out.println("for slot: "+ id);
-			MappingSubject mappingSubject= new MappingSubject();
-			mappingSubject.setSElementId(id);
-			mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
-			System.out.println("before: "+ mapper.getMappingSubjects());
-			mapper.getMappingSubjects().add(mappingSubject);
-			System.out.println("after: "+ mapper.getMappingSubjects());
+		if (sElementId.getSIdentifiableElement() instanceof SDocument){
+			if (	(givenSlots== null)||
+					(givenSlots.size()== 0)){
+				throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that 'givenSlots' is null or empty in method 'createPepperMapper()'");	
+			}
+			List<SElementId> givenSlot= givenSlots.get(sElementId.getSId());
+			if (givenSlot== null){
+				throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that a 'givenSlot' in 'givenSlots' is null or empty in method 'createPepperMapper()'. The sElementId '"+sElementId+"' was not contained in list: "+ givenSlots);
+			}
+			for (SElementId id: givenSlot){
+				System.out.println("for slot: "+ id);
+				MappingSubject mappingSubject= new MappingSubject();
+				mappingSubject.setSElementId(id);
+				mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
+				System.out.println("before: "+ mapper.getMappingSubjects());
+				mapper.getMappingSubjects().add(mappingSubject);
+				System.out.println("after: "+ mapper.getMappingSubjects());
+			}
+			System.out.println("mapper: "+ mapper.getMappingSubjects());
+		}else if (sElementId.getSIdentifiableElement() instanceof SCorpus){
+			List<SNode> givenSlot= mappingTable.get(sElementId.getSId());
+			if (givenSlot== null){
+				throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that a 'givenSlot' in 'givenSlots' is null or empty in method 'createPepperMapper()'. The sElementId '"+sElementId+"' was not contained in list: "+ givenSlots);
+			}
+			for (SNode sCorpus: givenSlot){
+				MappingSubject mappingSubject= new MappingSubject();
+				mappingSubject.setSElementId(sCorpus.getSElementId());
+				mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
+				mapper.getMappingSubjects().add(mappingSubject);
+			}
 		}
-		System.out.println("mapper: "+ mapper.getMappingSubjects());
 		return(mapper);
 	}
 }	

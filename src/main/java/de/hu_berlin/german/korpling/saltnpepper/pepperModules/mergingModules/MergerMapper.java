@@ -41,6 +41,7 @@ import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.impl.PepperMapper
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Edge;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Graph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Node;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpus;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDocumentGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SPointingRelation;
@@ -51,6 +52,11 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotatableElemen
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 
+/**
+ * @author Mario Frank
+ * @author Jakob Schmoling
+ * @author Florian Zipser
+ */
 public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	
 	public static final String ANNO_NAME_EXTENSION = "_1";
@@ -61,12 +67,15 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	public DOCUMENT_STATUS mapSDocument() {
 		this.initialize();
 		
+		System.out.println("mapSDocument: "+ getMappingSubjects());
+		
 		if (this.getMappingSubjects().size() != 0){
-			MappingSubject baseDocPair = null;
+			MappingSubject baseDocument = null;
 			
-			if (this.getMappingSubjects().size() >= 2){
+			if (this.getMappingSubjects().size() < 2){
+				baseDocument= getMappingSubjects().get(0);
+			}else{
 				this.initialize();
-				
 				// normalize all texts
 				for (MappingSubject subj : this.getMappingSubjects()){
 					if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
@@ -76,21 +85,20 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				
 				for (MappingSubject subj : this.getMappingSubjects()){
 					if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
-						baseDocPair= subj;
+						baseDocument= subj;
 						
 						SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
 						if (sDoc.equals(container.getBaseDocument())){
-							logger.debug("Chose base document. It is document with id ");
+							System.out.println("Chose base document. It is document with id ");
 //							baseDocPair = sDocPair;
 //							baseDocPair.status = DOCUMENT_STATUS.IN_PROGRESS;
-							baseDocPair= subj;
+							baseDocument= subj;
 						}
 					}
 				}
 				
 				/// base text -- < Other Document -- nonEquivalentTokens >
 				Hashtable<STextualDS, Hashtable<SDocument,HashSet<SToken>>> nonEquivalentTokenSets = new Hashtable<STextualDS, Hashtable<SDocument,HashSet<SToken>>>();
-				
 				// allign all texts
 //				for (DocumentStatusPair sDocPair : this.getDocumentStatusPairs()){
 				for (MappingSubject subj : this.getMappingSubjects()){
@@ -139,6 +147,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 						{ // The other document has NO text
 							hasTexts = false;
 						} // The other document has NO text
+						
 						if (! hasTexts){
 							HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 							for (STextualDS baseText : container.getBaseDocument().getSDocumentGraph().getSTextualDSs()){
@@ -217,9 +226,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 								}
 							}
 							// merge the document content
-							this.mergeDocumentContent((SDocument)baseDocPair.getSElementId().getSIdentifiableElement(), sDoc, nonEquivalentTokenInOtherTexts);
+							this.mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(), sDoc, nonEquivalentTokenInOtherTexts);
 							// we are finished with the document. Free the memory
-							System.out.println("Finishing document: " + (SDocument)baseDocPair.getSElementId().getSIdentifiableElement());
+							System.out.println("Finishing document: " + (SDocument)baseDocument.getSElementId().getSIdentifiableElement());
 							this.container.finishDocument(sDoc);
 							subj.setMappingResult(DOCUMENT_STATUS.DELETED);
 						} else {
@@ -231,9 +240,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 								nonEquivalentTokenInOtherTexts.addAll(sDoc.getSDocumentGraph().getSTokens());
 							}
 							// merge the document content
-							this.mergeDocumentContent((SDocument)baseDocPair.getSElementId().getSIdentifiableElement(),sDoc, nonEquivalentTokenInOtherTexts);
+							this.mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(),sDoc, nonEquivalentTokenInOtherTexts);
 							// we are finished with the document. Free the memory
-							System.out.println("Finishing document: " + (SDocument)baseDocPair.getSElementId().getSIdentifiableElement());
+							System.out.println("Finishing document: " + (SDocument)baseDocument.getSElementId().getSIdentifiableElement());
 							this.container.finishDocument(sDoc);
 							subj.setMappingResult(DOCUMENT_STATUS.DELETED);
 						}
@@ -241,23 +250,31 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				}
 				// clear the table of non-equivalent tokens
 				nonEquivalentTokenSets.clear();
-			}else{
-				System.out.println("Document.size() < 2");
 			}
 			
-			System.out.println("Finishing document: " + (SDocument)baseDocPair.getSElementId().getSIdentifiableElement());
-			this.container.finishDocument((SDocument)baseDocPair.getSElementId().getSIdentifiableElement());
-			baseDocPair.setMappingResult(DOCUMENT_STATUS.DELETED);
+			System.out.println("Finishing document: " + (SDocument)baseDocument.getSElementId().getSIdentifiableElement());
+			this.container.finishDocument((SDocument)baseDocument.getSElementId().getSIdentifiableElement());
+			baseDocument.setMappingResult(DOCUMENT_STATUS.COMPLETED);
 		}else{
 			logger.warn("No documents to merge");
 		}
+		
+		System.out.println(">>>>>>>>>>>>>>>>>><< mapping results: "+getMappingSubjects());
 		return(DOCUMENT_STATUS.COMPLETED);
 	}
 	
 	@Override
 	public DOCUMENT_STATUS mapSCorpus() {
-		// TODO Auto-generated method stub
-		return super.mapSCorpus();
+		System.out.println("MERGING SCORPUS: "+ getMappingSubjects());
+		
+		for (MappingSubject subj: getMappingSubjects()){
+			if (subj.getSElementId().getSIdentifiableElement() instanceof SCorpus){
+				//TODO move all annotations (SMetaAnnotation)
+				subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
+			}
+		}
+		
+		return(DOCUMENT_STATUS.COMPLETED);
 	}
 	
 	/** the {@link TokenMergeContainer} instance **/
@@ -812,7 +829,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	public void copyAllAnnotations(SAnnotatableElement from, SAnnotatableElement to) {
 		EList<SAnnotation> fromAnnotations = from.getSAnnotations();
 		if (fromAnnotations != null) {
-
+			
 			for (SAnnotation fromAnno : fromAnnotations) {
 				SAnnotation toAnno = to.getSAnnotation(fromAnno.getQName());
 				if (toAnno == null) {
