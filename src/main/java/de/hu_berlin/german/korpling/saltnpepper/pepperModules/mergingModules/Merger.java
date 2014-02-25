@@ -64,7 +64,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 		/** just copies all corpus graphs to a single one **/
 		MERGE_CORPUS_GRAPHS,
 		/** merges all corpus graphs into a single corpus graph, but does not merge the documents **/
-		MERGE_DOCUMENT_PATHES,
+		MERGE_DOCUMENT_PATHS,
 		/** merges all possible documents (by given table or autodetect) **/
 		MERGE_DOCUMENTS
 	}

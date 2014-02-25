@@ -768,8 +768,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 							// merge the document content
 							this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument, nonEquivalentTokenInOtherTexts);
 							// we are finished with the document. Free the memory
-							this.container.finishDocument(sDocPair.sDocument);
 							System.out.println("Finishing document: " + baseDocPair.sDocument);
+							this.container.finishDocument(sDocPair.sDocument);
 							sDocPair.status = DOCUMENT_STATUS.DELETED;
 						}
 					}
