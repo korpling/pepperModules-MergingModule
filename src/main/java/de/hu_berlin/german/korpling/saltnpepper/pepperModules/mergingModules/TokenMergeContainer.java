@@ -182,6 +182,7 @@ public class TokenMergeContainer {
 					this.baseDocument = doc;
 				}
 			}
+			System.out.println("set basedocument to " + doc);
 			this.normalizedTextMap.put(sTextualDS, normalizedText);
 		}
 		
@@ -236,8 +237,14 @@ public class TokenMergeContainer {
 		}
 		
 		public void addTokenMapping(SToken baseTextToken, SToken otherTextToken, STextualDS otherSText){
-			System.out.println("Adding mapping for base text token "+baseTextToken.getSName()+ " and token "+otherTextToken.getSName());
-			if (this.equivalentToken.get(baseTextToken) != null)
+		System.out.println("Adding mapping for base text token "
+				+ baseTextToken.getSDocumentGraph().getSDocument().getSId()
+				+ "/"
+				+ baseTextToken.getSName() + " and token "
+				+ otherTextToken.getSDocumentGraph().getSDocument().getSId()
+				+ "/"
+				+ otherTextToken.getSName());
+		if (this.equivalentToken.get(baseTextToken) != null)
 			{// there is a mapping for the base text token
 				if (! this.equivalentToken.get(baseTextToken).containsKey(otherSText))
 				{ // there is no mapping for the base text token in the other document. Add the mapping

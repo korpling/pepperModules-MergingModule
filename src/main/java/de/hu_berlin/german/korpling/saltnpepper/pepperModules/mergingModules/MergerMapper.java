@@ -643,7 +643,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 					boolean hasTexts = true;
 					if (! sDocPair.sDocument.equals(container.getBaseDocument()))
 					{// ignore the base document and align all other
-						System.out.println("Merging document");
 						if (sDocPair.sDocument.getSDocumentGraph().getSTextualDSs() != null)
 						{ // there are possibly texts
 							sDocPair.status = DOCUMENT_STATUS.IN_PROGRESS;
@@ -743,8 +742,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				{ // for all documents
 					if (! sDocPair.sDocument.equals(container.getBaseDocument()))
 					{// ignore the base document and merge the others
+						System.out.println("Merging document: " + sDocPair.sDocument);
 						if (sDocPair.sDocument.getSDocumentGraph().getSTextualDSs() != null)
 						{ // there should be texts
+							System.out.println("\ttext based search");
 							// get the set of tokens in the document which do not have an equivalent in the base text
 							HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 							if (nonEquivalentTokenSets.get(this.container.getBaseText()) != null){
@@ -760,6 +761,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 							sDocPair.status = DOCUMENT_STATUS.DELETED;
 						} else {
 							// there are no texts. So, just copy everything into the base document graph
+							System.out.println("\tno text found");
 							HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 							if (sDocPair.sDocument.getSDocumentGraph().getSTokens() != null){
 								// all tokens are unique
@@ -776,11 +778,15 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				}
 				// clear the table of non-equivalent tokens
 				nonEquivalentTokenSets.clear();
+			}else{
+				System.out.println("Document.size() < 2");
 			}
 			
 			System.out.println("Finishing document: " + baseDocPair.sDocument);
 			this.container.finishDocument(baseDocPair.sDocument);
 			baseDocPair.status = DOCUMENT_STATUS.COMPLETED;
+		}else{
+			log.warn("No documents to merge");
 		}
 		
 		
