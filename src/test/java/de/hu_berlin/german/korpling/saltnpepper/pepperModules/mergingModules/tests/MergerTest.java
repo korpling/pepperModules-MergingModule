@@ -67,7 +67,7 @@ public class MergerTest extends Merger{
 	}
 	
 	/**
-	 *  Tests the merging on level {@link MERGING_LEVEL#MERGE_DOCUMENT_PATHES}:
+	 *  Tests the merging on level {@link MERGING_LEVEL#MERGE_DOCUMENT_PATHS}:
 	 * <pre>
 	 *  c1    |    c1      |    c1      
 	 *  |     |   /  \     |   /  \     
@@ -219,7 +219,7 @@ public class MergerTest extends Merger{
 	}
 	
 	/**
-	 *  Tests the merging on level {@link MERGING_LEVEL#MERGE_DOCUMENT_PATHES}:
+	 *  Tests the merging on level {@link MERGING_LEVEL#MERGE_DOCUMENT_PATHS}:
 	 * <pre>
 	 *  c1    |    c1      |    c1      
 	 *  |     |   /  \     |   /  \     
@@ -237,7 +237,7 @@ public class MergerTest extends Merger{
 	 * </pre>
 	 */
 	@Test
-	public void test_MERGE_DOCUMENT_PATHES(){
+	public void test_MERGE_DOCUMENT_PATHS(){
 		SCorpusGraph graph1= SaltFactory.eINSTANCE.createSCorpusGraph();
 		SCorpus c1= SaltFactory.eINSTANCE.createSCorpus();
 		c1.setSName("c1");
@@ -291,7 +291,7 @@ public class MergerTest extends Merger{
 		getFixture().getSaltProject().getSCorpusGraphs().add(graph3);
 		
 		//TODO run
-		getFixture().getProperties().getProperty(MergerProperties.PROP_MERGING_LEVEL).setValueString(MERGING_LEVEL.MERGE_DOCUMENT_PATHES.toString());
+		getFixture().getProperties().getProperty(MergerProperties.PROP_MERGING_LEVEL).setValueString(MERGING_LEVEL.MERGE_DOCUMENT_PATHS.toString());
 		
 		getFixture().proposeImportOrder(graph1);
 		getFixture().proposeImportOrder(graph2);
