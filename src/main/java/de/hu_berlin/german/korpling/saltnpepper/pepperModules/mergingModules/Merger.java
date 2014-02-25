@@ -113,15 +113,6 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 	 */
 	protected synchronized void createMapping(){
 		if (mappingTable== null){
-//			int numOfSNodes= 0;
-		
-//			for (SCorpusGraph graph: getSaltProject().getSCorpusGraphs()){
-//				int tmpNumOfSNodes= graph.getSCorpora().size()+graph.getSCorpora().size();
-//				if (numOfSNodes< tmpNumOfSNodes){
-//					numOfSNodes= tmpNumOfSNodes;
-//				}
-//			}
-			
 			//initialize importOrder
 			importOrder= new HashMap<SCorpusGraph, List<SElementId>>();
 			for (SCorpusGraph graph: getSaltProject().getSCorpusGraphs()){
@@ -143,7 +134,6 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 					}
 				}
 			}
-			System.out.println("mappingTable: "+ mappingTable);
 			List<List<List<SNode>>> listOfLists= new ArrayList<List<List<SNode>>>(getSaltProject().getSCorpusGraphs().size());
 			for (int i= 0; i < getSaltProject().getSCorpusGraphs().size(); i++){
 				listOfLists.add(new ArrayList<List<SNode>>());
@@ -153,7 +143,6 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 				List<SNode> nodes= mappingTable.get(key);
 				listOfLists.get(nodes.size()-1).add(nodes);
 			}
-			System.out.println("listOflists: "+ listOfLists);
 			
 			for (int i= getSaltProject().getSCorpusGraphs().size(); i>0;i--){
 				List<List<SNode>> list= listOfLists.get(i-1);
@@ -165,8 +154,6 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 					}
 				}
 			}
-			
-			System.out.println("importOrder: "+ importOrder);
 		}
 	}
 	/**
@@ -191,10 +178,15 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 	@Override
 	public List<SElementId> proposeImportOrder(SCorpusGraph sCorpusGraph) {
 		List<SElementId> retVal= null;
-		if (getSaltProject().getSCorpusGraphs().size()>1)
-		{
-			if (!MERGING_LEVEL.MERGE_CORPUS_GRAPHS.equals(((MergerProperties)getProperties()).getMergingLevel())){
-				createMapping();
+		if (sCorpusGraph!= null){
+			if (getSaltProject().getSCorpusGraphs().size()>1)
+			{
+				if (!MERGING_LEVEL.MERGE_CORPUS_GRAPHS.equals(((MergerProperties)getProperties()).getMergingLevel())){
+					createMapping();
+					if (importOrder!= null){
+						retVal= importOrder.get(sCorpusGraph);
+					}
+				}
 			}
 		}
 		return(retVal);
