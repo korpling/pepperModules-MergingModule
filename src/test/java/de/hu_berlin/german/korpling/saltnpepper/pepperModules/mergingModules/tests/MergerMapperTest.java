@@ -56,11 +56,11 @@ public class MergerMapperTest extends MergerMapper{
 		sDoc3.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		
 		DocumentStatusPair pair1= new DocumentStatusPair(sDoc1);
-		getFixture().getDocumentPairs().add(pair1);
+		getFixture().getDocumentStatusPairs().add(pair1);
 		DocumentStatusPair pair2= new DocumentStatusPair(sDoc2);
-		getFixture().getDocumentPairs().add(pair2);
+		getFixture().getDocumentStatusPairs().add(pair2);
 		DocumentStatusPair pair3= new DocumentStatusPair(sDoc3);
-		getFixture().getDocumentPairs().add(pair3);
+		getFixture().getDocumentStatusPairs().add(pair3);
 		
 			SaltSample.createPrimaryData(sDoc1);
 			SaltSample.createTokens(sDoc1);

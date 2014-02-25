@@ -74,7 +74,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * Returns all documents to be mapped.
 	 * @return
 	 */
-	public List<DocumentStatusPair> getDocumentPairs(){
+	public List<DocumentStatusPair> getDocumentStatusPairs(){
 		if (pairs== null){
 			pairs= new Vector<DocumentStatusPair>();
 		}
@@ -346,9 +346,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		// check whether the document has any STextualDS
 		EList<STextualDS> sTextualDSs = sDocument.getSDocumentGraph().getSTextualDSs();
 		if (sTextualDSs == null){
-			this.getDocumentPairs().add(new DocumentStatusPair(sDocument,DOCUMENT_STATUS.DELETED));
+			this.getDocumentStatusPairs().add(new DocumentStatusPair(sDocument,DOCUMENT_STATUS.DELETED));
 		} else if (sTextualDSs.size() == 0){
-			this.getDocumentPairs().add(new DocumentStatusPair(sDocument,DOCUMENT_STATUS.DELETED));
+			this.getDocumentStatusPairs().add(new DocumentStatusPair(sDocument,DOCUMENT_STATUS.DELETED));
 		}
 		
 		// create maps which give fast access to a token which is specified by it's original left/right value
@@ -504,6 +504,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 */
 	protected SDocument mergeDocumentContent(SDocument base, SDocument other, HashSet<SToken> nonEquivalentTokenInOtherTexts){
 		//chooseFinalBaseText();
+		System.out.println(String.format("Start merge between %s and %s", base.getSId(), other.getSId()));
 		log.debug(String.format("Start merge between %s and %s", base.getSId(), other.getSId()));
 		Map<SNode,SNode> matchingToken = mergeTokenContent(base, other);
 		// TODO: may use the reversed map only?
@@ -626,7 +627,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 					this.normalizeTextualLayer(sDoc);
 				}
 				
-				for (DocumentStatusPair sDocPair : this.getDocumentPairs()){
+				for (DocumentStatusPair sDocPair : this.getDocumentStatusPairs()){
 					if (sDocPair.sDocument.equals(container.getBaseDocument())){
 						System.out.println("Chose base document. It is document with id ");
 						baseDocPair = sDocPair;
@@ -638,7 +639,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				Hashtable<STextualDS, Hashtable<SDocument,HashSet<SToken>>> nonEquivalentTokenSets = new Hashtable<STextualDS, Hashtable<SDocument,HashSet<SToken>>>();
 				
 				// allign all texts
-				for (DocumentStatusPair sDocPair : this.getDocumentPairs()){
+				for (DocumentStatusPair sDocPair : this.getDocumentStatusPairs()){
 					boolean hasTexts = true;
 					if (! sDocPair.sDocument.equals(container.getBaseDocument()))
 					{// ignore the base document and align all other
@@ -738,7 +739,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				}
 				
 				// merge!
-				for (DocumentStatusPair sDocPair : this.getDocumentPairs())
+				for (DocumentStatusPair sDocPair : this.getDocumentStatusPairs())
 				{ // for all documents
 					if (! sDocPair.sDocument.equals(container.getBaseDocument()))
 					{// ignore the base document and merge the others
@@ -754,7 +755,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 							// merge the document content
 							this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument, nonEquivalentTokenInOtherTexts);
 							// we are finished with the document. Free the memory
-							System.out.println("Finishing document");
+							System.out.println("Finishing document: " + baseDocPair.sDocument);
 							this.container.finishDocument(sDocPair.sDocument);
 							sDocPair.status = DOCUMENT_STATUS.DELETED;
 						} else {
@@ -768,7 +769,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 							this.mergeDocumentContent(baseDocPair.sDocument,sDocPair.sDocument, nonEquivalentTokenInOtherTexts);
 							// we are finished with the document. Free the memory
 							this.container.finishDocument(sDocPair.sDocument);
-							System.out.println("Finishing document");
+							System.out.println("Finishing document: " + baseDocPair.sDocument);
 							sDocPair.status = DOCUMENT_STATUS.DELETED;
 						}
 					}
@@ -777,7 +778,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				nonEquivalentTokenSets.clear();
 			}
 			
-			
+			System.out.println("Finishing document: " + baseDocPair.sDocument);
 			this.container.finishDocument(baseDocPair.sDocument);
 			baseDocPair.status = DOCUMENT_STATUS.COMPLETED;
 		}
