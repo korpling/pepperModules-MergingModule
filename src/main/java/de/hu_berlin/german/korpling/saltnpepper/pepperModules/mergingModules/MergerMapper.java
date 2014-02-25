@@ -536,6 +536,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		List<SNode> nonMatchingNode = new LinkedList<SNode>();
 		Set<Node> visited = new HashSet<Node>();
 		System.out.println(String.format("Start merge search (tokens:%s):", searchQueue.size()));
+		for (Edge e : g.getEdges()) {
+			System.out.println(e.getSource().getId() + " --" + e.getId() + "->" + e.getTarget().getId());
+		}
 		while (!searchQueue.isEmpty()) {
 			SNode node = searchQueue.remove();
 			visited.add(node);
