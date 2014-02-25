@@ -509,7 +509,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 */
 	protected SDocument mergeDocumentContent(SDocument base, SDocument other, HashSet<SToken> nonEquivalentTokenInOtherTexts){
 		//chooseFinalBaseText();
-		System.out.println(String.format("Start merge between %s and %s", base.getSId(), other.getSId()));
+		System.out.println(String.format("== Start merge between %s and %s", base.getSId(), other.getSId()));
 		log.debug(String.format("Start merge between %s and %s", base.getSId(), other.getSId()));
 		Map<SNode,SNode> matchingToken = mergeTokenContent(base, other);
 		// TODO: may use the reversed map only?
@@ -517,7 +517,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		mergeSearch(matchingToken, base.getSDocumentGraph(), other.getSDocumentGraph());
 		//mergeSpanContent(base, other);
 		//mergeStructureContent(base, other);
-		
+		System.out.println(String.format("== finished merge between %s and %s", base.getSId(), other.getSId()));
 		return base;
 	}
 	
@@ -528,7 +528,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param g
 	 * @param otherG
 	 */
-	private void mergeSearch(Map<SNode, SNode> matchingToken, SDocumentGraph g, SDocumentGraph otherG) {
+	private void mergeSearch(Map<SNode, SNode> matchingToken, SDocumentGraph g,
+			SDocumentGraph otherG) {
 		// for every equivalent token:
 		Queue<SNode> searchQueue = new LinkedList<SNode>();
 		searchQueue.addAll(matchingToken.keySet());
@@ -542,29 +543,38 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			// check every parent for equivalence on the base graph side
 			EList<Edge> edgesToParent = g.getInEdges(node.getId());
 			for (Edge edge : edgesToParent) {
+				Node parent = edge.getSource();
 				if (edge instanceof SPointingRelation) {
 					continue;
+				} else if (visited.contains(parent)) {
+					continue;
 				} else {
-					Node parent = edge.getSource();
-					if(visited.contains(parent)){
-						continue;
-					}else{
-						searchQueue.add((SNode) parent);
-					}
+					List<Node> children = new ArrayList<Node>();
+					searchQueue.add((SNode) parent);
 
-					List<Node> childConfiguration = new ArrayList<Node>();
 					for (Edge e : g.getOutEdges(parent.getId())) {
-						childConfiguration.add(e.getTarget());
+						children.add(e.getTarget());
 					}
-					// every other parent in the other graph is a candidate for equivalence
-					EList<Edge> otherEdgesToParent = otherG.getInEdges(otherNode.getId());
+					// every other parent in the other graph is a candidate for
+					// equivalence
+					EList<Edge> otherEdgesToParent = otherG
+							.getInEdges(otherNode.getId());
 					for (Edge otherEdgetoParent : otherEdgesToParent) {
 						// Check if an parent has matching children
 						Node otherParent = otherEdgetoParent.getSource();
-						if (checkEquivalenz(otherG,otherParent,childConfiguration,matchingToken)) {
+						boolean otherParentIsEquivalent = checkEquivalenz(
+								otherG, otherParent, children, matchingToken);
+						if (otherParentIsEquivalent) {
+							System.out.println(String.format(
+									"\t match found : %s/%s", otherG
+											.getSDocument().getSId(),
+									otherParent.getId()));
 							// take action on matching node
-							matchingToken.put((SNode) otherParent, (SNode) parent);
-							copyAllAnnotations((SAnnotatableElement)otherParent, (SAnnotatableElement) parent);
+							matchingToken.put((SNode) otherParent,
+									(SNode) parent);
+							copyAllAnnotations(
+									(SAnnotatableElement) otherParent,
+									(SAnnotatableElement) parent);
 							// TODO: move Edge?
 						} else {
 							nonMatchingNode.add((SNode) parent);
@@ -573,7 +583,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 					}
 				}
 			}
-			
 		}
 		
 	}
