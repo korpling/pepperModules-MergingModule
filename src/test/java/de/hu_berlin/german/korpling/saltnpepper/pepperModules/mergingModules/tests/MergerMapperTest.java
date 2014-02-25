@@ -103,16 +103,16 @@ public class MergerMapperTest extends MergerMapper{
 		assertEquals(DOCUMENT_STATUS.DELETED, pair2.status);
 		assertEquals(DOCUMENT_STATUS.DELETED, pair3.status);
 		
-		assertNotNull(pair1.sDocument.getSDocumentGraph());
-		assertNull(pair2.sDocument.getSDocumentGraph());
-		assertNull(pair3.sDocument.getSDocumentGraph());
-		
 		assertEquals(template.getSDocumentGraph().getSNodes().size(), pair1.sDocument.getSDocumentGraph().getSNodes().size());
 		assertEquals(template.getSDocumentGraph().getSRelations().size(), pair1.sDocument.getSDocumentGraph().getSRelations().size());
 		
 		assertEquals(template.getSDocumentGraph().getSTokens().size(), pair1.sDocument.getSDocumentGraph().getSTokens().size());
 		assertEquals(template.getSDocumentGraph().getSSpans().size(), pair1.sDocument.getSDocumentGraph().getSSpans().size());
 		assertEquals(template.getSDocumentGraph().getSStructures().size(), pair1.sDocument.getSDocumentGraph().getSStructures().size());
+		
+		assertNotNull(pair1.sDocument.getSDocumentGraph());
+		assertNull(pair2.sDocument.getSDocumentGraph());
+		assertNull(pair3.sDocument.getSDocumentGraph());
 	}
 	
 	/**
@@ -382,7 +382,7 @@ public class MergerMapperTest extends MergerMapper{
 		tok2.addSAnnotation(anno3);
 		
 		MergerMapper mm = new MergerMapper();
-		mm.copyAnnotation(tok1, tok2);
+		mm.copyAllAnnotations(tok1, tok2);
 
 		assertEquals("annotext1", tok2.getSAnnotation("anno1").getSValueSTEXT());
 		assertEquals("annotext22", tok2.getSAnnotation("anno2")

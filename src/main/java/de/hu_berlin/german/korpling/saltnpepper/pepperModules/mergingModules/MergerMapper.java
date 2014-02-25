@@ -19,6 +19,7 @@
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -476,8 +477,12 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		for (STextualDS otherText : other.getSDocumentGraph().getSTextualDSs()) {
 			for (SToken baseToken : base.getSDocumentGraph().getSTokens()) {
 				SToken otherToken = container.getTokenMapping(baseToken, otherText);
-				equiMap.put(baseToken, otherToken);
-				copyAnnotation(otherToken, baseToken);
+				if(otherToken != null){
+					equiMap.put(baseToken, otherToken);
+					copyAllAnnotations(otherToken, baseToken);
+				} else{
+					// TODO: copy token
+				}
 			}
 		}
 		return equiMap;
@@ -508,7 +513,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		log.debug(String.format("Start merge between %s and %s", base.getSId(), other.getSId()));
 		Map<SNode,SNode> matchingToken = mergeTokenContent(base, other);
 		// TODO: may use the reversed map only?
-		addReversed(matchingToken);
+		matchingToken = reverseMap(matchingToken);
 		mergeSearch(matchingToken, base.getSDocumentGraph(), other.getSDocumentGraph());
 		//mergeSpanContent(base, other);
 		//mergeStructureContent(base, other);
@@ -559,7 +564,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 						if (checkEquivalenz(otherG,otherParent,childConfiguration,matchingToken)) {
 							// take action on matching node
 							matchingToken.put((SNode) otherParent, (SNode) parent);
-							copyAnnotation((SAnnotatableElement)otherParent, (SAnnotatableElement) parent);
+							copyAllAnnotations((SAnnotatableElement)otherParent, (SAnnotatableElement) parent);
 							// TODO: move Edge?
 						} else {
 							nonMatchingNode.add((SNode) parent);
@@ -600,12 +605,15 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	}
 	/**
 	 * Adds every map entry in reversed order
-	 * @param matchingToken
+	 * @param map
+	 * @return 
 	 */
-	private void addReversed(Map<SNode, SNode> matchingToken) {
-		for (Map.Entry<SNode, SNode> entry : matchingToken.entrySet()) {
-			matchingToken.put(entry.getValue(), entry.getKey());
+	private Map<SNode, SNode> reverseMap(Map<SNode, SNode> map) {
+		Map<SNode, SNode> ret = new HashMap<SNode, SNode>();
+		for (Map.Entry<SNode, SNode> entry : map.entrySet()) {
+			ret.put(entry.getValue(), entry.getKey());
 		}
+		return ret;
 		
 	}
 	
@@ -802,22 +810,26 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param from
 	 * @param to
 	 */
-	public void copyAnnotation(SAnnotatableElement from, SAnnotatableElement to) {
-		for (SAnnotation fromAnno : from.getSAnnotations()) {
-			SAnnotation toAnno = to.getSAnnotation(fromAnno.getQName());
-			if (toAnno == null) {
-				toAnno = (SAnnotation) fromAnno.clone();
-				to.addSAnnotation(toAnno);
-				System.out.println("copied anno: " + toAnno);
-			} else if (!toAnno.getSValue().equals(fromAnno.getSValue())) {
-				toAnno = (SAnnotation) fromAnno.clone();
-				toAnno.setName(toAnno.getName() + ANNO_NAME_EXTENSION);
-				to.addSAnnotation(toAnno);
-				log.warn(String.format(
-						"Changed annotation name \"%s\" to \"%s\"",
-						fromAnno.getName(), toAnno.getName()));
-			} else {
-				// identical annotations
+	public void copyAllAnnotations(SAnnotatableElement from, SAnnotatableElement to) {
+		EList<SAnnotation> fromAnnotations = from.getSAnnotations();
+		if (fromAnnotations != null) {
+
+			for (SAnnotation fromAnno : fromAnnotations) {
+				SAnnotation toAnno = to.getSAnnotation(fromAnno.getQName());
+				if (toAnno == null) {
+					toAnno = (SAnnotation) fromAnno.clone();
+					to.addSAnnotation(toAnno);
+					System.out.println("copied anno: " + toAnno.toString());
+				} else if (!toAnno.getSValue().equals(fromAnno.getSValue())) {
+					toAnno = (SAnnotation) fromAnno.clone();
+					toAnno.setName(toAnno.getName() + ANNO_NAME_EXTENSION);
+					to.addSAnnotation(toAnno);
+					log.warn(String.format(
+							"Changed annotation name \"%s\" to \"%s\"",
+							fromAnno.getName(), toAnno.getName()));
+				} else {
+					// identical annotations
+				}
 			}
 		}
 	}
