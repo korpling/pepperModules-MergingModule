@@ -30,6 +30,7 @@ import java.util.Vector;
 
 import org.osgi.service.component.annotations.Component;
 
+import de.hu_berlin.german.korpling.saltnpepper.pepper.common.DOCUMENT_STATUS;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.exceptions.PepperFWException;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.DocumentController;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.MappingSubject;
@@ -242,7 +243,11 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 				givenSlots.put(sElementId.getSId(), givenSlot);
 			}
 			givenSlot.add(sElementId);
+			System.out.println("givenSlot: "+ givenSlot);
+			System.out.println("mappableSlot: "+ mappableSlot);
+			
 			if (givenSlot.size() < mappableSlot.size()){
+				System.out.println("send to slepp ");
 				documentController.sendToSleep();
 			}else if (givenSlot.size()== mappableSlot.size()){
 				try{
@@ -288,18 +293,25 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 	 **/
 	@Override
 	public PepperMapper createPepperMapper(SElementId sElementId) {
-		MergerMapper mapper= new MergerMapper();
-		List<SElementId> givenSlot= givenSlots.get(sElementId.getSId());
 		if (	(givenSlots== null)||
 				(givenSlots.size()== 0)){
-			throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that 'givenSlot' is null or empty in method 'createPepperMapper()'");	
+			throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that 'givenSlots' is null or empty in method 'createPepperMapper()'");	
 		}
+		List<SElementId> givenSlot= givenSlots.get(sElementId.getSId());
+		if (givenSlot== null){
+			throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that a 'givenSlot' in 'givenSlots' is null or empty in method 'createPepperMapper()'");
+		}
+		MergerMapper mapper= new MergerMapper();	
 		for (SElementId id: givenSlot){
+			System.out.println("for slot: "+ id);
 			MappingSubject mappingSubject= new MappingSubject();
 			mappingSubject.setSElementId(id);
+			mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
+			System.out.println("before: "+ mapper.getMappingSubjects());
 			mapper.getMappingSubjects().add(mappingSubject);
+			System.out.println("after: "+ mapper.getMappingSubjects());
 		}
-		
+		System.out.println("mapper: "+ mapper.getMappingSubjects());
 		return(mapper);
 	}
 }	
