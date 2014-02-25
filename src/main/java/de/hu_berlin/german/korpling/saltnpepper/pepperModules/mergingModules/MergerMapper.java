@@ -19,7 +19,6 @@
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -55,8 +54,21 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	
 	public static final String ANNO_NAME_EXTENSION = "_1";
 
-	static private Logger log = Logger.getLogger(MergerMapper.class);
+	private static final Logger log = Logger.getLogger(MergerMapper.class);
 
+	
+	@Override
+	public DOCUMENT_STATUS mapSDocument() {
+		// TODO Auto-generated method stub
+		return super.mapSDocument();
+	}
+	
+	@Override
+	public DOCUMENT_STATUS mapSCorpus() {
+		// TODO Auto-generated method stub
+		return super.mapSCorpus();
+	}
+	
 	public static class DocumentStatusPair{
 		public DocumentStatusPair(SDocument sDocument){
 			this.sDocument= sDocument;
