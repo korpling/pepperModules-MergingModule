@@ -129,14 +129,14 @@ public class TokenMergeContainer {
 		private Hashtable<STextualDS,List<Integer>> normalizedBaseTextToOriginalBaseText = null;
 		
 		public void setBaseTextPositionByNormalizedTextPosition(STextualDS sTextualDS, List<Integer> posMapping){
-			if (this.normalizedBaseTextToOriginalBaseText == null){
-				this.normalizedBaseTextToOriginalBaseText = new Hashtable<STextualDS, List<Integer>>();
-				this.normalizedBaseTextToOriginalBaseText.put(sTextualDS, posMapping);
-			} else {
+//			if (this.normalizedBaseTextToOriginalBaseText == null){
+//				this.normalizedBaseTextToOriginalBaseText = new Hashtable<STextualDS, List<Integer>>();
+//				this.normalizedBaseTextToOriginalBaseText.put(sTextualDS, posMapping);
+//			} else {
 				if (! this.normalizedBaseTextToOriginalBaseText.containsKey(sTextualDS)){
 					this.normalizedBaseTextToOriginalBaseText.put(sTextualDS, posMapping);
 				}
-			}
+//			}
 		}
 		
 		public int getBaseTextPositionByNormalizedTextPosition(STextualDS sTextualDS, int position){
@@ -159,6 +159,7 @@ public class TokenMergeContainer {
 			this.equivalentToken = new Hashtable<SToken, Hashtable<STextualDS,SToken>>();
 			this.alignedTextsMap = new Hashtable<STextualDS, AlignedTokensMap>();
 			this.normalizedTextMap = new Hashtable<STextualDS, String>();
+			this.normalizedBaseTextToOriginalBaseText = new Hashtable<STextualDS, List<Integer>>();
 		}
 		
 		public void setBaseDocument(SDocument sDocument){
