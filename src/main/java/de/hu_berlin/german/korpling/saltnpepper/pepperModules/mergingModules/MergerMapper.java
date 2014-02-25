@@ -479,7 +479,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				SToken otherToken = container.getTokenMapping(baseToken, otherText);
 				if(otherToken != null){
 					equiMap.put(baseToken, otherToken);
-					copyAllAnnotations(otherToken, baseToken);
+//					copyAllAnnotations(otherToken, baseToken);
 				} else{
 					// TODO: copy token
 				}
@@ -535,6 +535,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		searchQueue.addAll(matchingToken.keySet());
 		List<SNode> nonMatchingNode = new LinkedList<SNode>();
 		Set<Node> visited = new HashSet<Node>();
+		System.out.println(String.format("Start merge search (tokens:%s):", searchQueue.size()));
 		while (!searchQueue.isEmpty()) {
 			SNode node = searchQueue.remove();
 			visited.add(node);
@@ -544,10 +545,12 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			EList<Edge> edgesToParent = g.getInEdges(node.getId());
 			for (Edge edge : edgesToParent) {
 				Node parent = edge.getSource();
+				System.out.println("\tchecking " + parent);
 				if (edge instanceof SPointingRelation) {
 					continue;
 				} else if (visited.contains(parent)) {
 					continue;
+					
 				} else {
 					List<Node> children = new ArrayList<Node>();
 					searchQueue.add((SNode) parent);
@@ -562,23 +565,30 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 					for (Edge otherEdgetoParent : otherEdgesToParent) {
 						// Check if an parent has matching children
 						Node otherParent = otherEdgetoParent.getSource();
-						boolean otherParentIsEquivalent = checkEquivalenz(
-								otherG, otherParent, children, matchingToken);
-						if (otherParentIsEquivalent) {
-							System.out.println(String.format(
-									"\t match found : %s/%s", otherG
-											.getSDocument().getSId(),
-									otherParent.getId()));
-							// take action on matching node
-							matchingToken.put((SNode) otherParent,
-									(SNode) parent);
+						if (matchingToken.containsKey(otherParent)) {
 							copyAllAnnotations(
 									(SAnnotatableElement) otherParent,
 									(SAnnotatableElement) parent);
-							// TODO: move Edge?
-						} else {
-							nonMatchingNode.add((SNode) parent);
-							// TODO: move Node?
+						} else{
+							boolean otherParentIsEquivalent = checkEquivalenz(
+									otherG, otherParent, children, matchingToken);
+							if (otherParentIsEquivalent) {
+								System.out.println(String.format(
+										"\t match found : %s/%s", otherG
+										.getSDocument().getSId(),
+										otherParent.getId()));
+								// take action on matching node
+								matchingToken.put((SNode) otherParent,
+										(SNode) parent);
+								copyAllAnnotations(
+										(SAnnotatableElement) otherParent,
+										(SAnnotatableElement) parent);
+								// TODO: move Edge?
+							} else {
+								nonMatchingNode.add((SNode) parent);
+								// TODO: move Node?
+							}
+							
 						}
 					}
 				}
