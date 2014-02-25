@@ -299,7 +299,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 		}
 		List<SElementId> givenSlot= givenSlots.get(sElementId.getSId());
 		if (givenSlot== null){
-			throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that a 'givenSlot' in 'givenSlots' is null or empty in method 'createPepperMapper()'");
+			throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that a 'givenSlot' in 'givenSlots' is null or empty in method 'createPepperMapper()'. The sElementId '"+sElementId+"' was not contained in list: "+ givenSlots);
 		}
 		MergerMapper mapper= new MergerMapper();	
 		for (SElementId id: givenSlot){
