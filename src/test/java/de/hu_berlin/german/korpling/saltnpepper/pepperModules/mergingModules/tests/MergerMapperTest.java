@@ -357,19 +357,20 @@ public class MergerMapperTest extends MergerMapper{
 		SAnnotation anno3 = SaltFactory.eINSTANCE.createSAnnotation();
 		anno3.setName("anno2");
 		anno3.setSValue("annotext22");
-		
-		SAnnotation[] annos = {anno1,anno2, anno3};
-		
+
 		tok1.addSAnnotation(anno1);
 		tok1.addSAnnotation(anno2);
 		tok2.addSAnnotation(anno3);
 		
 		MergerMapper mm = new MergerMapper();
-		mm.copyAnnotation(tok1,tok2);
-		
-		assertEquals("annotext1",tok2.getSAnnotation("anno1").getSValueSTEXT());
-		assertEquals("annotext22",tok2.getSAnnotation("anno2").getSValueSTEXT());
-		assertEquals("annotext2",tok2.getSAnnotation("anno2" +  MergerMapper.ANNO_NAME_EXTENSION).getSValueSTEXT());
+		mm.copyAnnotation(tok1, tok2);
+
+		assertEquals("annotext1", tok2.getSAnnotation("anno1").getSValueSTEXT());
+		assertEquals("annotext22", tok2.getSAnnotation("anno2")
+				.getSValueSTEXT());
+		assertEquals("annotext2",
+				tok2.getSAnnotation("anno2" + MergerMapper.ANNO_NAME_EXTENSION)
+						.getSValueSTEXT());
 	}
 
 }
