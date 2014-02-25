@@ -18,25 +18,35 @@
 
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 import java.util.Vector;
 
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
 
+import de.hu_berlin.german.korpling.saltnpepper.pepper.common.DOCUMENT_STATUS;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.exceptions.PepperModuleException;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Edge;
+import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Graph;
+import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Node;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDocumentGraph;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SPointingRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotatableElement;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotation;
-
-import de.hu_berlin.german.korpling.saltnpepper.pepper.common.DOCUMENT_STATUS;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 
 public class MergerMapper {
 	
@@ -458,7 +468,17 @@ public class MergerMapper {
 		}
 	}
 	
-	protected void mergeTokenContent(SDocument base, SDocument other){
+	protected Map<SNode, SNode> mergeTokenContent(SDocument base, SDocument other){
+		Map<SNode, SNode> equiMap = new HashMap<SNode, SNode>();
+		// get all matching tokens
+		for (STextualDS otherText : other.getSDocumentGraph().getSTextualDSs()) {
+			for (SToken baseToken : base.getSDocumentGraph().getSTokens()) {
+				SToken otherToken = container.getTokenMapping(baseToken, otherText);
+				equiMap.put(baseToken, otherToken);
+				copyAnnotation(otherToken, baseToken);
+			}
+		}
+		return equiMap;
 		 
 	}
 	
@@ -482,10 +502,108 @@ public class MergerMapper {
 	 */
 	protected SDocument mergeDocumentContent(SDocument base, SDocument other, HashSet<SToken> nonEquivalentTokenInOtherTexts){
 		//chooseFinalBaseText();
-		mergeTokenContent(base, other);
-		mergeSpanContent(base, other);
-		mergeStructureContent(base, other);
+		log.debug(String.format("Start merge between %s and %s", base.getSId(), other.getSId()));
+		Map<SNode,SNode> matchingToken = mergeTokenContent(base, other);
+		// TODO: may use the reversed map only?
+		addReversed(matchingToken);
+		mergeSearch(matchingToken, base.getSDocumentGraph(), other.getSDocumentGraph());
+		//mergeSpanContent(base, other);
+		//mergeStructureContent(base, other);
+		
 		return base;
+	}
+	
+	/**
+	 * breath first search for matching tokens
+	 * 
+	 * @param matchingToken
+	 * @param g
+	 * @param otherG
+	 */
+	private void mergeSearch(Map<SNode, SNode> matchingToken, SDocumentGraph g, SDocumentGraph otherG) {
+		// for every equivalent token:
+		Queue<SNode> searchQueue = new LinkedList<SNode>();
+		searchQueue.addAll(matchingToken.keySet());
+		List<SNode> nonMatchingNode = new LinkedList<SNode>();
+		Set<Node> visited = new HashSet<Node>();
+		while (!searchQueue.isEmpty()) {
+			SNode node = searchQueue.remove();
+			visited.add(node);
+			SNode otherNode = matchingToken.get(node);
+
+			// check every parent for equivalence on the base graph side
+			EList<Edge> edgesToParent = g.getInEdges(node.getId());
+			for (Edge edge : edgesToParent) {
+				if (edge instanceof SPointingRelation) {
+					continue;
+				} else {
+					Node parent = edge.getSource();
+					if(visited.contains(parent)){
+						continue;
+					}else{
+						searchQueue.add((SNode) parent);
+					}
+
+					List<Node> childConfiguration = new ArrayList<Node>();
+					for (Edge e : g.getOutEdges(parent.getId())) {
+						childConfiguration.add(e.getTarget());
+					}
+					// every other parent in the other graph is a candidate for equivalence
+					EList<Edge> otherEdgesToParent = otherG.getInEdges(otherNode.getId());
+					for (Edge otherEdgetoParent : otherEdgesToParent) {
+						// Check if an parent has matching children
+						Node otherParent = otherEdgetoParent.getSource();
+						if (checkEquivalenz(otherG,otherParent,childConfiguration,matchingToken)) {
+							// take action on matching node
+							matchingToken.put((SNode) otherParent, (SNode) parent);
+							copyAnnotation((SAnnotatableElement)otherParent, (SAnnotatableElement) parent);
+							// TODO: move Edge?
+						} else {
+							nonMatchingNode.add((SNode) parent);
+							// TODO: move Node?
+						}
+					}
+				}
+			}
+			
+		}
+		
+	}
+	
+	/**
+	 * check if an Node satisfies the equivalence all criteria 
+	 * 1) the number of children matches
+	 * 2) every child is has an already tested equivalence 
+	 * @param otherG 
+	 * @param otherParent
+	 * @param childConfiguration
+	 * @param matchingToken
+	 */
+	private boolean checkEquivalenz(Graph otherG, Node otherParent, List<Node> childConfiguration,
+			Map<SNode, SNode> matchingToken) {
+		EList<Edge> outEdges = otherG.getOutEdges(otherParent.getId());
+		// 1) the number of children matches
+		if (outEdges.size() != childConfiguration.size()){
+			return false;
+		}
+		// 2) every child is has an already tested equivalence 
+		for (Edge edge : outEdges) {
+			Node child = edge.getTarget();
+			if(!matchingToken.containsKey(child)){
+				return false;
+			}
+		}
+		return true;
+	}
+	/**
+	 * Adds every map entry in reversed order
+	 * @param matchingToken
+	 */
+	private void addReversed(Map<SNode, SNode> matchingToken) {
+		for (Map.Entry<SNode, SNode> entry : matchingToken.entrySet()) {
+			matchingToken.put(entry.getValue(), entry.getKey());
+		}
+		
 	}
 	
 	/**
