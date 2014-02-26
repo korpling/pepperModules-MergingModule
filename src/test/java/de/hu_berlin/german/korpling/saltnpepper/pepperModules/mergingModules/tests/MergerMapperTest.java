@@ -168,21 +168,21 @@ public class MergerMapperTest extends MergerMapper{
 		String baseText ="This,isasmallExample!";
 		String otherText ="Thisisno";
 		
-		assertEquals(this.indexOfOmitChars(baseText, otherText, this.punctuations),-1);
+		assertEquals(this.indexOfOmitChars(baseText, otherText, this.punctuations,false),-1);
 		
 		otherText ="This;is";
-		assertEquals(this.indexOfOmitChars(baseText, otherText, punctuations),0);
+		assertEquals(this.indexOfOmitChars(baseText, otherText, punctuations,false),0);
 		
 		baseText ="Thisisnosmallexample.Itisasmallerexample!";
 		otherText = "exampleItis";
-		assertEquals(this.indexOfOmitChars(baseText, otherText, punctuations),13);
+		assertEquals(this.indexOfOmitChars(baseText, otherText, punctuations,false),13);
 		
 		otherText = ".exampleItis";
-		assertEquals(this.indexOfOmitChars(baseText, otherText, punctuations),13);
+		assertEquals(this.indexOfOmitChars(baseText, otherText, punctuations,false),13);
 		
-		baseText ="Thisisnosmallexampl.Itisasmallerexampl!";
+		baseText ="Thisisnosmallexampl.Itisasmallerexampl";
 		otherText = "example";
-		assertEquals(this.indexOfOmitChars(baseText, otherText, punctuations),-1);
+		assertEquals(this.indexOfOmitChars(baseText, otherText, punctuations,false),-1);
 				
 	}
 	

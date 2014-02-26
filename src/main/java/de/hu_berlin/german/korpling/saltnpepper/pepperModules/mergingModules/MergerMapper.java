@@ -309,9 +309,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param stringToSearchIn
 	 * @param stringToSearchFor
 	 * @param omitCharArray
+	 * @param useIndexof If this flag is set, all omit chars are removed from both provided strings and a normal indexOf is used
 	 * @return the index on success and -1 on failure
 	 */
-	protected int indexOfOmitChars(String stringToSearchIn, String stringToSearchFor, char[] omitCharArray) {
+	protected int indexOfOmitChars(String stringToSearchIn, String stringToSearchFor, char[] omitCharArray, boolean useIndexOf) {
 
 		/* put all omit characters into a hashset */
 		HashSet<Character> omitChars = new HashSet<Character>();
@@ -328,8 +329,73 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		}
 		String sourceString = builder.toString();
 		
+		if (useIndexOf){
+			builder = new StringBuilder();
+			for (char targetChar : stringToSearchIn.toCharArray()){
+				if (!omitChars.contains(targetChar)){
+					builder.append(targetChar);
+				}
+			}
+			String targetString = builder.toString();
+			return targetString.indexOf(sourceString);
+		}
+		
 		/* Initialize needed structures */
 		char c = sourceString.toCharArray()[0];
+		
+		/*
+		// get all indexes of the source char
+		List<Integer> indexes = new Vector<Integer>();
+		int charIndex = 0;
+		for (char targetChar : stringToSearchIn.toCharArray()){
+			if (c == targetChar){
+				indexes.add(charIndex);
+			}
+			charIndex++;
+		}
+		if (indexes.isEmpty()){
+			return -1;
+		}
+		
+		for (Integer targetStartPosition : indexes){
+			char[] charsToSearchIn = stringToSearchIn.toCharArray();
+			
+			int successfulMatchCount = 0;
+			for (char sourceChar : sourceString.toCharArray())
+			{ // for all chars of the string to search
+				/// search the char in the target string and omit all omit chars in the target string
+				boolean foundChar = false;
+				for (int i = targetStartPosition ; i < stringToSearchIn.length() ; i++)
+				{ // search the current char and ignore all chars to omit in the target string
+					char targetChar = charsToSearchIn[i];
+					if (omitChars.contains(targetChar))
+					{ // ignore
+						continue;
+					} // ignore
+					else 
+					{ // do not ignore
+						if (targetChar == sourceChar)
+						{ // we found the matching char
+							successfulMatchCount++;
+							foundChar = true;
+							break;
+						} // we found the matching char
+						else
+						{ // the char is wrong
+							foundChar = false;
+							//position++;
+							break;
+						} // the char is wrong
+					} // do not ignore
+				} // search the current char and ignore all chars to omit in the target string
+				if (! foundChar)
+				{ // if a char could not be found, stop the search in the current subString
+					retVal = -1;
+					break;
+				} // if a char could not be found, stop the search in the current subString
+			}
+		}
+		*/
 		int position = 0;
 		int retVal = -1;
 		boolean found = false;
@@ -340,11 +406,15 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		{
 			// the start position of the string to search
 			position = stringToSearchIn.indexOf(c,position);
-			retVal = position;
+			retVal = position; // initialize the return value to the found position
 			if (position == -1){ // stop, if the first char could not be found
 				break;
 			} 
+			
+			// we guess that we found a complete match
 			found = true;
+			// initialize the count of matched chars
+			int successfulMatchCount = 0;
 			for (char sourceChar : sourceString.toCharArray())
 			{ // for all chars of the string to search
 				/// search the char in the target string and omit all omit chars in the target string
@@ -361,6 +431,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 					{ // do not ignore
 						if (targetChar == sourceChar)
 						{ // we found the matching char
+							successfulMatchCount++;
 							foundChar = true;
 							position++;
 							break;
@@ -380,8 +451,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				} // if a char could not be found, stop the search in the current subString
 			}
 			if (found)
-			{ // if the found flag is still set, we are finished
-				break;
+			{ // if the found flag is still set, we are finished, if the successfulMatchCount is equal to the source string
+				if (successfulMatchCount == sourceString.length()){
+					break;
+				}
 			}
 		}
 		
@@ -418,7 +491,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		
 		// TODO @eladrion index of with punctuation skipping
 		//int offset = normalizedBaseText.toLowerCase().indexOfAnyBut(normalizedOtherText.toLowerCase(),this.punctuations);
-		int offset = indexOfOmitChars(normalizedBaseText.toLowerCase(),normalizedOtherText.toLowerCase(),this.punctuations);
+		int offset = indexOfOmitChars(normalizedBaseText.toLowerCase(),normalizedOtherText.toLowerCase(),this.punctuations, true);
 		if (offset != -1)
 		{// if the normalized other text is conatined in the normalized base text
 			returnVal = true;
