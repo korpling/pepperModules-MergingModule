@@ -14,6 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import de.hu_berlin.german.korpling.saltnpepper.pepper.common.DOCUMENT_STATUS;
+import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.MappingSubject;
 import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.MergerMapper;
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
@@ -61,13 +62,17 @@ public class MergerMapperTest extends MergerMapper{
 		sDoc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		sDoc3.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		
-		DocumentStatusPair pair1= new DocumentStatusPair(sDoc1);
-		DocumentStatusPair pair2= new DocumentStatusPair(sDoc2);
-		DocumentStatusPair pair3= new DocumentStatusPair(sDoc3);
-
-		getFixture().getDocumentStatusPairs().add(pair1);
-		getFixture().getDocumentStatusPairs().add(pair2);
-		getFixture().getDocumentStatusPairs().add(pair3);
+		MappingSubject sub1 = new MappingSubject();
+		MappingSubject sub2 = new MappingSubject();
+		MappingSubject sub3 = new MappingSubject();
+		
+		sub1.setSElementId(sDoc1.getSElementId());
+		sub2.setSElementId(sDoc2.getSElementId());
+		sub3.setSElementId(sDoc3.getSElementId());
+		
+		getFixture().getMappingSubjects().add(sub1);
+		getFixture().getMappingSubjects().add(sub2);
+		getFixture().getMappingSubjects().add(sub3);
 		
 		// document data
 		// doc 1 
@@ -97,22 +102,22 @@ public class MergerMapperTest extends MergerMapper{
 		SaltSample.createSyntaxAnnotations(template);
 		SaltSample.createMorphologyAnnotations(template);
 		
-		this.map();
+		this.mapSDocument();
 		// TODO real tests
-		assertEquals(DOCUMENT_STATUS.COMPLETED, pair1.status);
-		assertEquals(DOCUMENT_STATUS.DELETED, pair2.status);
-		assertEquals(DOCUMENT_STATUS.DELETED, pair3.status);
+		assertEquals(DOCUMENT_STATUS.COMPLETED, sub1.getMappingResult());
+		assertEquals(DOCUMENT_STATUS.DELETED,   sub2.getMappingResult());
+		assertEquals(DOCUMENT_STATUS.DELETED,   sub3.getMappingResult());
 		
-		assertEquals(template.getSDocumentGraph().getSNodes().size(), pair1.sDocument.getSDocumentGraph().getSNodes().size());
-		assertEquals(template.getSDocumentGraph().getSRelations().size(), pair1.sDocument.getSDocumentGraph().getSRelations().size());
+		assertEquals(template.getSDocumentGraph().getSNodes().size(),     sDoc1.getSDocumentGraph().getSNodes().size());
+		assertEquals(template.getSDocumentGraph().getSRelations().size(), sDoc1.getSDocumentGraph().getSRelations().size());
 		
-		assertEquals(template.getSDocumentGraph().getSTokens().size(), pair1.sDocument.getSDocumentGraph().getSTokens().size());
-		assertEquals(template.getSDocumentGraph().getSSpans().size(), pair1.sDocument.getSDocumentGraph().getSSpans().size());
-		assertEquals(template.getSDocumentGraph().getSStructures().size(), pair1.sDocument.getSDocumentGraph().getSStructures().size());
+		assertEquals(template.getSDocumentGraph().getSTokens().size(),     sDoc1.getSDocumentGraph().getSTokens().size());
+		assertEquals(template.getSDocumentGraph().getSSpans().size(),      sDoc1.getSDocumentGraph().getSSpans().size());
+		assertEquals(template.getSDocumentGraph().getSStructures().size(), sDoc1.getSDocumentGraph().getSStructures().size());
 		
-		assertNotNull(pair1.sDocument.getSDocumentGraph());
-		assertNull(pair2.sDocument.getSDocumentGraph());
-		assertNull(pair3.sDocument.getSDocumentGraph());
+		assertNotNull(sDoc1.getSDocumentGraph());
+		assertNull(sDoc2.getSDocumentGraph());
+		assertNull(sDoc3.getSDocumentGraph());
 	}
 	
 	/**
