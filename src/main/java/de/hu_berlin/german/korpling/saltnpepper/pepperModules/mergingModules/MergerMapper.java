@@ -312,7 +312,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param useIndexof If this flag is set, all omit chars are removed from both provided strings and a normal indexOf is used
 	 * @return the index on success and -1 on failure
 	 */
-	protected int indexOfOmitChars(String stringToSearchIn, String stringToSearchFor, char[] omitCharArray, boolean useIndexOf) {
+	protected static int indexOfOmitChars(String stringToSearchIn, String stringToSearchFor, char[] omitCharArray, boolean useIndexOf) {
 
 		/* put all omit characters into a hashset */
 		HashSet<Character> omitChars = new HashSet<Character>();
@@ -588,6 +588,92 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	}
 	
 	/**
+	 * This method checks whether the provided documents are mergeable. I.e., it 
+	 * is checked whether at least one text of the one document is alignible with at
+	 * least one text of the other document.
+	 * @param doc1 Some {@link SDocument}
+	 * @param doc2 Some {@link SDocument}
+	 * @return true, if one of the {@link SDocument} objects is meargeable into the other and false, else
+	 */
+	public static boolean isMergeable(SDocument doc1,	SDocument doc2){
+		boolean retVal = false;
+		Hashtable<Character,String> escapeTable = new Hashtable<Character, String>();
+		escapeTable.put(' ', ""); 
+		escapeTable.put('\t', "");
+		escapeTable.put('\n', "");
+		escapeTable.put('\r', "");
+	
+		escapeTable.put('ä', "ae");
+		escapeTable.put('ö', "oe");
+		escapeTable.put('ü', "ue");
+		escapeTable.put('ß', "ss");
+		escapeTable.put('Ä', "Ae");
+		escapeTable.put('Ö', "Oe");
+		escapeTable.put('Ü', "Ue");
+		
+		char[] punctuations = {'.',',',':',';','!','?','(',')','{','}','<','>'};
+		
+		EList<STextualDS> doc1Texts = doc1.getSDocumentGraph().getSTextualDSs();
+		EList<STextualDS> doc2Texts = doc2.getSDocumentGraph().getSTextualDSs();
+		if (doc1Texts != null && doc2Texts != null)
+		{ // both documents should have texts
+			if ( (!doc1Texts.isEmpty()) && (!doc2Texts.isEmpty()))
+			{ // both documents do have at least one text
+				for (STextualDS text1 : doc1Texts){
+					String normalizedText1 = normalizeText(text1, escapeTable);
+					for (STextualDS text2 : doc2Texts){
+						String normalizedText2 = normalizeText(text1, escapeTable);
+						if (indexOfOmitChars(normalizedText1, normalizedText2, punctuations, true) != -1 ||
+								indexOfOmitChars(normalizedText2, normalizedText1, punctuations, true) != -1
+								
+						){
+							retVal = true;
+							break;
+						}
+					}
+					if (retVal){
+						break;
+					}
+				}
+			} // both documents do have at least one text
+			else 
+			{ // one document does not have a text. We can merge
+				retVal = true;
+			} // one document does not have a text. We can merge
+			
+		} // both documents should have texts
+		else 
+		{ // at least one document obviously does not have a text. We can merge.
+			retVal = true;
+		} // at least one document obviously does not have a text. We can merge.
+
+		return retVal;
+	}
+	
+	/**
+	 * This method normalizes the text specified by the given {@link STextualDS}.
+	 * @param sTextualDS  the {@link STextualDS} to normalize
+	 * @return The normalized text
+	 */
+	protected static String normalizeText(STextualDS sTextualDS, Hashtable<Character,String> escapeTable){
+		String normalizedText = null;
+		StringBuilder normalizedTextBuilder = new StringBuilder();
+		// normalize the text
+		for (char c : sTextualDS.getSText().toCharArray()){
+			String stringToEscape = escapeTable.get(c);
+			// fill the StringBuilder
+			if (stringToEscape != null){
+				normalizedTextBuilder.append(stringToEscape);
+			} else {
+				normalizedTextBuilder.append(c);
+			}
+		}
+		// now we have the normalized text
+		normalizedText = normalizedTextBuilder.toString();
+		return normalizedText;
+	}
+	
+	/**
 	 * This method normalizes the textual layer for the given {@link SDocument}.
 	 * Note: only the normalization is done. The equivalent {@link SToken} are not
 	 * determined in any way. For this functionality, you need to use {@link alignDocuments}.
@@ -748,7 +834,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	protected void mergeStructureContent(SDocument base, SDocument other){
 		
 	}
-	
 	
 	/**
 	 * This method merges the Document content of the other {@link SDocument} to the base {@link SDocument} and
