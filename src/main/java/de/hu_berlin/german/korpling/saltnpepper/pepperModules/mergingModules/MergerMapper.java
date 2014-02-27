@@ -331,13 +331,43 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		
 		if (useIndexOf){
 			builder = new StringBuilder();
-			for (char targetChar : stringToSearchIn.toCharArray()){
-				if (!omitChars.contains(targetChar)){
-					builder.append(targetChar);
+			////////////////////////////////
+			/*
+			if (stringToEscape == null){ // no omit char
+				normalizedToOriginalMapping.add(start);
+			} else { // omit char
+				if (stringToEscape.length() > 0){
+					for (char x : stringToEscape.toCharArray())
+					{// one char is mapped to many. all chars have the same index in the original text
+						normalizedToOriginalMapping.add(start);
+					}
+				} 
+				else 
+				{ // one char is mapped to the empty string. 
+					// do nothing
 				}
+			}*/
+			
+			////////////////////////////////
+			
+			List<Integer> normalizedToOriginalMapping = new Vector<Integer>();
+			int start = 0;
+			for (char targetChar : stringToSearchIn.toCharArray()){
+				if (!omitChars.contains(targetChar)){ // no omit char
+					normalizedToOriginalMapping.add(start);
+					builder.append(targetChar);
+				} else { // omit char
+				}
+				start += 1;
 			}
 			String targetString = builder.toString();
-			return targetString.indexOf(sourceString);
+			int index = targetString.indexOf(sourceString);
+			if (index != -1){
+				return normalizedToOriginalMapping.get(index);
+			} else {
+				return index;
+			}
+			
 		}
 		
 		/* Initialize needed structures */
@@ -491,6 +521,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		
 		// TODO @eladrion index of with punctuation skipping
 		//int offset = normalizedBaseText.toLowerCase().indexOfAnyBut(normalizedOtherText.toLowerCase(),this.punctuations);
+		//int offset = normalizedBaseText.toLowerCase().indexOf(normalizedOtherText.toLowerCase());
 		int offset = indexOfOmitChars(normalizedBaseText.toLowerCase(),normalizedOtherText.toLowerCase(),this.punctuations, true);
 		if (offset != -1)
 		{// if the normalized other text is conatined in the normalized base text

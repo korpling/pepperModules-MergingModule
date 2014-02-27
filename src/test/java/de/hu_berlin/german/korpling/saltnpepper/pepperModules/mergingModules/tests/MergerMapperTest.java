@@ -260,6 +260,8 @@ public class MergerMapperTest extends MergerMapper{
 		
 		//System.out.println("Testing Alignment");
 		
+		
+		
 		//TODO check alignTests
 		this.normalizeTextualLayer(sDoc1);
 		//System.out.println("Testing Alignment");
