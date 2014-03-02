@@ -69,7 +69,12 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	public DOCUMENT_STATUS mapSDocument() {
 		this.initialize();
 		
-		System.out.println("mapSDocument: "+ getMappingSubjects());
+		String out= "MERGING SDOCUMENT: ";
+		for (MappingSubject subj: getMappingSubjects()){
+			out= out+ subj.getSElementId().getSId()+", ";
+		}
+		System.out.println(out);
+		
 		
 		if (this.getMappingSubjects().size() != 0){
 			MappingSubject baseDocument = null;
@@ -298,7 +303,13 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	
 	@Override
 	public DOCUMENT_STATUS mapSCorpus() {
-		System.out.println("MERGING SCORPUS: "+ getMappingSubjects());
+		
+		String out= "MERGING SCORPUS: ";
+		for (MappingSubject subj: getMappingSubjects()){
+			out= out+ subj.getSElementId().getSId()+", ";
+		}
+		System.out.println(out);
+		
 		
 		for (MappingSubject subj: getMappingSubjects()){
 			if (subj.getSElementId().getSIdentifiableElement() instanceof SCorpus){
