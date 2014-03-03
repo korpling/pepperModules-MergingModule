@@ -80,19 +80,19 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				// normalize all texts
 				for (MappingSubject subj : this.getMappingSubjects()){
 					if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
-						this.normalizeTextualLayer((SDocument) subj.getSElementId().getSIdentifiableElement());
+						SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
+//						if (sDoc.getSDocumentGraph()== null){
+//							sDoc.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+//						}
+						this.normalizeTextualLayer(sDoc);
 					}
 				}
 				
+				//find base document
 				for (MappingSubject subj : this.getMappingSubjects()){
 					if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
-						//baseDocument= subj;
-						
 						SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
 						if (sDoc.equals(container.getBaseDocument())){
-							System.out.println("Chose base document. It is document with id ");
-//							baseDocPair = sDocPair;
-//							baseDocPair.status = DOCUMENT_STATUS.IN_PROGRESS;
 							baseDocument= subj;
 							baseDocument.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
 						}
@@ -102,112 +102,115 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				/// base text -- < Other Document -- nonEquivalentTokens >
 				Hashtable<STextualDS, Hashtable<SDocument,HashSet<SToken>>> nonEquivalentTokenSets = new Hashtable<STextualDS, Hashtable<SDocument,HashSet<SToken>>>();
 				// allign all texts
-//				for (DocumentStatusPair sDocPair : this.getDocumentStatusPairs()){
 				for (MappingSubject subj : this.getMappingSubjects()){
 					boolean hasTexts = true;
-//					if (! sDocPair.sDocument.equals(container.getBaseDocument()))
 					SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
-					if (! sDoc.equals(container.getBaseDocument()))
-					{// ignore the base document and align all other
-						if (sDoc.getSDocumentGraph().getSTextualDSs() != null)
-						{ // there are possibly texts
-							subj.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
-							if (sDoc.getSDocumentGraph().getSTextualDSs().size() > 0)
-							{ // The other document has at least one text
-								HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-								for (STextualDS baseText : container.getBaseDocument().getSDocumentGraph().getSTextualDSs())
-								{ // for all texts of the base document
-									nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-									// initialize the set of nonEquivalent token. Initially, all token do not have an equivalent.
-									// in alignTexts, tokens which DO have an equivalent are removed from the set
-									if (sDoc.getSDocumentGraph().getSTokens() != null){
-										nonEquivalentTokenInOtherTexts.addAll(sDoc.getSDocumentGraph().getSTokens());
-									}
-									for (STextualDS otherText : sDoc.getSDocumentGraph().getSTextualDSs())
-									{ // allign the current base text with all texts of the other document
-										this.alignTexts(baseText, otherText,nonEquivalentTokenInOtherTexts);
-									}
-									/// save all unique token of the other document
-									if (nonEquivalentTokenSets.containsKey(baseText))
-									{
-										nonEquivalentTokenSets.get(baseText).put(sDoc, nonEquivalentTokenInOtherTexts);
-									} 
-									else 
-									{
-										Hashtable<SDocument,HashSet<SToken>> newTab = new Hashtable<SDocument, HashSet<SToken>>();
-										newTab.put(sDoc, nonEquivalentTokenInOtherTexts);
-										nonEquivalentTokenSets.put(baseText, newTab);
-									}
-								} // for all texts of the base document
-							} // The other document has at least one text 
-							else 
-							{ // The other document has NO text
+					if (sDoc.getSDocumentGraph()!= null){
+						if (! sDoc.equals(container.getBaseDocument()))
+						{// ignore the base document and align all other
+							if (sDoc.getSDocumentGraph().getSTextualDSs() != null)
+							{ // there are possibly texts
+								subj.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
+								if (sDoc.getSDocumentGraph().getSTextualDSs().size() > 0)
+								{ // The other document has at least one text
+									HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+									for (STextualDS baseText : container.getBaseDocument().getSDocumentGraph().getSTextualDSs()){ // for all texts of the base document
+										nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+										// initialize the set of nonEquivalent token. Initially, all token do not have an equivalent.
+										// in alignTexts, tokens which DO have an equivalent are removed from the set
+										if (sDoc.getSDocumentGraph().getSTokens() != null){
+											nonEquivalentTokenInOtherTexts.addAll(sDoc.getSDocumentGraph().getSTokens());
+										}
+										for (STextualDS otherText : sDoc.getSDocumentGraph().getSTextualDSs()){ // allign the current base text with all texts of the other document
+											this.alignTexts(baseText, otherText,nonEquivalentTokenInOtherTexts);
+										}
+										/// save all unique token of the other document
+										if (nonEquivalentTokenSets.containsKey(baseText)){
+											nonEquivalentTokenSets.get(baseText).put(sDoc, nonEquivalentTokenInOtherTexts);
+										} else {
+											Hashtable<SDocument,HashSet<SToken>> newTab = new Hashtable<SDocument, HashSet<SToken>>();
+											newTab.put(sDoc, nonEquivalentTokenInOtherTexts);
+											nonEquivalentTokenSets.put(baseText, newTab);
+										}
+									} // for all texts of the base document
+								} // The other document has at least one text 
+								else { // The other document has NO text
+									hasTexts = false;
+								} // The other document has NO text
+							} // there are possibly texts
+							else { // The other document has NO text
 								hasTexts = false;
 							} // The other document has NO text
-						} // there are possibly texts
-						else 
-						{ // The other document has NO text
-							hasTexts = false;
-						} // The other document has NO text
-						
-						if (! hasTexts){
-							HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-							for (STextualDS baseText : container.getBaseDocument().getSDocumentGraph().getSTextualDSs()){
-								nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-								if (sDoc.getSDocumentGraph().getSTokens() != null)
-								{ // mark all tokens of the other document as unique
-									nonEquivalentTokenInOtherTexts.addAll(sDoc.getSDocumentGraph().getSTokens());
-								}
-								if (nonEquivalentTokenSets.containsKey(baseText)){
-									nonEquivalentTokenSets.get(baseText).put(sDoc, nonEquivalentTokenInOtherTexts);
-								} else {
-									Hashtable<SDocument,HashSet<SToken>> newTab = new Hashtable<SDocument, HashSet<SToken>>();
-									newTab.put(sDoc, nonEquivalentTokenInOtherTexts);
-									nonEquivalentTokenSets.put(baseText, newTab);
+							
+							if (! hasTexts){
+								HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+								if (container== null)
+									throw new PepperModuleException(this, "No container was found.");
+								container.getBaseDocument();
+								container.getBaseDocument().getSDocumentGraph();
+								container.getBaseDocument().getSDocumentGraph().getSTextualDSs();
+								if (container.getBaseDocument().getSDocumentGraph().getSTextualDSs()!= null){
+									for (STextualDS baseText : container.getBaseDocument().getSDocumentGraph().getSTextualDSs()){
+										nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+										if (sDoc.getSDocumentGraph().getSTokens() != null)
+										{ // mark all tokens of the other document as unique
+											nonEquivalentTokenInOtherTexts.addAll(sDoc.getSDocumentGraph().getSTokens());
+										}
+										if (nonEquivalentTokenSets.containsKey(baseText)){
+											nonEquivalentTokenSets.get(baseText).put(sDoc, nonEquivalentTokenInOtherTexts);
+										} else {
+											Hashtable<SDocument,HashSet<SToken>> newTab = new Hashtable<SDocument, HashSet<SToken>>();
+											newTab.put(sDoc, nonEquivalentTokenInOtherTexts);
+											nonEquivalentTokenSets.put(baseText, newTab);
+										}
+									}
 								}
 							}
 						}
-					} 
+					}
 				}
 				
 				/// choose the perfect STextualDS of the base Document
 				SDocument baseDoc = this.container.getBaseDocument();
 				STextualDS baseText = null;
 				int minimalNonEquivalentTokens = -1;
-				
-				for (STextualDS text : baseDoc.getSDocumentGraph().getSTextualDSs())
-				{ // for all texts of the base document
-					Hashtable<SDocument,HashSet<SToken>> nonEQTokensInOtherDoc = nonEquivalentTokenSets.get(text);
-					if (nonEQTokensInOtherDoc != null)
-					{ // there is a set of non-equivalent token for the current base text
-						int countOfNonEquivalentTokens = 0;
-						for (SDocument otherDoc : nonEQTokensInOtherDoc.keySet())
-						{ // count the number of tokens of all documents which do not have an equivalent in the current base text
-							countOfNonEquivalentTokens += nonEQTokensInOtherDoc.get(otherDoc).size();
-						} // count the number of tokens of all documents which do not have an equivalent in the current base text
-						if (minimalNonEquivalentTokens == -1)
-						{ // if the minimalNonEquivalentTokens value is -1, we did not process a document, yet. initialize
-							minimalNonEquivalentTokens = countOfNonEquivalentTokens;
-							baseText = text;
-						} // if the minimalNonEquivalentTokens value is -1, we did not process a document, yet. initialize
-						else 
-						{ // there is some base text
-							if (minimalNonEquivalentTokens > countOfNonEquivalentTokens)
-							{ // if there are less non-equivalent tokens for this base text than for some other, set this text as base text
+				if (	(baseDoc!= null) &&
+						(baseDoc.getSDocumentGraph()!= null)){
+					for (STextualDS text : baseDoc.getSDocumentGraph().getSTextualDSs())
+					{ // for all texts of the base document
+						Hashtable<SDocument,HashSet<SToken>> nonEQTokensInOtherDoc = nonEquivalentTokenSets.get(text);
+						if (nonEQTokensInOtherDoc != null)
+						{ // there is a set of non-equivalent token for the current base text
+							int countOfNonEquivalentTokens = 0;
+							for (SDocument otherDoc : nonEQTokensInOtherDoc.keySet())
+							{ // count the number of tokens of all documents which do not have an equivalent in the current base text
+								countOfNonEquivalentTokens += nonEQTokensInOtherDoc.get(otherDoc).size();
+							} // count the number of tokens of all documents which do not have an equivalent in the current base text
+							if (minimalNonEquivalentTokens == -1)
+							{ // if the minimalNonEquivalentTokens value is -1, we did not process a document, yet. initialize
 								minimalNonEquivalentTokens = countOfNonEquivalentTokens;
 								baseText = text;
-							} // if there are less non-equivalent tokens for this base text than for some other, set this text as base text
-						}
-					} // there is a set of non-equivalent token for the current base text
-					
+							} // if the minimalNonEquivalentTokens value is -1, we did not process a document, yet. initialize
+							else 
+							{ // there is some base text
+								if (minimalNonEquivalentTokens > countOfNonEquivalentTokens)
+								{ // if there are less non-equivalent tokens for this base text than for some other, set this text as base text
+									minimalNonEquivalentTokens = countOfNonEquivalentTokens;
+									baseText = text;
+								} // if there are less non-equivalent tokens for this base text than for some other, set this text as base text
+							}
+						} // there is a set of non-equivalent token for the current base text
+						
+					}
 				}
-				
 				// set the base text
 				this.container.setBaseText(baseText);
 				// clear the nonEquivalentTokensMap from all base text candidates which were not approved
-				for (STextualDS text : this.container.getBaseDocument().getSDocumentGraph().getSTextualDSs()){
-					if (! text.equals(this.container.getBaseText())){
-						nonEquivalentTokenSets.remove(text);
+				if (this.container.getBaseDocument()!= null){
+					for (STextualDS text : this.container.getBaseDocument().getSDocumentGraph().getSTextualDSs()){
+						if (! text.equals(this.container.getBaseText())){
+							nonEquivalentTokenSets.remove(text);
+						}
 					}
 				}
 				
@@ -216,77 +219,69 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				for (MappingSubject subj : this.getMappingSubjects())
 				{ // for all documents
 					SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
-					if (! sDoc.equals(container.getBaseDocument()))
-					{// ignore the base document and merge the others
-						if (sDoc.getSDocumentGraph().getSTextualDSs() != null)
-						{ // there should be texts
-							System.out.println("\ttext based search");
-							// get the set of tokens in the document which do not have an equivalent in the base text
-							HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-							if (nonEquivalentTokenSets.get(this.container.getBaseText()) != null){
-								if (nonEquivalentTokenSets.get(this.container.getBaseText()).get(sDoc) != null){
-									nonEquivalentTokenInOtherTexts = nonEquivalentTokenSets.get(this.container.getBaseText()).get(sDoc);
+					if (sDoc.getSDocumentGraph()!= null){
+						if (! sDoc.equals(container.getBaseDocument()))
+						{// ignore the base document and merge the others
+							if (sDoc.getSDocumentGraph().getSTextualDSs() != null)
+							{ // there should be texts
+								System.out.println("\ttext based search");
+								// get the set of tokens in the document which do not have an equivalent in the base text
+								HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+								if (nonEquivalentTokenSets.get(this.container.getBaseText()) != null){
+									if (nonEquivalentTokenSets.get(this.container.getBaseText()).get(sDoc) != null){
+										nonEquivalentTokenInOtherTexts = nonEquivalentTokenSets.get(this.container.getBaseText()).get(sDoc);
+									}
 								}
-							}
-							// merge the document content
-							this.mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(), sDoc, nonEquivalentTokenInOtherTexts);
-							// we are finished with the document. Free the memory
-							if (! this.isTestMode){
-								System.out.println("Finishing document: " + (SDocument)baseDocument.getSElementId().getSIdentifiableElement());
-								this.container.finishDocument(sDoc);
-							}
-							subj.setMappingResult(DOCUMENT_STATUS.DELETED);
-						} else {
-							// there are no texts. So, just copy everything into the base document graph
-							System.out.println("\tno text found");
-							HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-							if (sDoc.getSDocumentGraph().getSTokens() != null){
-								// all tokens are unique
-								nonEquivalentTokenInOtherTexts.addAll(sDoc.getSDocumentGraph().getSTokens());
-							}
-							// merge the document content
-							this.mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(),sDoc, nonEquivalentTokenInOtherTexts);
-							// we are finished with the document. Free the memory
-							
-							if (! this.isTestMode){
-								System.out.println("Finishing document: " + (SDocument)baseDocument.getSElementId().getSIdentifiableElement());
-								this.container.finishDocument(sDoc);
-							}
+								// merge the document content
+								this.mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(), sDoc, nonEquivalentTokenInOtherTexts);
+								// we are finished with the document. Free the memory
+								if (! this.isTestMode){
+									System.out.println("Finishing document: " + (SDocument)baseDocument.getSElementId().getSIdentifiableElement());
+									this.container.finishDocument(sDoc);
+								}
 								subj.setMappingResult(DOCUMENT_STATUS.DELETED);
+							} else {
+								// there are no texts. So, just copy everything into the base document graph
+								System.out.println("\tno text found");
+								HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+								if (sDoc.getSDocumentGraph().getSTokens() != null){
+									// all tokens are unique
+									nonEquivalentTokenInOtherTexts.addAll(sDoc.getSDocumentGraph().getSTokens());
+								}
+								// merge the document content
+								this.mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(),sDoc, nonEquivalentTokenInOtherTexts);
+								// we are finished with the document. Free the memory
+								
+								if (! this.isTestMode){
+									System.out.println("Finishing document: " + (SDocument)baseDocument.getSElementId().getSIdentifiableElement());
+									this.container.finishDocument(sDoc);
+								}
+									subj.setMappingResult(DOCUMENT_STATUS.DELETED);
+							}
 						}
-					} 
+					}
 				}
 				// clear the table of non-equivalent tokens
 				nonEquivalentTokenSets.clear();
 			}
 			
-			if (! this.isTestMode){
-				System.out.println("Finishing document: " + (SDocument)baseDocument.getSElementId().getSIdentifiableElement());
-				this.container.finishDocument((SDocument)baseDocument.getSElementId().getSIdentifiableElement());
-				baseDocument.setMappingResult(DOCUMENT_STATUS.COMPLETED);
+			
+			if (baseDocument!= null){
+				if (! this.isTestMode){
+					System.out.println("Finishing document: " + (SDocument)baseDocument.getSElementId().getSIdentifiableElement());
+					this.container.finishDocument((SDocument)baseDocument.getSElementId().getSIdentifiableElement());
+					baseDocument.setMappingResult(DOCUMENT_STATUS.COMPLETED);
+				}
+			}else{
+				// nothing to be merged
+				
 			}
 		}else{
 			logger.warn("No documents to merge");
 		}
 		
-		// print the count of STextualDS for which there is an equivalent token 
-		/*
-		System.out.println("Base document has "+ this.container.getBaseDocument().getSDocumentGraph().getSTokens().size()+" tokens");
-		System.out.println("There are equivalence entries for "+this.container.getEquivalenceMap().size()+" tokens of the base document");
-		System.out.println("The base text has "+this.container.getAlignedTokens(this.container.getBaseText()).getTokens().size());
-		for (SToken tok : this.container.getBaseDocument().getSDocumentGraph().getSTokens()){
-			System.out.println("Base token "+tok.getSName()+ " has an equivalent in "+this.container.getEquivalenceMap().get(tok).size() +" texts");
-			for (STextualDS text : this.container.getEquivalenceMap().get(tok).keySet()){
-				System.out.println("Token "+this.container.getEquivalenceMap().get(tok).get(text).getSId()+ " is the equivalent in text " +text.getSElementId());
-			}
-		}*/
-		
 		System.out.println(">>>>>>>>>>>>>>>>>><< mapping results: "+getMappingSubjects());
-		if (! this.isTestMode){
-			return(DOCUMENT_STATUS.COMPLETED);
-		} else {
-			return(DOCUMENT_STATUS.IN_PROGRESS);
-		}
+		return(DOCUMENT_STATUS.COMPLETED);
 	}
 	
 	@Override
@@ -729,76 +724,79 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		if (sDocument == null)
 			throw new PepperModuleException(this, "Cannot normalize Text of the document since the SDocument reference is NULL");
 		
-		// check whether the document has any STextualDS
-		List<STextualDS> sTextualDSs = sDocument.getSDocumentGraph().getSTextualDSs();
-		
-		//TODO I do not understand what happens here @Mario: Can you please adopt this to new fields and methods?
-//		if (sTextualDSs == null){
-//			this.getDocumentStatusPairs().add(new DocumentStatusPair(sDocument,DOCUMENT_STATUS.DELETED));
-//		} else if (sTextualDSs.size() == 0){
-//			this.getDocumentStatusPairs().add(new DocumentStatusPair(sDocument,DOCUMENT_STATUS.DELETED));
-//		}
-		// create maps which give fast access to a token which is specified by it's original left/right value
-		Hashtable<Integer,SToken> tokensMappedByLeft = new Hashtable<Integer, SToken>();
-		Hashtable<Integer,SToken> tokensMappedByRight = new Hashtable<Integer, SToken>();
-		for (STextualRelation textRel : sDocument.getSDocumentGraph().getSTextualRelations()){
-			tokensMappedByLeft.put(textRel.getSStart(), textRel.getSToken());
-			tokensMappedByRight.put(textRel.getSEnd(), textRel.getSToken());
-		}
-		
-		// normalize all textual datasources
-		for (STextualDS sTextualDS : sTextualDSs){
+		if (sDocument.getSDocumentGraph()!= null){
 			
-			String normalizedText = null;
-			StringBuilder normalizedTextBuilder = new StringBuilder();
+			// check whether the document has any STextualDS
+			List<STextualDS> sTextualDSs = sDocument.getSDocumentGraph().getSTextualDSs();
 			
-			SToken currentToken= null;
+			//TODO I do not understand what happens here @Mario: Can you please adopt this to new fields and methods?
+	//		if (sTextualDSs == null){
+	//			this.getDocumentStatusPairs().add(new DocumentStatusPair(sDocument,DOCUMENT_STATUS.DELETED));
+	//		} else if (sTextualDSs.size() == 0){
+	//			this.getDocumentStatusPairs().add(new DocumentStatusPair(sDocument,DOCUMENT_STATUS.DELETED));
+	//		}
+			// create maps which give fast access to a token which is specified by it's original left/right value
+			Hashtable<Integer,SToken> tokensMappedByLeft = new Hashtable<Integer, SToken>();
+			Hashtable<Integer,SToken> tokensMappedByRight = new Hashtable<Integer, SToken>();
+			for (STextualRelation textRel : sDocument.getSDocumentGraph().getSTextualRelations()){
+				tokensMappedByLeft.put(textRel.getSStart(), textRel.getSToken());
+				tokensMappedByRight.put(textRel.getSEnd(), textRel.getSToken());
+			}
 			
-			int currentLeft = 0;
-			int countOfChangedChars = 0;
-			int currentTokenLength = 1;
-			int currentNormalizedLeft = 0;
-			
-			// normalize the text
-			for (char c : sTextualDS.getSText().toCharArray()){
-				String stringToEscape = this.escapeTable.get(c);
-				// fill the StringBuilder
-				if (stringToEscape != null){
-					normalizedTextBuilder.append(stringToEscape);
-					countOfChangedChars += 1;
-					currentNormalizedLeft += stringToEscape.length();
-				} else {
-					normalizedTextBuilder.append(c);
-					currentNormalizedLeft += 1;
-				}
+			// normalize all textual datasources
+			for (STextualDS sTextualDS : sTextualDSs){
 				
-				if (currentToken == null){// If we are currently NOT iterating over a token's interval
-					currentToken = tokensMappedByLeft.get(currentLeft);
-					if (currentToken != null){// if a token interval begins at the current left value
-						currentTokenLength = 1;
-					}
-				} else{// If we ARE currently iterating over a token's interval
-					//System.out.println("Aligning Token "+currentToken.getSName()+ " . Current left: "+currentLeft);
-					if (tokensMappedByRight.containsKey(currentLeft)){// if we reached the original end-char of the token
-						// beware: the SEnd value of a STextalRelation is the last char index of the token +1
-						container.addAlignedToken(sTextualDS, currentToken, currentNormalizedLeft, currentNormalizedLeft+currentTokenLength );
-						// reinitialize the normalizedTokenLeft and unmark the now processed token
-						currentToken = null;
+				String normalizedText = null;
+				StringBuilder normalizedTextBuilder = new StringBuilder();
+				
+				SToken currentToken= null;
+				
+				int currentLeft = 0;
+				int countOfChangedChars = 0;
+				int currentTokenLength = 1;
+				int currentNormalizedLeft = 0;
+				
+				// normalize the text
+				for (char c : sTextualDS.getSText().toCharArray()){
+					String stringToEscape = this.escapeTable.get(c);
+					// fill the StringBuilder
+					if (stringToEscape != null){
+						normalizedTextBuilder.append(stringToEscape);
+						countOfChangedChars += 1;
+						currentNormalizedLeft += stringToEscape.length();
 					} else {
-						//System.out.println("Found char of token: "+c);
-						currentTokenLength += 1;
+						normalizedTextBuilder.append(c);
+						currentNormalizedLeft += 1;
 					}
+					
+					if (currentToken == null){// If we are currently NOT iterating over a token's interval
+						currentToken = tokensMappedByLeft.get(currentLeft);
+						if (currentToken != null){// if a token interval begins at the current left value
+							currentTokenLength = 1;
+						}
+					} else{// If we ARE currently iterating over a token's interval
+						//System.out.println("Aligning Token "+currentToken.getSName()+ " . Current left: "+currentLeft);
+						if (tokensMappedByRight.containsKey(currentLeft)){// if we reached the original end-char of the token
+							// beware: the SEnd value of a STextalRelation is the last char index of the token +1
+							container.addAlignedToken(sTextualDS, currentToken, currentNormalizedLeft, currentNormalizedLeft+currentTokenLength );
+							// reinitialize the normalizedTokenLeft and unmark the now processed token
+							currentToken = null;
+						} else {
+							//System.out.println("Found char of token: "+c);
+							currentTokenLength += 1;
+						}
+					}
+					currentLeft += 1;
 				}
-				currentLeft += 1;
+				if (currentToken != null){ // there is a token which is not closed yet. do it now
+					container.addAlignedToken(sTextualDS, currentToken, currentNormalizedLeft, currentNormalizedLeft+currentTokenLength );
+					//System.out.println("Ended alignment of token "+ currentToken.getSName());
+				}
+				// now we have the normalized text
+				normalizedText = normalizedTextBuilder.toString();
+				// add it to the tokenMergeContainer
+				this.container.addNormalizedText(sDocument, sTextualDS, normalizedText, countOfChangedChars);
 			}
-			if (currentToken != null){ // there is a token which is not closed yet. do it now
-				container.addAlignedToken(sTextualDS, currentToken, currentNormalizedLeft, currentNormalizedLeft+currentTokenLength );
-				//System.out.println("Ended alignment of token "+ currentToken.getSName());
-			}
-			// now we have the normalized text
-			normalizedText = normalizedTextBuilder.toString();
-			// add it to the tokenMergeContainer
-			this.container.addNormalizedText(sDocument, sTextualDS, normalizedText, countOfChangedChars);
 		}
 	}
 	
