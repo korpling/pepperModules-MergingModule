@@ -314,7 +314,6 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 	@Override
 	public void start() throws PepperModuleException
 	{
-		System.out.println("merging table: "+ getMergingTable());
 		if (getSaltProject()== null)
 			throw new PepperFWException("No salt project was set in module '"+getName()+", "+getVersion()+"'.");
 		//creating new thread group for mapper threads
@@ -341,13 +340,11 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 				givenSlots.put(sElementId.getSId(), givenSlot);
 			}
 			givenSlot.add(sElementId);
-			System.out.println("givenSlot: "+ givenSlot);
 			
 			if (givenSlot.size() < mappableSlot.size()){
 				documentController.sendToSleep();
 			}else if (givenSlot.size()== mappableSlot.size()){
 				try{
-					System.out.println("Call start("+createGlobalId(sElementId)+")");
 					start(sElementId);
 				}catch (Exception e){
 					throw new PepperModuleException("",e);
@@ -391,7 +388,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 	 **/
 	@Override
 	public PepperMapper createPepperMapper(SElementId sElementId) {
-		MergerMapper mapper= new MergerMapper();	
+		MergerMapper mapper= new MergerMapper();
 		if (sElementId.getSIdentifiableElement() instanceof SDocument){
 			if (	(givenSlots== null)||
 					(givenSlots.size()== 0)){
@@ -406,6 +403,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 				mappingSubject.setSElementId(id);
 				mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
 				mapper.getMappingSubjects().add(mappingSubject);
+				
 			}
 		}else if (sElementId.getSIdentifiableElement() instanceof SCorpus){
 			
