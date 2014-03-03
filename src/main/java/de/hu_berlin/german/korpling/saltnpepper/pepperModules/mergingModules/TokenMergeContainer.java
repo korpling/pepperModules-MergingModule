@@ -225,8 +225,12 @@ public class TokenMergeContainer {
 			return returnVal;
 		}
 		
+		public AlignedTokensMap getAlignedTokens(STextualDS text){
+			return this.alignedTextsMap.get(text);
+		}
+		
 		public void addAlignedToken(STextualDS text, SToken tok, int left, int right){
-			//System.out.println("Aligned Token "+tok.getSName() + " with start/end:"+left+"/"+right);
+			//System.out.println("Aligned Token "+tok.getSName() +" in SText "+ text.getSElementId()+ " with start/end:"+left+"/"+right);
 			if (this.alignedTextsMap.containsKey(text)){
 				this.alignedTextsMap.get(text).addToken(tok, left, right);
 			} else {
@@ -238,6 +242,10 @@ public class TokenMergeContainer {
 		}
 		
 		public void addTokenMapping(SToken baseTextToken, SToken otherTextToken, STextualDS otherSText){
+			if (otherTextToken.equals(baseTextToken)){
+				System.out.println("Sorry, you tried to add a token as it's own mapping");
+				return;
+			}
 		System.out.println("Adding mapping for base text token "
 				+ baseTextToken.getSDocumentGraph().getSDocument().getSId()
 				+ "/"
@@ -249,7 +257,12 @@ public class TokenMergeContainer {
 			{// there is a mapping for the base text token
 				if (! this.equivalentToken.get(baseTextToken).containsKey(otherSText))
 				{ // there is no mapping for the base text token in the other document. Add the mapping
+					//if (! this.equivalentToken.get(baseTextToken).containsKey(arg0))
 					this.equivalentToken.get(baseTextToken).put(otherSText, otherTextToken);
+				} 
+				else 
+				{ // there is a mapping for the base token in the otherSTextt
+					System.out.println("WARNING: There is already another mapping for the base SToken "+baseTextToken.getSName()+" in STextualDS "+otherSText.getSName());
 				}
 			} 
 			else 
@@ -275,6 +288,10 @@ public class TokenMergeContainer {
 				equivalentToken = this.equivalentToken.get(baseTextToken).get(otherSText);
 			}
 			return equivalentToken;
+		}
+		
+		public Hashtable<SToken,Hashtable<STextualDS,SToken>> getEquivalenceMap(){
+			return this.equivalentToken;
 		}
 		
 		/**

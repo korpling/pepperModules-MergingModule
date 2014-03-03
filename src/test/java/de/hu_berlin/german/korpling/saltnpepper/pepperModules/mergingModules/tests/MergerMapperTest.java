@@ -101,12 +101,55 @@ public class MergerMapperTest extends MergerMapper{
 		SaltSample.createAnaphoricAnnotations(template);
 		SaltSample.createSyntaxAnnotations(template);
 		SaltSample.createMorphologyAnnotations(template);
+		/*
+		STextualDS sText1 = sDoc1.getSDocumentGraph().getSTextualDSs().get(0);
+		STextualDS sText2 = sDoc2.getSDocumentGraph().getSTextualDSs().get(0);
+		STextualDS sText3 = sDoc3.getSDocumentGraph().getSTextualDSs().get(0);
 		
+		sText1.setId(sText1.getId()+"_1");
+		sText2.setId(sText1.getId()+"_2");
+		sText3.setId(sText1.getId()+"_3");
+		*/
+		
+		this.isTestMode = true;
 		this.mapSDocument();
-		// TODO real tests
-		assertEquals(DOCUMENT_STATUS.COMPLETED, sub1.getMappingResult());
-		assertEquals(DOCUMENT_STATUS.DELETED,   sub2.getMappingResult());
-		assertEquals(DOCUMENT_STATUS.DELETED,   sub3.getMappingResult());
+		
+		
+		// First test: the first document must be the base document
+		assertEquals(sDoc1,container.getBaseDocument());
+		//assertNotNull("Document 2 was deleted!",sDoc2);
+		//assertNotNull("The text of Document 2 was deleted!",sDoc2.getSDocumentGraph().getSTextualDSs());
+		//assertTrue("The text of Document 2 was deleted!",sDoc2.getSDocumentGraph().getSTextualDSs().size() != 0);
+		
+		//assertNotNull("The tokens of Document 2 was deleted!",sDoc2.getSDocumentGraph().getSTokens());
+		//assertTrue("The tokens of Document 2 was deleted!",sDoc2.getSDocumentGraph().getSTokens().size() != 0);
+		
+		//assertNotNull("We have a bug here. A token is deleted!",this.container.getAlignedTokenByStart(sText2, 0));
+		//System.out.println("Normalized SText for doc2: "+this.container.getNormalizedText(sText2));
+		
+		// Second test: the text of the first document must be the base text
+		assertEquals(sDoc1.getSDocumentGraph().getSTextualDSs().get(0),container.getBaseDocument().getSDocumentGraph().getSTextualDSs().get(0));
+		
+		// Fourth test: for (doc : [doc2,doc3])
+		//                 for every token i of doc:
+		//                      token j of doc1 is equivalent to token i
+		/*
+		EList<SToken> sDoc1Tokens = sDoc1.getSDocumentGraph().getSortedSTokenByText();
+		EList<SToken> sDoc2Tokens = sDoc2.getSDocumentGraph().getSortedSTokenByText();
+		EList<SToken> sDoc3Tokens = sDoc3.getSDocumentGraph().getSortedSTokenByText();
+		int i = 0;
+		
+		for (SToken sDoc1Token : sDoc1Tokens){
+			//System.out.println("Position and length of doc1 token "+sDoc1Token.getSName()+": "+this.container.getAlignedTokenStart(sText1, sDoc1Token)+"/"+this.container.getAlignedTokenLength(sText1, sDoc1Token));
+			//System.out.println("Position and length of doc2 token "+sDoc2Tokens.get(i).getSName()+": "+this.container.getAlignedTokenStart(sText1, sDoc2Tokens.get(i))+"/"+this.container.getAlignedTokenLength(sText1, sDoc2Tokens.get(i)));
+			//System.out.println("Position and length of doc3 token "+sDoc3Tokens.get(i).getSName()+": "+this.container.getAlignedTokenStart(sText1, sDoc3Tokens.get(i))+"/"+this.container.getAlignedTokenLength(sText1, sDoc3Tokens.get(i)));
+			assertEquals(sDoc2Tokens.get(i),this.container.getTokenMapping(sDoc1Token, sDoc2.getSDocumentGraph().getSTextualDSs().get(0)));
+			assertEquals(sDoc3Tokens.get(i),this.container.getTokenMapping(sDoc1Token, sDoc3.getSDocumentGraph().getSTextualDSs().get(0)));
+			i++;
+		}*/
+		
+		// the count of tokens in sDoc1 must be the same as before!
+		assertEquals(template.getSDocumentGraph().getSTokens().size(),     sDoc1.getSDocumentGraph().getSTokens().size());
 		
 		assertEquals(template.getSDocumentGraph().getSNodes().size(),     sDoc1.getSDocumentGraph().getSNodes().size());
 		assertEquals(template.getSDocumentGraph().getSRelations().size(), sDoc1.getSDocumentGraph().getSRelations().size());
@@ -118,6 +161,79 @@ public class MergerMapperTest extends MergerMapper{
 		assertNotNull(sDoc1.getSDocumentGraph());
 		assertNull(sDoc2.getSDocumentGraph());
 		assertNull(sDoc3.getSDocumentGraph());
+	}
+	
+	/**
+	 * Tests the document status after the mapping of three documents containing the same primary data and same tokenization, but
+	 * different annotation layers:
+	 * <ol>
+	 * 	<li>document1: anaphoric relations (pointing relations)</li>
+	 * 	<li>document2: syntactic annotations </li>
+	 * 	<li>document3: morphological annotations (POS and lemma)</li>
+	 * </ol>
+	 */
+	@Test
+	public void testMap3Documents_sameTokenizationDocumentStatus() {
+		// set up empty documents
+		SDocument sDoc1= SaltFactory.eINSTANCE.createSDocument();
+		SDocument sDoc2= SaltFactory.eINSTANCE.createSDocument();
+		SDocument sDoc3= SaltFactory.eINSTANCE.createSDocument();
+		
+		sDoc1.setSId("sdoc1");
+		sDoc2.setSId("sdoc2");
+		sDoc3.setSId("sdoc3");
+
+		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		sDoc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		sDoc3.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		
+		MappingSubject sub1 = new MappingSubject();
+		MappingSubject sub2 = new MappingSubject();
+		MappingSubject sub3 = new MappingSubject();
+		
+		sub1.setSElementId(sDoc1.getSElementId());
+		sub2.setSElementId(sDoc2.getSElementId());
+		sub3.setSElementId(sDoc3.getSElementId());
+		
+		getFixture().getMappingSubjects().add(sub1);
+		getFixture().getMappingSubjects().add(sub2);
+		getFixture().getMappingSubjects().add(sub3);
+		
+		// document data
+		// doc 1 
+		SaltSample.createPrimaryData(sDoc1);
+		SaltSample.createTokens(sDoc1);
+		SaltSample.createAnaphoricAnnotations(sDoc1);
+			
+		// doc 2
+		SaltSample.createPrimaryData(sDoc2);
+		SaltSample.createTokens(sDoc2);
+		SaltSample.createSyntaxStructure(sDoc2);
+		SaltSample.createSyntaxAnnotations(sDoc2);
+		
+		// doc 3
+		SaltSample.createPrimaryData(sDoc3);
+		SaltSample.createTokens(sDoc3);
+		SaltSample.createMorphologyAnnotations(sDoc3);
+		
+		// template document contains all annotations
+		SDocument template= SaltFactory.eINSTANCE.createSDocument();
+		template.setSId("template");
+		template.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		SaltSample.createPrimaryData(template);
+		SaltSample.createTokens(template);
+		SaltSample.createSyntaxStructure(template);
+		SaltSample.createAnaphoricAnnotations(template);
+		SaltSample.createSyntaxAnnotations(template);
+		SaltSample.createMorphologyAnnotations(template);
+		
+		this.isTestMode = false;
+		this.mapSDocument();
+		
+		assertEquals(DOCUMENT_STATUS.COMPLETED, sub1.getMappingResult());
+		assertEquals(DOCUMENT_STATUS.DELETED,   sub2.getMappingResult());
+		assertEquals(DOCUMENT_STATUS.DELETED,   sub3.getMappingResult());
+		
 	}
 	
 	/**
