@@ -426,12 +426,46 @@ public class MergerMapperTest extends MergerMapper{
 		String norm= "Die deutschen Namen, die dann oft daneben stehen, tragen meist ein solches Gepräge der Unklarheit, dass sie jeden zurückschrecken müssen, der sie statt der lateinischen einführen möchte.";
 		String dipl= "Die deutſchen Namen, die dann oft daneben ſtehen, tragen meiſt ein ſolches Gepräge der Unklarheit, daſz ſie jeden zurückſchrecken müſſen, der ſie ſtatt der lateiniſchen einführen möchte.";
 		STextualDS sTextDS1= sDoc1.getSDocumentGraph().createSTextualDS(norm);
-		//TODO tokenize ALL
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 0, 3);		//Die
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 4, 13);	//deutschen
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 14, 19);	//Namen
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 19, 20);	//,
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 21, 24);	//die
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 25, 29);	//dann
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 30, 33);	//oft
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 34, 41);	//daneben
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 42, 48);	//stehen
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 48, 49);   //,
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 50, 56);	//tragen
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 57, 62);	//meist
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 63, 66);	//ein
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 67, 74);	//solches
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 75, 82);	//Gepräge
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 83, 86);	//der
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 87, 97);	//Unklarheit
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 97, 98);	//,
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 99, 103);	//dass
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 104, 107);	//sie
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 108, 113);	//jeden
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 114, 129);	//zurückschrecken
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 130, 136);	//müssen
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 136, 137);	//,
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 138, 141);	//der
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 142, 145);	//sie
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 146, 151);	//statt
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 152, 155);	//der
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 156, 168);	//lateinischen
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 169, 178);	//einführen
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 179, 185);	//möchte
+		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 185, 186);	//.
 		
 		
 		STextualDS sTextDS2= sDoc1.getSDocumentGraph().createSTextualDS(dipl);
-		//TODO tokenize
-		// TODO tokenize : Die Deutschen Unklarheit möchte
+		// tokenize : Die Deutschen Unklarheit möchte
+		sDoc1.getSDocumentGraph().createSToken(sTextDS2, 0, 3);		//Die
+		sDoc1.getSDocumentGraph().createSToken(sTextDS2, 4, 13);	//deutschen
+		sDoc1.getSDocumentGraph().createSToken(sTextDS2, 87, 97);	//Unklarheit
+		sDoc1.getSDocumentGraph().createSToken(sTextDS2, 179, 185);	//möchte
 		
 		//create document2
 		SDocument sDoc2= SaltFactory.eINSTANCE.createSDocument();
@@ -473,11 +507,26 @@ public class MergerMapperTest extends MergerMapper{
 		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 159, 160);	//.
 		
 		//TODO call align method (or whatever)
-		MergerMapper mm = new MergerMapper();
+		//MergerMapper mm = new MergerMapper();
+		MappingSubject sub1 = new MappingSubject();
+		MappingSubject sub2 = new MappingSubject();
+		
+		sub1.setSElementId(sDoc1.getSElementId());
+		sub2.setSElementId(sDoc2.getSElementId());
+		
+		getFixture().getMappingSubjects().add(sub1);
+		getFixture().getMappingSubjects().add(sub2);
+		
+		
+		this.mapSDocument();
 		
 		//test the result
 		
-		// TODO assert baseText = norm
+		// assert base document = sDoc1 & baseText = norm
+		assertEquals("The base Document should be document 1. but it is not!",sDoc1, this.container.getBaseDocument());
+		assertEquals("The base text should be norm of document 1. but it is not!",sTextDS1, this.container.getBaseText());
+		System.out.println("Base text is: "+this.container.getBaseText().getSName());
+		System.out.println("Base text SText is: "+this.container.getBaseText().getSText());
 	}
 	
 	@Test
