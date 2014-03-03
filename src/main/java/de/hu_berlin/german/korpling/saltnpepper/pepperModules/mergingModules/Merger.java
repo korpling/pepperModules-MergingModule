@@ -40,7 +40,6 @@ import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperMapperContr
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.exceptions.PepperModuleException;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.impl.PepperManipulatorImpl;
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.SaltProject;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpus;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpusGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
@@ -48,8 +47,6 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SElementId;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SMetaAnnotatableElement;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SMetaAnnotation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SProcessingAnnotatableElement;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SProcessingAnnotation;
 
 /**
  * 
@@ -121,100 +118,6 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 		public Set<String> keySet(){
 			return(map.keySet());
 		}
-	}
-	
-	//TODO move this to SaltFactory
-	public String getGlobalId(SElementId sElementId)
-	{
-		String globalId= null;
-		if (sElementId!= null){
-			if (	(sElementId.getSIdentifiableElement()!= null)&&
-					(sElementId.getSIdentifiableElement() instanceof SProcessingAnnotatableElement)){
-				SProcessingAnnotatableElement sElement= (SProcessingAnnotatableElement) sElementId.getSIdentifiableElement();
-				SProcessingAnnotation pa= sElement.getSProcessingAnnotation(SaltFactory.eINSTANCE.createQName(SaltFactory.NAMESPACE_SALT, SaltFactory.PA_GLOBALID_NAME));
-				if (pa!= null)
-					globalId= pa.getSValueSTEXT();
-			}
-		}
-		return(globalId);
-	}
-	
-	//TODO move this to SaltFactory
-	/**
-	 * {@inheritDoc SaltFactory#createGlobalId(SElementId)}
-	 */
-	public String createGlobalId(SElementId sElementId){
-		String retVal= null;
-		if (sElementId!= null){
-			synchronized (sElementId) {
-				if (	(sElementId.getSIdentifiableElement()!= null)&&
-						(sElementId.getSIdentifiableElement() instanceof SProcessingAnnotatableElement)){
-					SProcessingAnnotatableElement sElement= (SProcessingAnnotatableElement) sElementId.getSIdentifiableElement();
-					SProcessingAnnotation pa= sElement.getSProcessingAnnotation(SaltFactory.eINSTANCE.createQName(SaltFactory.NAMESPACE_SALT, SaltFactory.PA_GLOBALID_NAME));
-					if (pa== null){
-						StringBuilder globalId= new StringBuilder();
-						globalId.append(SaltFactory.URI_SALT_SCHEMA);
-						
-						SCorpusGraph sCorpusGraph= null;
-						if (sElementId.getSIdentifiableElement() instanceof SDocument){
-							sCorpusGraph= ((SDocument) sElementId.getSIdentifiableElement()).getSCorpusGraph();
-						}else if (sElementId.getSIdentifiableElement() instanceof SCorpus){
-							sCorpusGraph= ((SCorpus) sElementId.getSIdentifiableElement()).getSCorpusGraph();
-						}
-						
-						if (sCorpusGraph!= null)
-						{
-							SaltProject project= sCorpusGraph.getSaltProject(); 
-							if (project!= null)
-							{
-								globalId.append("/");
-								globalId.append(project.getSCorpusGraphs().indexOf(sCorpusGraph));
-								globalId.append("/");
-							}
-						}
-						String actualId= sElementId.getSId().replace("salt:", "");
-						if (actualId.startsWith("/"))
-							actualId= actualId.substring(1, actualId.length());
-						globalId.append(actualId);		
-						
-						pa= sElement.createSProcessingAnnotation(SaltFactory.NAMESPACE_SALT, SaltFactory.PA_GLOBALID_NAME, globalId.toString());
-					}
-					retVal= pa.getSValueSTEXT();
-				}
-			}
-		}
-		return(retVal);
-	}
-	
-	
-	/**
-	 * Returns a String containing a table of mergable elements ({@link SDocument} and {@link SCorpus} objects, 
-	 * which are supposed to be merged). 
-	 * @return
-	 */
-	public String getMergingTable(){
-		StringBuilder retVal= new StringBuilder();
-		int y= 0;
-		for (String key: mappingTable.keySet()){
-			List<SNode> slot= mappingTable.get(key);
-			if (slot!= null){
-				if (y!= 0){
-					retVal.append(", ");
-				}
-				retVal.append("(");
-				int i= 0;
-				for (SNode sNode: slot){
-					if (i!= 0){
-						retVal.append(", ");
-					}
-					retVal.append(createGlobalId(sNode.getSElementId()));
-					i++;
-				}
-				retVal.append(")");
-			}
-			y++;
-		}
-		return(retVal.toString());
 	}
 	
 	/**
@@ -325,7 +228,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 		while ((isStart) || (sElementId!= null))
 		{	
 			isStart= false;
-			documentController= this.getModuleController().next(true);
+			documentController= this.getModuleController().next();
 			if (documentController== null){
 				break;
 			}
@@ -340,8 +243,11 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 				givenSlots.put(sElementId.getSId(), givenSlot);
 			}
 			givenSlot.add(sElementId);
+			System.out.println("givenSlot: "+ givenSlot);
+			System.out.println("mappableSlot: "+ mappableSlot);
 			
 			if (givenSlot.size() < mappableSlot.size()){
+				System.out.println("send to slepp ");
 				documentController.sendToSleep();
 			}else if (givenSlot.size()== mappableSlot.size()){
 				try{
@@ -380,7 +286,6 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 			}
 		}
 	}
-	
 	/** 
 	 * Creates a {@link PepperMapper} of type {@link MergerMapper}. Therefore the table {@link #givenSlots} 
 	 * must contain an entry for the given {@link SElementId}. The create methods passes all documents 
@@ -388,7 +293,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 	 **/
 	@Override
 	public PepperMapper createPepperMapper(SElementId sElementId) {
-		MergerMapper mapper= new MergerMapper();
+		MergerMapper mapper= new MergerMapper();	
 		if (sElementId.getSIdentifiableElement() instanceof SDocument){
 			if (	(givenSlots== null)||
 					(givenSlots.size()== 0)){
@@ -399,14 +304,16 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 				throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that a 'givenSlot' in 'givenSlots' is null or empty in method 'createPepperMapper()'. The sElementId '"+sElementId+"' was not contained in list: "+ givenSlots);
 			}
 			for (SElementId id: givenSlot){
+				System.out.println("for slot: "+ id);
 				MappingSubject mappingSubject= new MappingSubject();
 				mappingSubject.setSElementId(id);
 				mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
+				System.out.println("before: "+ mapper.getMappingSubjects());
 				mapper.getMappingSubjects().add(mappingSubject);
-				
+				System.out.println("after: "+ mapper.getMappingSubjects());
 			}
+			System.out.println("mapper: "+ mapper.getMappingSubjects());
 		}else if (sElementId.getSIdentifiableElement() instanceof SCorpus){
-			
 			List<SNode> givenSlot= mappingTable.get(sElementId.getSId());
 			if (givenSlot== null){
 				throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that a 'givenSlot' in 'givenSlots' is null or empty in method 'createPepperMapper()'. The sElementId '"+sElementId+"' was not contained in list: "+ givenSlots);
@@ -419,23 +326,5 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 			}
 		}
 		return(mapper);
-	}
-	
-	/**
-	 * Calls {@link #start(SElementId)} for all slots of {@link #mappingTable} only containing {@link SCorpus} objects.
-	 */
-	@Override
-	public void end() throws PepperModuleException {
-		if (mappingTable!= null){
-			Set<String> keys= mappingTable.keySet();
-			for (String key: keys){
-				List<SNode> slot= mappingTable.get(key);
-				if (	(slot!= null)&&
-						(slot.size()> 0)&&
-						(slot.get(0) instanceof SCorpus)){
-					this.start(slot.get(0).getSElementId());
-				}
-			}
-		}
 	}
 }	
