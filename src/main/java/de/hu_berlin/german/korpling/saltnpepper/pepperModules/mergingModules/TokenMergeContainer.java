@@ -34,6 +34,11 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
  */
 public class TokenMergeContainer {
 		
+		/**
+		 * This class contains all tokens which were aligned and allows a search for specific {@link SToken} objects
+		 * by their start position. Moreover, a search for the start and length of a specific {@link SToken} object
+		 * is possible.
+		 */
 		public class AlignedTokensMap{
 			public AlignedTokensMap(){
 				this.tokenLeftMap = new Hashtable<SToken, Integer>();
@@ -45,6 +50,10 @@ public class TokenMergeContainer {
 			private Hashtable<SToken,Integer> tokenRightMap=null;
 			private Hashtable<Integer,SToken> tokensByStart=null;
 			
+			/**
+			 * This method returns all {@link SToken} objects contained in this {@link AlignedTokensMap}
+			 * @return all contained {@link SToken} objects
+			 */
 			public EList<SToken> getTokens(){
 				return new BasicEList(tokenLeftMap.keySet());
 			}
@@ -69,6 +78,7 @@ public class TokenMergeContainer {
 			public SToken getTokenByStart(int start){
 				return this.tokensByStart.get(start);
 			}
+			
 			
 			/**
 			 * This method returns the length of the given {@link SToken} aligned to the normalized text.
@@ -112,48 +122,32 @@ public class TokenMergeContainer {
 			}
 		}
 		
+		/** The base {@link SDocument} object **/
 		SDocument baseDocument= null;
 		
+		/** The base {@link STextualDS} object **/
 		STextualDS baseText=null;
 		
-		Hashtable<SToken,Hashtable<STextualDS,SToken>> equivalentToken= null;
+		/** 
+		 * The token equivalence map. For every {@link SToken} object which has an equivalent {@link SToken} object,
+		 * the map contains an hashmap as entry which contains the equivalent {@link SToken} object as value and the
+		 * {@link STextualDS} object as key. 
+		 **/
+		private Hashtable<SToken,Hashtable<STextualDS,SToken>> equivalentToken= null;
 		
-		Hashtable<STextualDS,AlignedTokensMap> alignedTextsMap= null;
+		/** The map of aligned texts which is a map with the {@link STextualDS} objects as keys and the {@link AlignedTokensMap} as value.**/
+		private Hashtable<STextualDS,AlignedTokensMap> alignedTextsMap= null;
 		
-		Hashtable<STextualDS,String> normalizedTextMap=null;
-		
-		int countOfChangedChars = -1;
+		/** the map of normalized texts **/
+		private Hashtable<STextualDS,String> normalizedTextMap=null;
 		
 		int maximumNormalizedTextLength = -1;
 		
+		/** 
+		 * This map contains a mapping from normalized index of a character to the index
+		 * in the original text for every base {@link STextualDS} objects.
+		 **/
 		private Hashtable<STextualDS,List<Integer>> normalizedBaseTextToOriginalBaseText = null;
-		
-		public void setBaseTextPositionByNormalizedTextPosition(STextualDS sTextualDS, List<Integer> posMapping){
-//			if (this.normalizedBaseTextToOriginalBaseText == null){
-//				this.normalizedBaseTextToOriginalBaseText = new Hashtable<STextualDS, List<Integer>>();
-//				this.normalizedBaseTextToOriginalBaseText.put(sTextualDS, posMapping);
-//			} else {
-				if (! this.normalizedBaseTextToOriginalBaseText.containsKey(sTextualDS)){
-					this.normalizedBaseTextToOriginalBaseText.put(sTextualDS, posMapping);
-				}
-//			}
-		}
-		
-		public int getBaseTextPositionByNormalizedTextPosition(STextualDS sTextualDS, int position){
-			int baseTextPosition = -1;
-			if (this.normalizedBaseTextToOriginalBaseText != null){
-				if (this.normalizedBaseTextToOriginalBaseText.containsKey(sTextualDS)){
-					if (this.normalizedBaseTextToOriginalBaseText.get(sTextualDS).size() > position){
-						baseTextPosition = this.normalizedBaseTextToOriginalBaseText.get(sTextualDS).get(position);
-					}
-				}
-			}
-			return baseTextPosition;
-		}
-		
-		public EList<SToken> getBaseTextToken(){
-			return this.alignedTextsMap.get(this.baseText).getTokens();
-		}
 		
 		public TokenMergeContainer(){
 			this.equivalentToken = new Hashtable<SToken, Hashtable<STextualDS,SToken>>();
@@ -162,15 +156,67 @@ public class TokenMergeContainer {
 			this.normalizedBaseTextToOriginalBaseText = new Hashtable<STextualDS, List<Integer>>();
 		}
 		
+		/**
+		 * This method sets the specified mapping from normalized text to the original text for the specified 
+		 * {@link STextualDS} object.
+		 * @param sTextualDS The {@link STextualDS} object
+		 * @param posMapping The mapping list
+		 */
+		public void setBaseTextPositionByNormalizedTextPosition(STextualDS sTextualDS, List<Integer> posMapping){
+			if (! this.normalizedBaseTextToOriginalBaseText.containsKey(sTextualDS)){
+				this.normalizedBaseTextToOriginalBaseText.put(sTextualDS, posMapping);
+			}
+		}
+		
+		/**
+		 * This method returns the position of a character in the original text, specified by the given {@link STextualDS} and
+		 * the given position in the normalized text.
+		 * @param sTextualDS The {@link STextualDS} object
+		 * @param position The position of a character in the normalized text
+		 * @return The original position on success and -1 on failure
+		 */
+		public int getBaseTextPositionByNormalizedTextPosition(STextualDS sTextualDS, int position){
+			int baseTextPosition = -1;
+			if (this.normalizedBaseTextToOriginalBaseText.containsKey(sTextualDS)){
+				if (this.normalizedBaseTextToOriginalBaseText.get(sTextualDS).size() > position){
+					baseTextPosition = this.normalizedBaseTextToOriginalBaseText.get(sTextualDS).get(position);
+				}
+			}
+			return baseTextPosition;
+		}
+		
+		/**
+		 * This method returns the {@link SToken} objects which overlap the base text.
+		 * @return The {@link SToken} objects ov the base text
+		 */
+		public EList<SToken> getBaseTextToken(){
+			return this.alignedTextsMap.get(this.baseText).getTokens();
+		}
+		
+		/**
+		 * This method sets the base {@link SDocument}.
+		 * @param sDocument The {@link SDocument} to set as base.
+		 */
 		public void setBaseDocument(SDocument sDocument){
 			this.baseDocument = sDocument;
 		}
 		
+		/**
+		 * This method returns the base {@link SDocument} object.
+		 * @return The base {@link SDocument} or null, if there is no base {@link SDocument}
+		 */
 		public SDocument getBaseDocument(){
 			return this.baseDocument;
 		}
 		
-		public void addNormalizedText(SDocument doc, STextualDS sTextualDS, String normalizedText, int countOfChangedChars){
+		/**
+		 * This method adds the normalized text, specified by the parameter, for the specified {@link STextualDS} of the specified
+		 * {@link SDocument} object. 
+		 * @param doc The {@link SDocument} object containing the given text
+		 * @param sTextualDS The {@link STextualDS} for which a normalized text should be added
+		 * @param normalizedText The normalized text for the given {@link STextualDS}
+		 */
+		public void addNormalizedText(SDocument doc, STextualDS sTextualDS, String normalizedText){
 			if (maximumNormalizedTextLength == -1){
 				this.maximumNormalizedTextLength = normalizedText.length();
 				this.baseText = sTextualDS;
@@ -187,18 +233,39 @@ public class TokenMergeContainer {
 			this.normalizedTextMap.put(sTextualDS, normalizedText);
 		}
 		
+		/**
+		 * This method searches the normalized text for the given {@link STextualDS}.
+		 * @param sTextualDS The {@link STextualDS} to search the normalized text for.
+		 * @return The normalized text or null, if there is no normalized text for the given {@link STextualDS}
+		 */
 		public String getNormalizedText(STextualDS sTextualDS){
 			return this.normalizedTextMap.get(sTextualDS);
 		}
 		
+		/**
+		 * This method returns the base text.
+		 * @return The base text or null, if there is no such text.
+		 */
 		public STextualDS getBaseText(){
 			return this.baseText;
 		}
 		
+		/**
+		 * This method sets the base text to the one specified by the given {@link STextualDS}
+		 * @param text The {@link STextualDS} to set the base text to.
+		 */
 		public void setBaseText(STextualDS text){
 			this.baseText = text;
 		}
 		
+		/**
+		 * This method returns the {@link SToken} object which is located in the given normalized {@link STextualDS}
+		 * at the given start position.
+		 * @param sTextualDS The {@link STextualDS} which contains the {@link SToken} at the start position
+		 * @param start The start position of the {@link SToken} in the {@link STextualDS}.
+		 * @return The {@link SToken} which is located at position start in the given {@link STextualDS} or null, if 
+		 * there is no such {@link SToken}.
+		 */
 		public SToken getAlignedTokenByStart(STextualDS sTextualDS, int start){
 			SToken tok = null;
 			if (this.alignedTextsMap.containsKey(sTextualDS)){
@@ -207,6 +274,14 @@ public class TokenMergeContainer {
 			return tok;
 		}
 		
+		/**
+		 * This method returns the start for the given {@link SToken} object in the normalized version
+		 * of the given {@link STextualDS}.
+		 * @param sTextualDS The {@link STextualDS} to search the start position of the given {@link SToken} for
+		 * @param sToken The {@link SToken} to search the start position for
+		 * @return The position of the {@link SToken} in the normalized version of the given {@link STextualDS} or -1,
+		 * if the {@link SToken} has no position in the given {@link STextualDS}.
+		 */
 		public int getAlignedTokenStart(STextualDS sTextualDS,SToken sToken){
 			int returnVal = -1;
 			if (this.alignedTextsMap.containsKey(sTextualDS)){
@@ -216,6 +291,14 @@ public class TokenMergeContainer {
 			return returnVal;
 		}
 		
+		/**
+		 * This method returns the length for the given {@link SToken} object in the normalized version
+		 * of the given {@link STextualDS}.
+		 * @param sTextualDS The {@link STextualDS} to search the length of the given {@link SToken} for
+		 * @param sToken The {@link SToken} to search the length for
+		 * @return The length of the {@link SToken} in the normalized version of the given {@link STextualDS} or -1,
+		 * if the {@link SToken} has length in the given {@link STextualDS}.
+		 */
 		public int getAlignedTokenLength(STextualDS sTextualDS,SToken sToken){
 			int returnVal = -1;
 			if (this.alignedTextsMap.containsKey(sTextualDS)){
@@ -225,10 +308,23 @@ public class TokenMergeContainer {
 			return returnVal;
 		}
 		
+		/**
+		 * This method returns the map of aligned {@link SToken} objects for the specified {@link STextualDS}. 
+		 * @param text The {@link STextualDS} to search the map of aligned tokens for.
+		 * @return The {@link AlignedTokensMap} for the specified {@link STextualDS} or null if there is no such map.
+		 */
 		public AlignedTokensMap getAlignedTokens(STextualDS text){
 			return this.alignedTextsMap.get(text);
 		}
 		
+		/**
+		 * This method adds the given {@link SToken} which is contained in the given {@link STextualDS} at the
+		 * normalized left and right position. 
+		 * @param text The {@link STextualDS} which contains the given {@link SToken}
+		 * @param tok The {@link SToken} object to add
+		 * @param left The start of the {@link SToken} in the normalized version of the {@link STextualDS}
+		 * @param right The end of the {@link SToken} in the normalized version of the {@link STextualDS}
+		 */
 		public void addAlignedToken(STextualDS text, SToken tok, int left, int right){
 			//System.out.println("Aligned Token "+tok.getSName() +" in SText "+ text.getSElementId()+ " with start/end:"+left+"/"+right);
 			if (this.alignedTextsMap.containsKey(text)){
@@ -241,6 +337,13 @@ public class TokenMergeContainer {
 			}
 		}
 		
+		/**
+		 * This method adds an equivalence mapping for the given {@link SToken} of the base text to the given
+		 * {@link SToken} in some other {@link STextualDS} which is specified as parameter
+		 * @param baseTextToken The base {@link SToken} to add a mapping for.
+		 * @param otherTextToken The {@link SToken} which is a mapping for the base {@link SToken}
+		 * @param otherSText The {@link STextualDS} which is connected to the mapped {@link SToken}
+		 */
 		public void addTokenMapping(SToken baseTextToken, SToken otherTextToken, STextualDS otherSText){
 			if (otherTextToken.equals(baseTextToken)){
 				System.out.println("Sorry, you tried to add a token as it's own mapping");
@@ -290,6 +393,10 @@ public class TokenMergeContainer {
 			return equivalentToken;
 		}
 		
+		/**
+		 * This method returns the map of equivalences for the base text tokens.
+		 * @return The equivalence map.
+		 */
 		public Hashtable<SToken,Hashtable<STextualDS,SToken>> getEquivalenceMap(){
 			return this.equivalentToken;
 		}
