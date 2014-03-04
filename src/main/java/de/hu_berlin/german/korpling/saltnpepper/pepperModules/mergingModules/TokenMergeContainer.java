@@ -416,7 +416,8 @@ public class TokenMergeContainer {
 				this.normalizedBaseTextToOriginalBaseText.clear();
 			}
 			for (SToken tok : this.equivalentToken.keySet()){
-				if (this.equivalentToken.get(tok).containsKey(sDocument)){
+				Hashtable<STextualDS, SToken> map = this.equivalentToken.get(tok);
+				if (map != null && map.containsKey(sDocument)){
 					this.equivalentToken.get(tok).remove(sDocument);
 				}
 			}
