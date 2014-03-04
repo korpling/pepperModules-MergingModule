@@ -24,6 +24,7 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Vector;
@@ -48,6 +49,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SRelation;
 
@@ -899,15 +901,13 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			for (SToken baseToken : base.getSDocumentGraph().getSTokens()) {
 				SToken otherToken = container.getTokenMapping(baseToken, otherText);
 				if(otherToken != null){
-					equiMap.put(baseToken, otherToken);
-//					copyAllAnnotations(otherToken, baseToken);
+					equiMap.put( otherToken,baseToken);
 				} else{
 					// TODO: copy token
 				}
 			}
 		}
 		return equiMap;
-		 
 	}
 	
 	protected void mergeSpanContent(SDocument base, SDocument other){
@@ -933,8 +933,12 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		logger.debug(String.format("Start merge between %s and %s", base.getSId(), other.getSId()));
 		Map<SNode,SNode> matchingToken = mergeTokenContent(base, other);
 		// TODO: may use the reversed map only?
-		matchingToken = reverseMap(matchingToken);
-//		mergeSearch(matchingToken, base.getSDocumentGraph(), other.getSDocumentGraph());
+//		matchingToken = reverseMap(matchingToken);
+		System.out.println("== Matching token:");
+		for (Entry<SNode, SNode> node : matchingToken.entrySet()) {
+			System.out.println(String.format("%s\t-->\t%s", node.getKey(),node.getValue()));
+		}
+		mergeSearch(matchingToken, base.getSDocumentGraph(), other.getSDocumentGraph());
 		//mergeSpanContent(base, other);
 		//mergeStructureContent(base, other);
 		moveAll(matchingToken,base.getSDocumentGraph(), other.getSDocumentGraph());
@@ -995,12 +999,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		Set<Node> visited = new HashSet<Node>();
 		System.out.println(String.format("Start merge search (tokens:%s):", searchQueue.size()));
 		for (Edge e : g.getEdges()) {
-			System.out.println(e.getSource().getId() + " --" + e.getId() + "->" + e.getTarget().getId());
+			System.out.println(e.getSource().getId() + "\t--" + e.getId() + "->\t" + e.getTarget().getId());
 		}
 		while (!searchQueue.isEmpty()) {
 			SNode node = searchQueue.remove();
 			SNode otherNode = matchingToken.get(node);
-			
 			visited.add(node);
 //			simultaneousEquivalenceCheck(node, otherNode, matchingToken);
 //			System.out.println("Before: " + g.getOutEdges(otherNode.getSId()).size());
@@ -1009,9 +1012,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 //			System.out.println("After: " + g.getOutEdges(otherNode.getSId()).size());
 
 			// check every parent for equivalence on the base graph side
-			EList<Edge> in = otherG.getInEdges(otherNode.getSId());
+//			EList<Edge> in = otherG.getInEdges(otherNode.getSId());
 			EList<Edge> out = otherG.getOutEdges(otherNode.getSId());
-			out.addAll(in);
+//			out.addAll(in);
 			for (Edge edge : out) {
 				Node parent = edge.getSource();
 				Node target = edge.getTarget();
@@ -1022,14 +1025,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				}
 				if(matchingToken.containsKey(target)){
 					System.out.println("Before: " + edge.getTarget());
-					edge.setTarget(matchingToken.get(parent));
-					edge.setGraph(g);
+//					edge.setTarget(matchingToken.get(parent));
+//					edge.setGraph(g);
 					System.out.println("After: " + edge.getTarget());
 				}
-				
-				System.out.println("Before: " + edge.getTarget());
-				edge.setGraph(g);
-				System.out.println("After: " + edge.getTarget());
 				
 				Node[] nodes = {parent, target};
 				for (Node n : nodes) {
@@ -1055,9 +1054,62 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		}
 		
 	}
+	
+	class NodeParameters{
+		String canonicalClassName;
+		Map<String, Integer> outgoingCount;
+		Map<String, Integer> inboundCount;
+		
+		public NodeParameters(SNode n, SGraph g) {
+			// TODO Auto-generated constructor stub
+			canonicalClassName = n.getClass().getCanonicalName();
+			addEdges(inboundCount, g.getInEdges(n.getSId()));
+			addEdges(outgoingCount, g.getOutEdges(n.getSId()));
+		}
 
-
-
+		private void addEdges(Map<String, Integer> map, EList<Edge> edges) {
+			for (Edge e : edges) {
+				Integer i;
+				if (map.containsKey(e.getClass().getCanonicalName())) {
+					i = map.get(e.getClass().getCanonicalName()) + 1;
+				} else {
+					i = 1;
+				}
+				inboundCount.put(e.getClass().getCanonicalName(), i);
+			}
+		}
+		
+		@Override
+		public boolean equals(Object other) {
+			if (!(other instanceof NodeParameters)){
+				return false;
+			}
+			NodeParameters param = (NodeParameters) other;
+			if (!param.canonicalClassName.equals(this.canonicalClassName)){
+				return false;
+			}
+			if (param.outgoingCount.size() != this.outgoingCount.size()){
+				return false;
+			}
+			if (!isMapEqual(param.inboundCount,this.inboundCount)){
+				return false;
+			}
+			if (!isMapEqual(param.outgoingCount,this.outgoingCount)){
+				return false;
+			}
+			return true;
+		}
+		
+		private boolean isMapEqual(Map<String, Integer> map1, Map<String, Integer> map2) {
+			// TODO Auto-generated method stub
+			for (String key : map1.keySet()) {
+				if (map1.get(key) != map2.get(key)){
+					return false;
+				}
+			}
+			return true;
+		}
+	}
 	
 //	/**
 //	 * check if an Node satisfies the equivalence all criteria 
@@ -1127,20 +1179,23 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 					Object toVal = toLabel.getValue();
 					if (fromVal == toVal && fromVal == null){
 						fromLabel.setQName(fromLabel.getQName() + LABEL_NAME_EXTENSION);
-					}else if(!fromVal.equals(toVal)){
-					// same name but different values
-					fromLabel.setQName(fromLabel.getQName() + LABEL_NAME_EXTENSION);
-					to.addLabel(fromLabel);
-					logger.warn(String.format(
-							"Changed annotation name \"%s\" to \"%s\" because %s != %s",
-							fromLabel.getQName(), toLabel.getQName(),toLabel.getValue(),fromLabel.getValue()));
+					} else if (!fromVal.equals(toVal)) {
+						// same name but different values
+						fromLabel.setQName(fromLabel.getQName()
+								+ LABEL_NAME_EXTENSION);
+						to.addLabel(fromLabel);
+						logger.warn(String
+								.format("Changed annotation name to\"%s\" from \"%s\" because %s != %s",
+										fromLabel.getQName(),
+										toLabel.getQName(), toLabel.getValue(),
+										fromLabel.getValue()));
 					} else {
 						System.out.println(String.format(
 								"found same annotation:\n\t%s %s to\n%s %s",
 								fromLabel.getQName(), toLabel.getQName(),
 								toLabel.getQName(), toLabel.getValue()));
 					}
-				} 
+				}
 //				else {
 //					// identical annotations
 ////					from.removeLabel(fromLabel.getQName());
