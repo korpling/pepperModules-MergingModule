@@ -206,7 +206,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		this.initialize();
 		System.out.println("MERGING SDOCUMENT: "+getMappingSubjects());
 		
-		
+		merge();
+		return(DOCUMENT_STATUS.COMPLETED);
+	}
+	
+	public void merge() {
 		if (this.getMappingSubjects().size() != 0){
 			MappingSubject baseDocument = null;
 			
@@ -217,7 +221,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				// normalize all texts
 				for (MappingSubject subj : this.getMappingSubjects()){
 					if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
-						this.normalizeTextualLayer((SDocument) subj.getSElementId().getSIdentifiableElement());
+						SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
+						this.normalizeTextualLayer(sDoc);
 					}
 				}
 				baseDocument = this.chooseBaseDocument();
@@ -293,11 +298,26 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				}
 				// clear the table of non-equivalent tokens
 				nonEquivalentTokenSets.clear();
-			}			
-			if (! this.isTestMode){
-				System.out.println("Finishing document: " + (SDocument)baseDocument.getSElementId().getSIdentifiableElement());
-				this.container.finishDocument((SDocument)baseDocument.getSElementId().getSIdentifiableElement());
-				baseDocument.setMappingResult(DOCUMENT_STATUS.COMPLETED);
+			}
+			
+			
+			if (baseDocument!= null){
+				if (! this.isTestMode){
+					System.out.println("Finishing document: " + (SDocument)baseDocument.getSElementId().getSIdentifiableElement());
+					this.container.finishDocument((SDocument)baseDocument.getSElementId().getSIdentifiableElement());
+					baseDocument.setMappingResult(DOCUMENT_STATUS.COMPLETED);
+				}
+			}else{
+				// nothing to be merged
+				int i= 0;
+				for (MappingSubject subj: getMappingSubjects()){
+					if (i==0){
+						subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
+					}else{
+						subj.setMappingResult(DOCUMENT_STATUS.DELETED);
+					}
+					i++;
+				}
 			}
 		}else{
 			logger.warn("No documents to merge");
@@ -316,11 +336,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		}*/
 		
 		System.out.println(">>>>>>>>>>>>>>>>>><< mapping results: "+getMappingSubjects());
-		if (! this.isTestMode){
-			return(DOCUMENT_STATUS.COMPLETED);
-		} else {
-			return(DOCUMENT_STATUS.IN_PROGRESS);
-		}
 	}
 	
 	@Override
