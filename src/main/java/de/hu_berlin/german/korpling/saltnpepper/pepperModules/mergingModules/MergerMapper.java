@@ -18,6 +18,7 @@
 
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
+import java.io.ObjectInputStream.GetField;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -365,8 +366,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	/** This table contains the escape sequences for all characters **/
 	private Hashtable<Character,String> escapeTable= null;
 	
-	protected char[] punctuations = {'.',',',':',';','!','?','(',')','{','}','<','>'};
-	
 	/**
 	 * This method searches for the first occurence of the stringToSearchFor in the stringToSearchIn and ommits all chars
 	 * in the omitCharArray. The index of the first occurence is returned.
@@ -376,14 +375,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param useIndexof If this flag is set, all omit chars are removed from both provided strings and a normal indexOf is used
 	 * @return the index on success and -1 on failure
 	 */
-	protected static int indexOfOmitChars(String stringToSearchIn, String stringToSearchFor, char[] omitCharArray, boolean useIndexOf) {
+	protected static int indexOfOmitChars(String stringToSearchIn, String stringToSearchFor, boolean useIndexOf, Set<Character> omitChars) {
 
 		// TODO @eladrion clean up
 		/* put all omit characters into a hashset */
-		HashSet<Character> omitChars = new HashSet<Character>();
-		for (char c : omitCharArray){
-			omitChars.add(c);
-		}
+		
 		
 		/* remove all omit chars from the stringToSearchFor */
 		StringBuilder builder = new StringBuilder();
@@ -566,7 +562,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			this.container.setBaseTextPositionByNormalizedTextPosition(baseText,this.createBaseTextNormOriginalMapping(this.container.getBaseText()));
 		}
 		
-		int offset = indexOfOmitChars(normalizedBaseText.toLowerCase(),normalizedOtherText.toLowerCase(),this.punctuations, true);
+		int offset = indexOfOmitChars(normalizedBaseText.toLowerCase(),normalizedOtherText.toLowerCase(),true, ((MergerProperties)getProperties()).getPunctuations());
 		if (offset != -1)
 		{// if the normalized other text is conatined in the normalized base text
 			returnVal = true;
@@ -688,7 +684,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param doc2 Some {@link SDocument}
 	 * @return true, if one of the {@link SDocument} objects is meargeable into the other and false, else
 	 */
-	public static boolean isMergeable(SDocument doc1,	SDocument doc2){
+	public boolean isMergeable(SDocument doc1,	SDocument doc2){
 		boolean retVal = false;
 		Hashtable<Character,String> escapeTable = new Hashtable<Character, String>();
 		escapeTable.put(' ', ""); 
@@ -704,8 +700,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		escapeTable.put('Ö', "Oe");
 		escapeTable.put('Ü', "Ue");
 		
-		char[] punctuations = {'.',',',':',';','!','?','(',')','{','}','<','>'};
-		
 		EList<STextualDS> doc1Texts = doc1.getSDocumentGraph().getSTextualDSs();
 		EList<STextualDS> doc2Texts = doc2.getSDocumentGraph().getSTextualDSs();
 		if (doc1Texts != null && doc2Texts != null)
@@ -716,8 +710,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 					String normalizedText1 = normalizeText(text1, escapeTable);
 					for (STextualDS text2 : doc2Texts){
 						String normalizedText2 = normalizeText(text1, escapeTable);
-						if (indexOfOmitChars(normalizedText1, normalizedText2, punctuations, true) != -1 ||
-								indexOfOmitChars(normalizedText2, normalizedText1, punctuations, true) != -1
+						if (indexOfOmitChars(normalizedText1, normalizedText2, true, ((MergerProperties)getProperties()).getPunctuations()) != -1 ||
+								indexOfOmitChars(normalizedText2, normalizedText1, true, ((MergerProperties)getProperties()).getPunctuations()) != -1
 								
 						){
 							retVal = true;
@@ -775,83 +769,84 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	protected void normalizeTextualLayer(SDocument sDocument){
 		if (sDocument == null)
 			throw new PepperModuleException("Cannot normalize Text of the document since the SDocument reference is NULL");
-		
-		// check whether the document has any STextualDS
-		EList<STextualDS> sTextualDSs = sDocument.getSDocumentGraph().getSTextualDSs();
-		
-		// create maps which give fast access to a token which is specified by it's original left/right value
-		Hashtable<Integer,SToken> tokensMappedByLeft = new Hashtable<Integer, SToken>();
-		Hashtable<Integer,SToken> tokensMappedByRight = new Hashtable<Integer, SToken>();
-		for (STextualRelation textRel : sDocument.getSDocumentGraph().getSTextualRelations()){
-			tokensMappedByLeft.put(textRel.getSStart(), textRel.getSToken());
-			tokensMappedByRight.put(textRel.getSEnd(), textRel.getSToken());
-		}
-		
-		// normalize all textual datasources
-		for (STextualDS sTextualDS : sTextualDSs){
+		if (sDocument.getSDocumentGraph()!= null){
+			// check whether the document has any STextualDS
+			EList<STextualDS> sTextualDSs = sDocument.getSDocumentGraph().getSTextualDSs();
 			
-			String normalizedText = null;
-			StringBuilder normalizedTextBuilder = new StringBuilder();
+			// create maps which give fast access to a token which is specified by it's original left/right value
+			Hashtable<Integer,SToken> tokensMappedByLeft = new Hashtable<Integer, SToken>();
+			Hashtable<Integer,SToken> tokensMappedByRight = new Hashtable<Integer, SToken>();
+			for (STextualRelation textRel : sDocument.getSDocumentGraph().getSTextualRelations()){
+				tokensMappedByLeft.put(textRel.getSStart(), textRel.getSToken());
+				tokensMappedByRight.put(textRel.getSEnd(), textRel.getSToken());
+			}
 			
-			SToken currentToken= null;
-			
-			int currentLeft = 0;
-			int countOfChangedChars = 0;
-			int currentTokenLength = 1;
-			int currentNormalizedLeft = 0;
-			
-			// normalize the text
-			for (char c : sTextualDS.getSText().toCharArray()){
-				String stringToEscape = this.escapeTable.get(c);
-				// fill the StringBuilder
-				if (stringToEscape != null){
-					normalizedTextBuilder.append(stringToEscape);
-					countOfChangedChars += 1;
-					currentNormalizedLeft += stringToEscape.length();
-				} else {
-					normalizedTextBuilder.append(c);
-					currentNormalizedLeft += 1;
-				}
+			// normalize all textual datasources
+			for (STextualDS sTextualDS : sTextualDSs){
 				
-				if (currentToken == null)
-				{// If we are currently NOT iterating over a token's interval
-					currentToken = tokensMappedByLeft.get(currentLeft);
-					if (currentToken != null)
-					{// if a token interval begins at the current left value
-						//System.out.println("Starting alignment of Token "+currentToken.getSName());
-						//System.out.println("Found char of token: "+c);
-						currentTokenLength = 1;
-					}
-				} 
-				else 
-				{// If we ARE currently iterating over a token's interval
-					//System.out.println("Aligning Token "+currentToken.getSName()+ " . Current left: "+currentLeft);
-					if (tokensMappedByRight.containsKey(currentLeft))
-					{// if we reached the original end-char of the token
-						//System.out.println("Ending alignment of Token "+currentToken.getSName());
-						// beware: the SEnd value of a STextalRelation is the last char index of the token +1
-						//container.addAlignedToken(sTextualDS, currentToken, normalizedTokenLeft, normalizedTokenLeft+currentTokenLength );
-						container.addAlignedToken(sTextualDS, currentToken, currentNormalizedLeft, currentNormalizedLeft+currentTokenLength );
-						//System.out.println("Ended alignment of token "+ currentToken.getSName());
-						// reinitialize the normalizedTokenLeft and unmark the now processed token
-						currentToken = null;
+				String normalizedText = null;
+				StringBuilder normalizedTextBuilder = new StringBuilder();
+				
+				SToken currentToken= null;
+				
+				int currentLeft = 0;
+				int countOfChangedChars = 0;
+				int currentTokenLength = 1;
+				int currentNormalizedLeft = 0;
+				
+				// normalize the text
+				for (char c : sTextualDS.getSText().toCharArray()){
+					String stringToEscape = this.escapeTable.get(c);
+					// fill the StringBuilder
+					if (stringToEscape != null){
+						normalizedTextBuilder.append(stringToEscape);
+						countOfChangedChars += 1;
+						currentNormalizedLeft += stringToEscape.length();
 					} else {
-						//System.out.println("Found char of token: "+c);
-						currentTokenLength += 1;
+						normalizedTextBuilder.append(c);
+						currentNormalizedLeft += 1;
 					}
+					
+					if (currentToken == null)
+					{// If we are currently NOT iterating over a token's interval
+						currentToken = tokensMappedByLeft.get(currentLeft);
+						if (currentToken != null)
+						{// if a token interval begins at the current left value
+							//System.out.println("Starting alignment of Token "+currentToken.getSName());
+							//System.out.println("Found char of token: "+c);
+							currentTokenLength = 1;
+						}
+					} 
+					else 
+					{// If we ARE currently iterating over a token's interval
+						//System.out.println("Aligning Token "+currentToken.getSName()+ " . Current left: "+currentLeft);
+						if (tokensMappedByRight.containsKey(currentLeft))
+						{// if we reached the original end-char of the token
+							//System.out.println("Ending alignment of Token "+currentToken.getSName());
+							// beware: the SEnd value of a STextalRelation is the last char index of the token +1
+							//container.addAlignedToken(sTextualDS, currentToken, normalizedTokenLeft, normalizedTokenLeft+currentTokenLength );
+							container.addAlignedToken(sTextualDS, currentToken, currentNormalizedLeft, currentNormalizedLeft+currentTokenLength );
+							//System.out.println("Ended alignment of token "+ currentToken.getSName());
+							// reinitialize the normalizedTokenLeft and unmark the now processed token
+							currentToken = null;
+						} else {
+							//System.out.println("Found char of token: "+c);
+							currentTokenLength += 1;
+						}
+					}
+					currentLeft += 1;
 				}
-				currentLeft += 1;
+				if (currentToken != null)
+				{ // there is a token which is not closed yet. do it now
+					container.addAlignedToken(sTextualDS, currentToken, currentNormalizedLeft, currentNormalizedLeft+currentTokenLength );
+					//System.out.println("Ended alignment of token "+ currentToken.getSName());
+				}
+				// now we have the normalized text
+				normalizedText = normalizedTextBuilder.toString();
+				System.out.println("Normalize: "+sTextualDS.getSText()+" becomes "+normalizedText);
+				// add it to the tokenMergeContainer
+				this.container.addNormalizedText(sDocument, sTextualDS, normalizedText);
 			}
-			if (currentToken != null)
-			{ // there is a token which is not closed yet. do it now
-				container.addAlignedToken(sTextualDS, currentToken, currentNormalizedLeft, currentNormalizedLeft+currentTokenLength );
-				//System.out.println("Ended alignment of token "+ currentToken.getSName());
-			}
-			// now we have the normalized text
-			normalizedText = normalizedTextBuilder.toString();
-			System.out.println("Normalize: "+sTextualDS.getSText()+" becomes "+normalizedText);
-			// add it to the tokenMergeContainer
-			this.container.addNormalizedText(sDocument, sTextualDS, normalizedText);
 		}
 	}
 	

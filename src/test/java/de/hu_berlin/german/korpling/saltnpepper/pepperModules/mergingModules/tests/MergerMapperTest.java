@@ -1,6 +1,9 @@
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.tests;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.HashSet;
 import java.util.List;
@@ -13,6 +16,7 @@ import org.junit.Test;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.common.DOCUMENT_STATUS;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.MappingSubject;
 import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.MergerMapper;
+import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.MergerProperties;
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpus;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
@@ -23,7 +27,6 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SMetaAnnotation;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltSample.SaltSample;
 
 public class MergerMapperTest extends MergerMapper{
@@ -39,6 +42,7 @@ public class MergerMapperTest extends MergerMapper{
 	@Before
 	public void setUp(){
 		setFixture(this);
+		this.setProperties(new MergerProperties());
 		this.initialize();
 	}
 	/**
