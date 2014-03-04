@@ -18,7 +18,6 @@
 
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -39,7 +38,8 @@ import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperMapper;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.exceptions.PepperModuleException;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.impl.PepperMapperImpl;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Edge;
-import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Graph;
+import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Label;
+import de.hu_berlin.german.korpling.saltnpepper.salt.graph.LabelableElement;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Node;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpus;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
@@ -48,9 +48,8 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotatableElement;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SRelation;
 
 /**
  * @author Mario Frank
@@ -59,7 +58,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
  */
 public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	
-	public static final String ANNO_NAME_EXTENSION = "_1";
+	public static final String LABEL_NAME_EXTENSION = "_1";
 
 	private static final Logger logger = Logger.getLogger(MergerMapper.class);
 
@@ -920,13 +919,51 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		Map<SNode,SNode> matchingToken = mergeTokenContent(base, other);
 		// TODO: may use the reversed map only?
 		matchingToken = reverseMap(matchingToken);
-		mergeSearch(matchingToken, base.getSDocumentGraph(), other.getSDocumentGraph());
+//		mergeSearch(matchingToken, base.getSDocumentGraph(), other.getSDocumentGraph());
 		//mergeSpanContent(base, other);
 		//mergeStructureContent(base, other);
+		moveAll(matchingToken,base.getSDocumentGraph(), other.getSDocumentGraph());
 		System.out.println(String.format("== finished merge between %s and %s", base.getSId(), other.getSId()));
 		return base;
 	}
 	
+	private void moveAll(Map<SNode, SNode> matchingToken,
+			SDocumentGraph base, SDocumentGraph other) {
+		// Move nodes first 
+		for (SNode otherNode : other.getSNodes()) {
+			if(matchingToken.containsKey(otherNode)){
+				System.out.println("merging SNode" + otherNode.getSId());
+				SNode match = matchingToken.get(otherNode);
+				// change edges 
+				updateEdges(other, match, match.getSId());
+				// change annotations
+				moveAllLabels(otherNode, match);
+				// change layers?
+				
+			}else{
+				System.out.println("Moving SNode " + otherNode.getSId());
+				String oldID = otherNode.getSId();
+				otherNode.setSGraph(base);
+				updateEdges(other, otherNode, oldID);
+			}
+		}
+		// edges can not be moved before every node is moved
+		for (SRelation otherRelation : other.getSRelations()) {
+			System.out.println("Moving edge" + otherRelation.getSId());
+			otherRelation.setSGraph(base);
+		}
+		
+	}
+
+	private void updateEdges(SDocumentGraph other, SNode otherNode, String oldID) {
+		for (Edge relation : other.getInEdges(oldID)) {
+			relation.setTarget(otherNode);
+		}
+		for (Edge relation : other.getOutEdges(oldID)) {
+			relation.setSource(otherNode);
+		}
+	}
+
 	/**
 	 * breath first search for matching tokens
 	 * 
@@ -947,90 +984,91 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		}
 		while (!searchQueue.isEmpty()) {
 			SNode node = searchQueue.remove();
-			visited.add(node);
 			SNode otherNode = matchingToken.get(node);
+			
+			visited.add(node);
+//			simultaneousEquivalenceCheck(node, otherNode, matchingToken);
+//			System.out.println("Before: " + g.getOutEdges(otherNode.getSId()).size());
+			
+			otherNode.setGraph(g);
+//			System.out.println("After: " + g.getOutEdges(otherNode.getSId()).size());
 
 			// check every parent for equivalence on the base graph side
-			EList<Edge> edgesToParent = g.getInEdges(node.getId());
-			for (Edge edge : edgesToParent) {
+			EList<Edge> in = otherG.getInEdges(otherNode.getSId());
+			EList<Edge> out = otherG.getOutEdges(otherNode.getSId());
+			out.addAll(in);
+			for (Edge edge : out) {
 				Node parent = edge.getSource();
-				System.out.println("\tchecking " + parent);
-				if (edge instanceof SPointingRelation) {
-					continue;
-				} else if (visited.contains(parent)) {
-					continue;
-					
-				} else {
-					List<Node> children = new ArrayList<Node>();
-					searchQueue.add((SNode) parent);
-
-					for (Edge e : g.getOutEdges(parent.getId())) {
-						children.add(e.getTarget());
-					}
-					// every other parent in the other graph is a candidate for
-					// equivalence
-					EList<Edge> otherEdgesToParent = otherG
-							.getInEdges(otherNode.getId());
-					for (Edge otherEdgetoParent : otherEdgesToParent) {
-						// Check if an parent has matching children
-						Node otherParent = otherEdgetoParent.getSource();
-						if (matchingToken.containsKey(otherParent)) {
-							copyAllAnnotations(
-									(SAnnotatableElement) otherParent,
-									(SAnnotatableElement) parent);
-						} else{
-							boolean otherParentIsEquivalent = checkEquivalenz(
-									otherG, otherParent, children, matchingToken);
-							if (otherParentIsEquivalent) {
-								System.out.println(String.format(
-										"\t match found : %s/%s", otherG
-										.getSDocument().getSId(),
-										otherParent.getId()));
-								// take action on matching node
-								matchingToken.put((SNode) otherParent,
-										(SNode) parent);
-								copyAllAnnotations(
-										(SAnnotatableElement) otherParent,
-										(SAnnotatableElement) parent);
-								// TODO: move Edge?
-							} else {
-								nonMatchingNode.add((SNode) parent);
-								// TODO: move Node?
-							}
-							
-						}
+				Node target = edge.getTarget();
+				
+				if(matchingToken.containsKey(parent)){
+					edge.setSource(matchingToken.get(parent));
+					edge.setGraph(g);
+				}
+				if(matchingToken.containsKey(target)){
+					System.out.println("Before: " + edge.getTarget());
+					edge.setTarget(matchingToken.get(parent));
+					edge.setGraph(g);
+					System.out.println("After: " + edge.getTarget());
+				}
+				
+				System.out.println("Before: " + edge.getTarget());
+				edge.setGraph(g);
+				System.out.println("After: " + edge.getTarget());
+				
+				Node[] nodes = {parent, target};
+				for (Node n : nodes) {
+					System.out.println("\tchecking " + parent);
+					if (edge instanceof SPointingRelation) {
+						continue;
+					} else if (visited.contains(parent)) {
+						continue;
+						
+					} else {
+						searchQueue.add((SNode) parent);
+						
+						
+						
 					}
 				}
+				
+			} // end for
+//			
+			for (SNode unmatched : nonMatchingNode) {
+//				unmatched.set
 			}
 		}
 		
 	}
+
+
+
 	
-	/**
-	 * check if an Node satisfies the equivalence all criteria 
-	 * 1) the number of children matches
-	 * 2) every child is has an already tested equivalence 
-	 * @param otherG 
-	 * @param otherParent
-	 * @param childConfiguration
-	 * @param matchingToken
-	 */
-	private boolean checkEquivalenz(Graph otherG, Node otherParent, List<Node> childConfiguration,
-			Map<SNode, SNode> matchingToken) {
-		EList<Edge> outEdges = otherG.getOutEdges(otherParent.getId());
-		// 1) the number of children matches
-		if (outEdges.size() != childConfiguration.size()){
-			return false;
-		}
-		// 2) every child is has an already tested equivalence 
-		for (Edge edge : outEdges) {
-			Node child = edge.getTarget();
-			if(!matchingToken.containsKey(child)){
-				return false;
-			}
-		}
-		return true;
-	}
+//	/**
+//	 * check if an Node satisfies the equivalence all criteria 
+//	 * 1) the number of children matches
+//	 * 2) every child is has an already tested equivalence 
+//	 * @param otherG 
+//	 * @param otherParent
+//	 * @param childConfiguration
+//	 * @param matchingToken
+//	 */
+//	private boolean checkEquivalenz(Graph otherG, Node otherParent, List<Node> childConfiguration,
+//			Map<SNode, SNode> matchingToken) {
+//		EList<Edge> outEdges = otherG.getOutEdges(otherParent.getId());
+//		// 1) the number of children matches
+//		if (outEdges.size() != childConfiguration.size()){
+//			return false;
+//		}
+//		// 2) every child is has an already tested equivalence 
+//		for (Edge edge : outEdges) {
+//			Node child = edge.getTarget();
+//			if(!matchingToken.containsKey(child)){
+//				return false;
+//			}
+//		}
+//		return true;
+//	}
 	/**
 	 * Adds every map entry in reversed order
 	 * @param map
@@ -1046,33 +1084,52 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	}
 	
 	/**
-	 * Copies annotations from one element to another. If two annotations have
-	 * different values, than the method will extend the annotation name to make
-	 * coping possible. Existing annotations will not be copied.
+	 * moves annotations from one element to another. 
+	 * 
+	 * If two annotations have different values, 
+	 * than the method will extend the annotation name to make
+	 * coping possible. 
+	 * 
+	 * Existing annotations will not be copied, but removed from the first element.
 	 * 
 	 * @param from
 	 * @param to
 	 */
-	public void copyAllAnnotations(SAnnotatableElement from, SAnnotatableElement to) {
-		EList<SAnnotation> fromAnnotations = from.getSAnnotations();
+	public void moveAllLabels(LabelableElement from, LabelableElement to) {
+		EList<Label> fromAnnotations = from.getLabels();
 		if (fromAnnotations != null) {
 			
-			for (SAnnotation fromAnno : fromAnnotations) {
-				SAnnotation toAnno = to.getSAnnotation(fromAnno.getQName());
-				if (toAnno == null) {
-					toAnno = (SAnnotation) fromAnno.clone();
-					to.addSAnnotation(toAnno);
-					System.out.println("copied anno: " + toAnno.toString());
-				} else if (!toAnno.getSValue().equals(fromAnno.getSValue())) {
-					toAnno = (SAnnotation) fromAnno.clone();
-					toAnno.setName(toAnno.getName() + ANNO_NAME_EXTENSION);
-					to.addSAnnotation(toAnno);
-					logger.warn(String.format(
-							"Changed annotation name \"%s\" to \"%s\"",
-							fromAnno.getName(), toAnno.getName()));
+			while (!from.getLabels().isEmpty()) {
+				// actually I should not be able to remove labels directly, don't I?
+				Label fromLabel = from.getLabels().remove(0);
+				Label toLabel = to.getLabel(fromLabel.getQName());
+				if (toLabel == null) {
+					// add as new label
+					to.addLabel(fromLabel);
+					System.out.println("moved anno: " + fromLabel.toString());
 				} else {
-					// identical annotations
-				}
+					Object fromVal = fromLabel.getValue();
+					Object toVal = toLabel.getValue();
+					if (fromVal == toVal && fromVal == null){
+						fromLabel.setQName(fromLabel.getQName() + LABEL_NAME_EXTENSION);
+					}else if(!fromVal.equals(toVal)){
+					// same name but different values
+					fromLabel.setQName(fromLabel.getQName() + LABEL_NAME_EXTENSION);
+					to.addLabel(fromLabel);
+					logger.warn(String.format(
+							"Changed annotation name \"%s\" to \"%s\" because %s != %s",
+							fromLabel.getQName(), toLabel.getQName(),toLabel.getValue(),fromLabel.getValue()));
+					} else {
+						System.out.println(String.format(
+								"found same annotation:\n\t%s %s to\n%s %s",
+								fromLabel.getQName(), toLabel.getQName(),
+								toLabel.getQName(), toLabel.getValue()));
+					}
+				} 
+//				else {
+//					// identical annotations
+////					from.removeLabel(fromLabel.getQName());
+//				}
 			}
 		}
 	}

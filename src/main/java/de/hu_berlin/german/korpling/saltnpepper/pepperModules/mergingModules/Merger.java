@@ -182,7 +182,9 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 				sMeta= source.getSMetaAnnotations().get(0);
 				if (target.getSMetaAnnotation(SaltFactory.eINSTANCE.createQName(sMeta.getSNS(), sMeta.getSName()))== null){
 					target.addSMetaAnnotation(sMeta);
-				}else offset++;
+				} else {
+					offset++;
+				}
 			}
 		}
 	}

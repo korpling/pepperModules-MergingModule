@@ -1,9 +1,6 @@
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.HashSet;
 import java.util.List;
@@ -17,10 +14,16 @@ import de.hu_berlin.german.korpling.saltnpepper.pepper.common.DOCUMENT_STATUS;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.MappingSubject;
 import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.MergerMapper;
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpus;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDocumentGraph;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SSpan;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SSpanningRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotation;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SMetaAnnotation;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltSample.SaltSample;
 
 public class MergerMapperTest extends MergerMapper{
@@ -530,7 +533,7 @@ public class MergerMapperTest extends MergerMapper{
 	}
 	
 	@Test
-	public void testAnnotationCopy() throws Exception {
+	public void testMovingLabels() throws Exception {
 		SToken tok1 = SaltFactory.eINSTANCE.createSToken();
 		SToken tok2 = SaltFactory.eINSTANCE.createSToken();
 		
@@ -554,14 +557,86 @@ public class MergerMapperTest extends MergerMapper{
 		tok2.addSAnnotation(anno3);
 		
 		MergerMapper mm = new MergerMapper();
-		mm.copyAllAnnotations(tok1, tok2);
+		mm.moveAllLabels(tok1, tok2);
 
 		assertEquals("annotext1", tok2.getSAnnotation("anno1").getSValueSTEXT());
 		assertEquals("annotext22", tok2.getSAnnotation("anno2")
 				.getSValueSTEXT());
 		assertEquals("annotext2",
-				tok2.getSAnnotation("anno2" + MergerMapper.ANNO_NAME_EXTENSION)
+				tok2.getSAnnotation("anno2" + MergerMapper.LABEL_NAME_EXTENSION)
 						.getSValueSTEXT());
+	}
+	
+	@Test
+	public void testMetaAnnotationMove() throws Exception {
+		MergerMapper mm = new MergerMapper();
+		SCorpus sCorp = SaltFactory.eINSTANCE.createSCorpus();
+		SDocument sDoc = SaltFactory.eINSTANCE.createSDocument();
+		
+		SMetaAnnotation meta = SaltFactory.eINSTANCE.createSMetaAnnotation();
+		String annoName = "metaAnno";
+		String annoValue= "metaValue";
+		meta.setName(annoName);
+		meta.setValue(annoValue);
+		
+		sCorp.addSMetaAnnotation(meta);
+		
+		mm.moveAllLabels(sCorp, sDoc);
+		
+		assertEquals(1, sDoc.getSMetaAnnotations().size());
+		assertNotNull(sDoc.getSMetaAnnotation(annoName));
+		assertEquals(annoName, sDoc.getSMetaAnnotation(annoName).getSName());
+		assertEquals(annoValue, sDoc.getSMetaAnnotation(annoName).getValue());
+		
+		SMetaAnnotation meta2 = SaltFactory.eINSTANCE.createSMetaAnnotation();
+		String annoName2 = "metaAnno";
+		String annoValue2= "metaValue_1";
+		meta2.setName(annoName2);
+		meta2.setValue(annoValue2);
+		
+		sCorp.addSMetaAnnotation(meta2);
+		
+		mm.moveAllLabels(sCorp, sDoc);
+		
+		assertEquals(2, sDoc.getSMetaAnnotations().size());
+		assertNotNull(sDoc.getSMetaAnnotation(annoName2));
+		assertEquals(annoName2 + MergerMapper.LABEL_NAME_EXTENSION, sDoc.getSMetaAnnotation(annoName2).getSName());
+		assertEquals(annoValue2, sDoc.getSMetaAnnotation(annoName2).getValue());
+	}
+	
+	@Test
+	public void testMovingNodes() throws Exception {
+		SDocument sDoc1 = SaltFactory.eINSTANCE.createSDocument();
+		SDocument sDoc2 = SaltFactory.eINSTANCE.createSDocument();
+		
+		sDoc1.setSName("doc1");
+		sDoc2.setSName("doc2");
+		
+		SDocumentGraph graph1 = SaltFactory.eINSTANCE.createSDocumentGraph();
+		SDocumentGraph graph2 = SaltFactory.eINSTANCE.createSDocumentGraph();
+		sDoc1.setSDocumentGraph(graph1);
+		sDoc2.setSDocumentGraph(graph2);
+		
+		STextualDS sTextDS1= sDoc1.getSDocumentGraph().createSTextualDS("boat");
+		SToken tok1 = sDoc1.getSDocumentGraph().createSToken(sTextDS1, 0, 3);	
+		SSpan span1 = graph1.createSSpan(tok1);
+		SSpanningRelation rel1 = (SSpanningRelation) graph1.getInEdges(tok1.getSId()).get(0);
+		
+		assertEquals(graph1, tok1.getSDocumentGraph());
+		assertEquals(rel1.getSource(), span1);
+		assertEquals(rel1.getTarget(), tok1);
+		
+		tok1.setSDocumentGraph(graph2);
+		
+		assertEquals(graph2, tok1.getSDocumentGraph());
+		assertEquals(graph1, span1.getSDocumentGraph());
+		assertEquals(rel1.getSource(), span1);
+		assertEquals(rel1.getTarget(), tok1);
+		// move all node before the edge
+		span1.setSDocumentGraph(graph2);
+		rel1.setSDocumentGraph(graph2);
+		assertEquals(rel1.getSource(), span1);
+		assertEquals(rel1.getTarget(), tok1);
 	}
 
 }
