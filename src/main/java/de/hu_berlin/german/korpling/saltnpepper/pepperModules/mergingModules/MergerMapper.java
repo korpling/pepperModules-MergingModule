@@ -362,9 +362,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	public TokenMergeContainer getContainer() {
 		return container;
 	}
-
-	/** This table contains the escape sequences for all characters **/
-	private Hashtable<Character,String> escapeTable= null;
 	
 	/**
 	 * This method searches for the first occurence of the stringToSearchFor in the stringToSearchIn and ommits all chars
@@ -656,7 +653,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		List<Integer> normalizedToOriginalMapping = new Vector<Integer>();
 		int start = 0;
 		for (char c : sTextualDS.getSText().toCharArray()){
-			String stringToEscape = this.escapeTable.get(c);
+			String stringToEscape = ((MergerProperties)getProperties()).getEscapeMapping().get(c);
 			if (stringToEscape == null){
 				normalizedToOriginalMapping.add(start);
 			} else {
@@ -796,7 +793,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				
 				// normalize the text
 				for (char c : sTextualDS.getSText().toCharArray()){
-					String stringToEscape = this.escapeTable.get(c);
+					String stringToEscape = ((MergerProperties)getProperties()).getEscapeMapping().get(c);
 					// fill the StringBuilder
 					if (stringToEscape != null){
 						normalizedTextBuilder.append(stringToEscape);
@@ -856,36 +853,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	protected void initialize(){
 		if (this.container == null){
 			this.container = new TokenMergeContainer();
-		}
-		
-		if (this.escapeTable == null){
-			this.escapeTable = new Hashtable<Character, String>();
-			this.escapeTable.put(' ', "");
-			this.escapeTable.put('\t', "");
-			this.escapeTable.put('\n', "");
-			this.escapeTable.put('\r', "");
-		
-			this.escapeTable.put('ä', "ae");
-			this.escapeTable.put('ö', "oe");
-			this.escapeTable.put('ü', "ue");
-			this.escapeTable.put('ß', "ss");
-			this.escapeTable.put('Ä', "Ae");
-			this.escapeTable.put('Ö', "Oe");
-			this.escapeTable.put('Ü', "Ue");
-		
-			/*
-			this.escapeTable.put('.', "");
-			this.escapeTable.put(',', "");
-			this.escapeTable.put(':', "");
-			this.escapeTable.put(';', "");
-			this.escapeTable.put('!', "");
-			this.escapeTable.put('?', "");
-			this.escapeTable.put('(', "");
-			this.escapeTable.put(')', "");
-			this.escapeTable.put('{', "");
-			this.escapeTable.put('}', "");
-			this.escapeTable.put('<', "");
-			this.escapeTable.put('>', "");*/
 		}
 	}
 	
