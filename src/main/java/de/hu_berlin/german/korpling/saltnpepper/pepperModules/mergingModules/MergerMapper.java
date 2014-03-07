@@ -375,7 +375,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param useIndexof If this flag is set, all omit chars are removed from both provided strings and a normal indexOf is used
 	 * @return the index on success and -1 on failure
 	 */
-	protected static int indexOfOmitChars(String stringToSearchIn, String stringToSearchFor, boolean useIndexOf, Set<Character> omitChars) {
+	protected int indexOfOmitChars(String stringToSearchIn, String stringToSearchFor, boolean useIndexOf, Set<Character> omitChars) {
 
 		// TODO @eladrion clean up
 		/* put all omit characters into a hashset */

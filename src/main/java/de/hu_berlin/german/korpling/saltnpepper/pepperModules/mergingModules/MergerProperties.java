@@ -24,18 +24,18 @@ public class MergerProperties extends PepperModuleProperties {
 	/** Default punctuation characters **/
 	public static final String  PUNCTUATION_DEFAULT = "'.',',',':',';','!','?','(',')','{','}','<','>'";
 	
-	public static final String ESCAPE_MAPPING_DEFAULT= 		"' ': \"\", "
-														+ "'\t': \"\", "
-														+"'\t': \"\", "
-														+"'\n': \"\", "
-														+"'\r': \"\", "
-														+"'ä': \"ae\", "
-														+"'ö': \"oe\", "
-														+"'ü': \"ue\", "
-														+"'ß': \"ss\", "
-														+"'Ä': \"Ae\", "
-														+"'Ö': \"Oe\", "
-														+"'Ü': \"Ue\", ";
+	public static final String ESCAPE_MAPPING_DEFAULT= 		"\" \": \"\", "
+														+ "\"\t\": \"\", "
+														+"\"\t\": \"\", "
+														+"\"\n\": \"\", "
+														+"\"\r\": \"\", "
+														+"\"ä\": \"ae\", "
+														+"\"ö\": \"oe\", "
+														+"\"ü\": \"ue\", "
+														+"\"ß\": \"ss\", "
+														+"\"Ä\": \"Ae\", "
+														+"\"Ö\": \"Oe\", "
+														+"\"Ü\": \"Ue\", ";
 	
 	public MergerProperties()
 	{
@@ -59,7 +59,7 @@ public class MergerProperties extends PepperModuleProperties {
 		this.addProperty(new PepperModuleProperty<String>(
 				PROP_ESCAPE_MAPPING,
 				String.class,
-				"Determines the mapping used in normalization step, to map special characters like umlauts. This value is a comma separated list of mappings: 'REPLACED_CHARACTER' : \"REPLACEMENT\" (, 'REPLACED_CHARACTER' : \"REPLACEMENT\")*",
+				"Determines the mapping used in normalization step, to map special characters like umlauts. This value is a comma separated list of mappings: \"REPLACED_CHARACTER\" : \"REPLACEMENT\" (, \"REPLACED_CHARACTER\" : \"REPLACEMENT\")*",
 				ESCAPE_MAPPING_DEFAULT));
 	}
 	
@@ -77,73 +77,81 @@ public class MergerProperties extends PepperModuleProperties {
 		return(retVal);
 	}
 	
+	/** punctuation characters specified by the user. If the user didn't specify any**/
+	private Set<Character> punctuations= null;
+	
 	/**
 	 * Returns all punctuation characters specified by the user. If the user didn't specify any
 	 * punctuations, the defaults are used 
 	 * @return
 	 */
-	public Set<Character> getPunctuations(){
-		PepperModuleProperty<String> prop= (PepperModuleProperty<String>) getProperty(PROP_PUNCTUATIONS);
-		
-		Set<Character> retVal= null;
-		String puncString= prop.getValue();
-		if (	(puncString!= null)&&
-				(!puncString.isEmpty())){
-			retVal= new HashSet<Character>();
-			boolean quoteStarted= false;
-			for (char ch: puncString.toCharArray()){
-				if ('\'' == ch){
-					quoteStarted= !quoteStarted;
-				}else{
-					if (	(','==ch)&&
-							(!quoteStarted)){
-						//doNothing
+	public synchronized Set<Character> getPunctuations(){
+		if (punctuations== null){
+			PepperModuleProperty<String> prop= (PepperModuleProperty<String>) getProperty(PROP_PUNCTUATIONS);
+			
+			String puncString= prop.getValue();
+			if (	(puncString!= null)&&
+					(!puncString.isEmpty())){
+				punctuations= new HashSet<Character>();
+				boolean quoteStarted= false;
+				for (char ch: puncString.toCharArray()){
+					if ('\'' == ch){
+						quoteStarted= !quoteStarted;
+					}else{
+						if (	(','==ch)&&
+								(!quoteStarted)){
+							//doNothing
+						}
+						punctuations.add(ch);
 					}
-					retVal.add(ch);
+					
 				}
-				
 			}
 		}
-		return(retVal);
-		
-//		/** This table contains the escape sequences for all characters **/
-//		private Hashtable<Character,String> escapeTable= null;
-//		
-//		protected char[] punctuations = {'.',',',':',';','!','?','(',')','{','}','<','>'};
+		return(punctuations);
 	}
-	
+	/** a map of characters to be escaped and the corresponding replacement String.**/
+	private Map<String,String> escapeMapping= null;
 	/**
-	 * Returns a map of characters to be escaped and the corresponding replacement String.  
+	 * Returns a map of characters to be escaped and the corresponding replacement String. This map is computed from the property
+	 * {@link #PROP_ESCAPE_MAPPING}, which has the form: \"REPLACED_CHARACTER\" : \"REPLACEMENT\" (, \"REPLACED_CHARACTER\" : \"REPLACEMENT\").  
 	 * @return
 	 */
-	public Map<Character,String> getEscapeMapping(){
-		Hashtable<Character,String> escapeTable = new Hashtable<Character, String>();
-		
-		String escapeMapping= 	"' ': \"\", "
-								+ "'\t': \"\", "
-								+"'\t': \"\", "
-								+"'\n': \"\", "
-								+"'\r': \"\", "
-								+"'ä': \"ae\", "
-								+"'ö': \"oe\", "
-								+"'ü': \"ue\", "
-								+"'ß': \"ss\", "
-								+"'Ä': \"Ae\", "
-								+"'Ö': \"Oe\", "
-								+"'Ü': \"Ue\", ";
-		escapeTable.put(' ', ""); 
-		escapeTable.put('\t', "");
-		escapeTable.put('\n', "");
-		escapeTable.put('\r', "");
-	
-		escapeTable.put('ä', "ae");
-		escapeTable.put('ö', "oe");
-		escapeTable.put('ü', "ue");
-		escapeTable.put('ß', "ss");
-		escapeTable.put('Ä', "Ae");
-		escapeTable.put('Ö', "Oe");
-		escapeTable.put('Ü', "Ue");
-		return(escapeTable);
+	public Map<String,String> getEscapeMapping(){
+//		Hashtable<Character,String> escapeTable = new Hashtable<Character, String>();
+		if (escapeMapping== null){
+			PepperModuleProperty<String> prop= (PepperModuleProperty<String>) getProperty(PROP_ESCAPE_MAPPING);
+			
+			String escaping= prop.getValue();
+			if (	(escaping!= null)&&
+					(!escaping.isEmpty())){
+				escapeMapping= new Hashtable<String, String>();
+				
+				String[] singleMappings= escaping.split(",");
+				if (singleMappings.length > 0){
+					for (String singleMapping: singleMappings){
+						String[] parts= singleMapping.split(":");{
+							if (parts.length== 2){
+								escapeMapping.put(parts[0].trim().replace("\"", ""), parts[1].trim().replace("\"", ""));
+							}
+						}
+					}
+				}
+				
+//				boolean quoteStarted= false;
+//				for (char ch: escaping.toCharArray()){
+//					String key= null;
+//					String value= null;
+//					if (','== ch){
+//						key= null;
+//						value= null;
+//					}else if ('\"'==ch){
+//						quoteStarted= !quoteStarted;
+//					}
+//				}
+			}
+		}
+		return(escapeMapping);
 	}
 		
 }

@@ -291,21 +291,21 @@ public class MergerMapperTest extends MergerMapper{
 		String baseText ="This,isasmallExample!";
 		String otherText ="Thisisno";
 		
-		assertEquals(this.indexOfOmitChars(baseText, otherText, this.punctuations,false),-1);
+		assertEquals(this.indexOfOmitChars(baseText, otherText, false, ((MergerProperties)getProperties()).getPunctuations()),-1);
 		
 		otherText ="This;is";
-		assertEquals(this.indexOfOmitChars(baseText, otherText, punctuations,false),0);
+		assertEquals(this.indexOfOmitChars(baseText, otherText, false, ((MergerProperties)getProperties()).getPunctuations()),0);
 		
 		baseText ="Thisisnosmallexample.Itisasmallerexample!";
 		otherText = "exampleItis";
-		assertEquals(this.indexOfOmitChars(baseText, otherText, punctuations,false),13);
+		assertEquals(this.indexOfOmitChars(baseText, otherText, false, ((MergerProperties)getProperties()).getPunctuations()),13);
 		
 		otherText = ".exampleItis";
-		assertEquals(this.indexOfOmitChars(baseText, otherText, punctuations,false),13);
+		assertEquals(this.indexOfOmitChars(baseText, otherText, false, ((MergerProperties)getProperties()).getPunctuations()),13);
 		
 		baseText ="Thisisnosmallexampl.Itisasmallerexampl";
 		otherText = "example";
-		assertEquals(this.indexOfOmitChars(baseText, otherText, punctuations,false),-1);
+		assertEquals(this.indexOfOmitChars(baseText, otherText, false, ((MergerProperties)getProperties()).getPunctuations()),-1);
 				
 	}
 	
