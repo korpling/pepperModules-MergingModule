@@ -18,7 +18,6 @@
 
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
-import java.io.ObjectInputStream.GetField;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -683,19 +682,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 */
 	public boolean isMergeable(SDocument doc1,	SDocument doc2){
 		boolean retVal = false;
-		Hashtable<Character,String> escapeTable = new Hashtable<Character, String>();
-		escapeTable.put(' ', ""); 
-		escapeTable.put('\t', "");
-		escapeTable.put('\n', "");
-		escapeTable.put('\r', "");
-	
-		escapeTable.put('ä', "ae");
-		escapeTable.put('ö', "oe");
-		escapeTable.put('ü', "ue");
-		escapeTable.put('ß', "ss");
-		escapeTable.put('Ä', "Ae");
-		escapeTable.put('Ö', "Oe");
-		escapeTable.put('Ü', "Ue");
 		
 		EList<STextualDS> doc1Texts = doc1.getSDocumentGraph().getSTextualDSs();
 		EList<STextualDS> doc2Texts = doc2.getSDocumentGraph().getSTextualDSs();
@@ -704,9 +690,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			if ( (!doc1Texts.isEmpty()) && (!doc2Texts.isEmpty()))
 			{ // both documents do have at least one text
 				for (STextualDS text1 : doc1Texts){
-					String normalizedText1 = normalizeText(text1, escapeTable);
+					String normalizedText1 = normalizeText(text1, ((MergerProperties)getProperties()).getEscapeMapping());
 					for (STextualDS text2 : doc2Texts){
-						String normalizedText2 = normalizeText(text1, escapeTable);
+						String normalizedText2 = normalizeText(text1, ((MergerProperties)getProperties()).getEscapeMapping());
 						if (indexOfOmitChars(normalizedText1, normalizedText2, true, ((MergerProperties)getProperties()).getPunctuations()) != -1 ||
 								indexOfOmitChars(normalizedText2, normalizedText1, true, ((MergerProperties)getProperties()).getPunctuations()) != -1
 								
@@ -739,7 +725,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param sTextualDS  the {@link STextualDS} to normalize
 	 * @return The normalized text
 	 */
-	protected static String normalizeText(STextualDS sTextualDS, Hashtable<Character,String> escapeTable){
+	protected static String normalizeText(STextualDS sTextualDS, Map<String,String> escapeTable){
 		String normalizedText = null;
 		StringBuilder normalizedTextBuilder = new StringBuilder();
 		// normalize the text
