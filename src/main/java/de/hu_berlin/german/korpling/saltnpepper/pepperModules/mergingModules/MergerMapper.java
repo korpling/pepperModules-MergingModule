@@ -228,7 +228,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				}
 				baseDocument = this.chooseBaseDocument();
 				if (baseDocument == null){
-					throw new PepperModuleException("Could not choose a base SDocument");
+					throw new PepperModuleException(this, "Could not choose a base SDocument");
 				}
 				
 				// allign all texts and create the nonEquivalentTokenSets
@@ -239,7 +239,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				SDocument baseDoc = this.container.getBaseDocument();
 				STextualDS baseText = chooseBaseText(baseDoc, nonEquivalentTokenSets);
 				if (baseText == null){
-					throw new PepperModuleException("Could not choose a base STextualDS");
+					throw new PepperModuleException(this, "Could not choose a base STextualDS");
 				}
 				// set the base text
 				this.container.setBaseText(baseText);
@@ -543,9 +543,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 */
 	protected boolean alignTexts(STextualDS baseText, STextualDS otherText, HashSet<SToken> nonEquivalentTokenInOtherTexts){
 		if (baseText == null)
-			throw new PepperModuleException("Cannot align the Text of the documents since the base SDocument reference is NULL");
+			throw new PepperModuleException(this, "Cannot align the Text of the documents since the base SDocument reference is NULL");
 		if (otherText == null)
-			throw new PepperModuleException("Cannot align the Text of the documents since the other SDocument reference is NULL");
+			throw new PepperModuleException(this, "Cannot align the Text of the documents since the other SDocument reference is NULL");
 		
 		boolean returnVal = false;
 		// first we need the two normalized texts
@@ -750,7 +750,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 */
 	protected void normalizeTextualLayer(SDocument sDocument){
 		if (sDocument == null)
-			throw new PepperModuleException("Cannot normalize Text of the document since the SDocument reference is NULL");
+			throw new PepperModuleException(this, "Cannot normalize Text of the document since the SDocument reference is NULL");
 		if (sDocument.getSDocumentGraph()!= null){
 			// check whether the document has any STextualDS
 			List<STextualDS> sTextualDSs = sDocument.getSDocumentGraph().getSTextualDSs();
