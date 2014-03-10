@@ -30,8 +30,6 @@ import java.util.Set;
 import java.util.Vector;
 
 import org.apache.log4j.Logger;
-import org.eclipse.emf.common.util.BasicEList;
-import org.eclipse.emf.common.util.EList;
 
 import de.hu_berlin.german.korpling.saltnpepper.pepper.common.DOCUMENT_STATUS;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.MappingSubject;
@@ -564,7 +562,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			returnVal = true;
 			//System.out.println("Text to merge has an offset of "+offset);
 			// get the tokens of the other text.
-			EList<SToken> textTokens = new BasicEList<SToken>();
+			List<SToken> textTokens = new Vector<SToken>();
 			for (Edge e : otherText.getSDocumentGraph().getInEdges(otherText.getSId())){
 				if (e instanceof STextualRelation){
 					textTokens.add(((STextualRelation)e).getSToken());
@@ -607,7 +605,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				} 
 				else 
 				{ // the other token has either no start or no length -> ERROR
-					this.logger.error("The SToken "+otherText.getSId()+" of the STextualDS "+otherText.getSId()+ " has no proper start or length. It was probably not aligned correctly.");
+					logger.error("The SToken "+otherText.getSId()+" of the STextualDS "+otherText.getSId()+ " has no proper start or length. It was probably not aligned correctly.");
 				} // the other token has either no start or no length -> ERROR
 			}
 			
@@ -683,8 +681,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	public boolean isMergeable(SDocument doc1,	SDocument doc2){
 		boolean retVal = false;
 		
-		EList<STextualDS> doc1Texts = doc1.getSDocumentGraph().getSTextualDSs();
-		EList<STextualDS> doc2Texts = doc2.getSDocumentGraph().getSTextualDSs();
+		List<STextualDS> doc1Texts = doc1.getSDocumentGraph().getSTextualDSs();
+		List<STextualDS> doc2Texts = doc2.getSDocumentGraph().getSTextualDSs();
 		if (doc1Texts != null && doc2Texts != null)
 		{ // both documents should have texts
 			if ( (!doc1Texts.isEmpty()) && (!doc2Texts.isEmpty()))
@@ -754,7 +752,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			throw new PepperModuleException("Cannot normalize Text of the document since the SDocument reference is NULL");
 		if (sDocument.getSDocumentGraph()!= null){
 			// check whether the document has any STextualDS
-			EList<STextualDS> sTextualDSs = sDocument.getSDocumentGraph().getSTextualDSs();
+			List<STextualDS> sTextualDSs = sDocument.getSDocumentGraph().getSTextualDSs();
 			
 			// create maps which give fast access to a token which is specified by it's original left/right value
 			Hashtable<Integer,SToken> tokensMappedByLeft = new Hashtable<Integer, SToken>();
@@ -961,7 +959,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 
 			// check every parent for equivalence on the base graph side
 //			EList<Edge> in = otherG.getInEdges(otherNode.getSId());
-			EList<Edge> out = otherG.getOutEdges(otherNode.getSId());
+			List<Edge> out = otherG.getOutEdges(otherNode.getSId());
 //			out.addAll(in);
 			for (Edge edge : out) {
 				Node parent = edge.getSource();
@@ -1015,7 +1013,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			addEdges(outgoingCount, g.getOutEdges(n.getSId()));
 		}
 
-		private void addEdges(Map<String, Integer> map, EList<Edge> edges) {
+		private void addEdges(Map<String, Integer> map, List<Edge> edges) {
 			for (Edge e : edges) {
 				Integer i;
 				if (map.containsKey(e.getClass().getCanonicalName())) {
@@ -1111,7 +1109,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param to
 	 */
 	public void moveAllLabels(LabelableElement from, LabelableElement to) {
-		EList<Label> fromAnnotations = from.getLabels();
+		List<Label> fromAnnotations = from.getLabels();
 		if (fromAnnotations != null) {
 			
 			while (!from.getLabels().isEmpty()) {
