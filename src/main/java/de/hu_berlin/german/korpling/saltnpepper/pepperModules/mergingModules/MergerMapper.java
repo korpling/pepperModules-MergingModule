@@ -65,6 +65,46 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 
 	protected boolean isTestMode = false;
 	
+	@Override
+	public DOCUMENT_STATUS mapSCorpus() {
+		System.out.println("MERGING SCORPUS: "+ getMappingSubjects());
+		
+		for (MappingSubject subj: getMappingSubjects()){
+			if (subj.getSElementId().getSIdentifiableElement() instanceof SCorpus){
+				//TODO move all annotations (SMetaAnnotation)
+				subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
+			}
+		}
+		
+		return(DOCUMENT_STATUS.COMPLETED);
+	}
+	
+	@Override
+	public DOCUMENT_STATUS mapSDocument() {
+		this.initialize();
+		System.out.println("MERGING SDOCUMENT: "+getMappingSubjects());
+		if (this.getMappingSubjects().size() != 0){
+			boolean isEmpty= true;
+			
+			//emit if document contains content
+			for (MappingSubject subj: getMappingSubjects()){
+				if (	(subj.getSElementId()!= null)&&
+						(subj.getSElementId().getIdentifiableElement() != null)){
+					SDocument doc= (SDocument)subj.getSElementId().getIdentifiableElement();
+					if (	(doc.getSDocumentGraph()!= null)&&
+							(doc.getSDocumentGraph().getSNodes().size()!= 0)){
+						isEmpty= false;
+						break;
+					}
+				}
+			}
+			if (!isEmpty){
+				mergeSDocumentGraph();
+			}
+		}
+		return(DOCUMENT_STATUS.COMPLETED);
+	}
+	
 	/**
 	 * This method chooses the base {@link SDocument}.
 	 * @return The base {@link SDocument}
@@ -201,17 +241,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		}
 		return nonEquivalentTokenSets;
 	}
-	
-	@Override
-	public DOCUMENT_STATUS mapSDocument() {
-		this.initialize();
-		System.out.println("MERGING SDOCUMENT: "+getMappingSubjects());
-		
-		merge();
-		return(DOCUMENT_STATUS.COMPLETED);
-	}
-	
-	public void merge() {
+
+	public void mergeSDocumentGraph() {
 		if (this.getMappingSubjects().size() != 0){
 			MappingSubject baseDocument = null;
 			
@@ -337,20 +368,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		}*/
 		
 		System.out.println(">>>>>>>>>>>>>>>>>><< mapping results: "+getMappingSubjects());
-	}
-	
-	@Override
-	public DOCUMENT_STATUS mapSCorpus() {
-		System.out.println("MERGING SCORPUS: "+ getMappingSubjects());
-		
-		for (MappingSubject subj: getMappingSubjects()){
-			if (subj.getSElementId().getSIdentifiableElement() instanceof SCorpus){
-				//TODO move all annotations (SMetaAnnotation)
-				subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
-			}
-		}
-		
-		return(DOCUMENT_STATUS.COMPLETED);
 	}
 	
 	/** the {@link TokenMergeContainer} instance **/
