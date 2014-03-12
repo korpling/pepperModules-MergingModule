@@ -48,6 +48,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SElementId;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SRelation;
@@ -933,7 +934,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				// change edges 
 				updateEdges(other, match, match.getSId());
 				// change annotations
-				moveAllLabels(otherNode, match);
+				moveAllLabels(otherNode, match, true);
 				// change layers?
 				
 			}else{
@@ -1139,7 +1140,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param from
 	 * @param to
 	 */
-	public void moveAllLabels(LabelableElement from, LabelableElement to) {
+	public void moveAllLabels(LabelableElement from, LabelableElement to, boolean ignoreSElementId) {
 		List<Label> fromAnnotations = from.getLabels();
 		if (fromAnnotations != null) {
 			
@@ -1147,6 +1148,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				// actually I should not be able to remove labels directly, don't I?
 				Label fromLabel = from.getLabels().remove(0);
 				Label toLabel = to.getLabel(fromLabel.getQName());
+				if (ignoreSElementId){
+					if (toLabel instanceof SElementId){
+						continue;
+					}
+				}
 				if (toLabel == null) {
 					// add as new label
 					to.addLabel(fromLabel);
