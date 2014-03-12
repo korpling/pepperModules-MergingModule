@@ -58,20 +58,6 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 @Component(name="MergerComponent", factory="PepperManipulatorComponentFactory")
 public class Merger extends PepperManipulatorImpl implements PepperManipulator
 {
-	/**
-	 * Determins the merging level concerning the corpus-structure of how a corpus should be merged.
-	 * @author florian
-	 *
-	 */
-	public enum MERGING_LEVEL{
-		/** just copies all corpus graphs to a single one **/
-		MERGE_CORPUS_GRAPHS,
-		/** merges all corpus graphs into a single corpus graph, but does not merge the documents **/
-		MERGE_DOCUMENT_PATHS,
-		/** merges all possible documents (by given table or autodetect) **/
-		MERGE_DOCUMENTS
-	}
-	
 	public Merger()
 	{
 		super();
@@ -219,11 +205,9 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 		if (sCorpusGraph!= null){
 			if (getSaltProject().getSCorpusGraphs().size()>1)
 			{
-				if (!MERGING_LEVEL.MERGE_CORPUS_GRAPHS.equals(((MergerProperties)getProperties()).getMergingLevel())){
-					createMapping();
-					if (importOrder!= null){
-						retVal= importOrder.get(sCorpusGraph);
-					}
+				createMapping();
+				if (importOrder!= null){
+					retVal= importOrder.get(sCorpusGraph);
 				}
 			}
 		}
@@ -259,23 +243,15 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 				}
 			}
 			if(noBase){
-				List<SCorpus> corpora= null;
 				if (isDoc){
-					corpora= getBaseCorpusStructure().createSCorpus(URI.createURI(key).trimSegments(1));
-					SDocument sDoc= getBaseCorpusStructure().createSDocument(URI.createURI(key));
-//					mappingTable.put(sDoc.getSId(), sDoc);
+					System.out.println("create document: "+ URI.createURI(key));
+					getBaseCorpusStructure().createSCorpus(URI.createURI(key).trimSegments(1));
+					getBaseCorpusStructure().createSDocument(URI.createURI(key));
 				}else{
-					corpora= getBaseCorpusStructure().createSCorpus(URI.createURI(key));
+					System.out.println("create corpus: "+ URI.createURI(key));
+					getBaseCorpusStructure().createSCorpus(URI.createURI(key));
 				}
-//				if (corpora!= null){
-//					for (SCorpus sCorp: corpora){
-//						mappingTable.put(sCorp.getSId(), sCorp);
-//					}
-//				}
 			}
-//			else{
-//				System.out.println("base contains key '"+key+"': "+getBaseCorpusStructure().getSNode(key));
-//			}
 		}
 	}
 	
