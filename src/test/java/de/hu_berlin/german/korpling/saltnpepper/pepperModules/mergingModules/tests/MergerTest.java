@@ -2,6 +2,9 @@ package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.te
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
+
+import org.eclipse.emf.common.util.URI;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -28,6 +31,7 @@ public class MergerTest extends PepperManipulatorTest{
 
 	public void setFixture(Merger fixture) {
 		this.fixture = fixture;
+		super.setResourcesURI(URI.createFileURI(new File(".").getAbsolutePath()));
 	}
 	
 	@Before
