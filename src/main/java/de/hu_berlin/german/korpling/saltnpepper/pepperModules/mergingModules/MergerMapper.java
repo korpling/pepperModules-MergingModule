@@ -293,11 +293,19 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 							System.out.println("\ttext based search");
 							// get the set of tokens in the document which do not have an equivalent in the base text
 							HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+							// We state : all tokens are unique
+							nonEquivalentTokenInOtherTexts.addAll(sDoc.getSDocumentGraph().getSTokens());
+							System.out.println("(Re-)alligning the texts of "+sDoc.getSElementId()+ " to the base text");
+							for (STextualDS sTextualDS : sDoc.getSDocumentGraph().getSTextualDSs()){
+								// align the texts
+								this.alignTexts(this.container.getBaseText(), sTextualDS, nonEquivalentTokenInOtherTexts);
+							}
+							/*
 							if (nonEquivalentTokenSets.get(this.container.getBaseText()) != null){
 								if (nonEquivalentTokenSets.get(this.container.getBaseText()).get(sDoc) != null){
 									nonEquivalentTokenInOtherTexts = nonEquivalentTokenSets.get(this.container.getBaseText()).get(sDoc);
 								}
-							}
+							}*/
 							// merge the document content
 							this.mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(), sDoc, nonEquivalentTokenInOtherTexts);
 							// we are finished with the document. Free the memory
@@ -1158,12 +1166,15 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 					to.addLabel(fromLabel);
 					System.out.println("moved anno: " + fromLabel.toString());
 				} else {
+					// target contains a label with the same qname
 					Object fromVal = fromLabel.getValue();
 					Object toVal = toLabel.getValue();
 					if (fromVal == toVal && fromVal == null){
+						System.out.println("ERRRRROR: FromVal is null");
 						fromLabel.setQName(fromLabel.getQName() + LABEL_NAME_EXTENSION);
+						to.addLabel(fromLabel);
 					} else if (!fromVal.equals(toVal)) {
-						// same name but different values
+						// same qname but different values
 						fromLabel.setQName(fromLabel.getQName()
 								+ LABEL_NAME_EXTENSION);
 						to.addLabel(fromLabel);

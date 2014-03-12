@@ -364,8 +364,13 @@ public class TokenMergeContainer {
 					this.equivalentToken.get(baseTextToken).put(otherSText, otherTextToken);
 				} 
 				else 
-				{ // there is a mapping for the base token in the otherSTextt
-					System.out.println("WARNING: There is already another mapping for the base SToken "+baseTextToken.getSName()+" in STextualDS "+otherSText.getSName());
+				{ // there is a mapping for the base token in the otherSText
+					if (this.equivalentToken.get(baseTextToken).get(otherSText).equals(otherTextToken)){
+						System.out.println("Info: There is already a mapping for the base SToken "+baseTextToken.getSName()+" in STextualDS "+otherSText.getSName()+ " to token "+otherTextToken.getSName());
+					} else {
+						System.out.println("Warning: There is already a mapping for the base SToken "+baseTextToken.getSName()+" in STextualDS "+otherSText.getSName()+ " to some other token which is not "+otherTextToken.getSName());
+					}
+					
 				}
 			} 
 			else 
