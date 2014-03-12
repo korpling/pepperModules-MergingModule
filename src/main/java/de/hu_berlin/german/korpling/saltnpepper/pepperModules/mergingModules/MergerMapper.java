@@ -48,8 +48,12 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotatableElement;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SElementId;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SGraph;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SMetaAnnotatableElement;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SMetaAnnotation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SRelation;
 
@@ -683,13 +687,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		for (char c : sTextualDS.getSText().toCharArray()){
 			String originalString = new String();
 			originalString += c;
-			String stringToEscape = ((MergerProperties)getProperties()).getEscapeMapping().get(originalString);
+			String stringToEscape = ((MergerProperties)getProperties()).getEscapeMapping().get(c);
 			if (stringToEscape == null){
-				//System.out.print(c);
 				normalizedToOriginalMapping.add(start);
 			} else {
 				if (stringToEscape.length() > 0){
-					//System.out.print(stringToEscape);
 					for (char x : stringToEscape.toCharArray())
 					{// one char is mapped to many. all chars have the same index in the original text
 						normalizedToOriginalMapping.add(start);
@@ -766,7 +768,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		for (char c : sTextualDS.getSText().toCharArray()){
 			String originalString = new String();
 			originalString += c;
-			String stringToEscape = escapeTable.get(originalString);
+			String stringToEscape = escapeTable.get(c);
 			// fill the StringBuilder
 			if (stringToEscape != null){
 				normalizedTextBuilder.append(stringToEscape);
@@ -817,7 +819,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				for (char c : sTextualDS.getSText().toCharArray()){
 					String originalString = new String();
 					originalString += c;
-					String stringToEscape = ((MergerProperties)getProperties()).getEscapeMapping().get(originalString);
+					String stringToEscape = ((MergerProperties)getProperties()).getEscapeMapping().get(c);
 					// fill the StringBuilder
 					if (stringToEscape != null){
 						normalizedTextBuilder.append(stringToEscape);
@@ -1135,6 +1137,35 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		return ret;
 		
 	}
+	/**
+	 * Copies all {@link SAnnotation} objects from <code>from</code> to <code>to</code>.
+	 * @param from
+	 * @param to
+	 */
+	public void copySAnnotation(SAnnotatableElement from, SAnnotatableElement to){
+		if 	(	(from != null)&&
+				(to != null)){
+			for (SAnnotation fromSAnno: from.getSAnnotations()){
+				SAnnotation toSAnno= to.createSAnnotation(fromSAnno.getSNS(), fromSAnno.getSName(), fromSAnno.getValueString());
+				//recursive for toSAnno
+			}
+		}
+	}
+	
+	/**
+	 * Copies all {@link SAnnotation} objects from <code>from</code> to <code>to</code>.
+	 * @param from
+	 * @param to
+	 */
+	public void copySMetaAnnotation(SMetaAnnotatableElement from, SMetaAnnotatableElement to){
+		if 	(	(from != null)&&
+				(to != null)){
+			for (SMetaAnnotation fromSAnno: from.getSMetaAnnotations()){
+				SMetaAnnotation toSAnno= to.createSMetaAnnotation(fromSAnno.getSNS(), fromSAnno.getSName(), fromSAnno.getValueString());
+				//recursive for toSAnno
+			}
+		}
+	}
 	
 	/**
 	 * moves annotations from one element to another. 
@@ -1148,7 +1179,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param from
 	 * @param to
 	 */
-	public void moveAllLabels(LabelableElement from, LabelableElement to, boolean ignoreSElementId) {
+	public void moveAllLabels(LabelableElement from, LabelableElement to) {
 		List<Label> fromAnnotations = from.getLabels();
 		if (fromAnnotations != null) {
 			
@@ -1181,7 +1212,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 						logger.warn(String
 								.format("Changed annotation name to\"%s\" from \"%s\" because %s != %s",
 										fromLabel.getQName(),
-										toLabel.getQName(), toLabel.getValue(),
+							 			toLabel.getQName(), toLabel.getValue(),
 										fromLabel.getValue()));
 					} else {
 						System.out.println(String.format(
