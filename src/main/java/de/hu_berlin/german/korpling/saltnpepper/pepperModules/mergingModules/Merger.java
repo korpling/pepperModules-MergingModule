@@ -344,7 +344,13 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 			this.done(controller);
 		}
 		
-		this.end();
+//		this.end();
+		
+		Collection<SCorpus> corpora= Collections.synchronizedCollection(getBaseCorpusStructure().getSCorpora());
+		for (SCorpus sCorpus: corpora){
+			start(sCorpus.getSElementId());
+		}
+		
 		//only wait for  controllers which have been added by end()
 		for (PepperMapperController controller: this.getMapperControllers().values())
 		{
@@ -390,7 +396,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 				mappingSubject.setSElementId(getBaseCorpusStructure().getSNode(sElementId.getSId()).getSElementId());
 				mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
 				mapper.getMappingSubjects().add(mappingSubject);
-				System.out.println("ADDED document: "+ mappingSubject.getSElementId());
+				System.out.println("ADDED document: "+ SaltFactory.eINSTANCE.getGlobalId(mappingSubject.getSElementId()));
 			}
 			System.out.println("SUBJECT (SDOCUMENT): "+ mapper.getMappingSubjects());
 		}else if (sElementId.getSIdentifiableElement() instanceof SCorpus){
@@ -413,6 +419,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 				mappingSubject.setSElementId(getBaseCorpusStructure().getSNode(sElementId.getSId()).getSElementId());
 				mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
 				mapper.getMappingSubjects().add(mappingSubject);
+				System.out.println("ADDED corpus: "+ SaltFactory.eINSTANCE.getGlobalId(mappingSubject.getSElementId()));
 			}
 			System.out.println("SUBJECT (SCORPUS): "+ mapper.getMappingSubjects());
 		}

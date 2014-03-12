@@ -67,7 +67,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	
 	@Override
 	public DOCUMENT_STATUS mapSCorpus() {
-		System.out.println("MERGING SCORPUS: "+ getMappingSubjects());
 		
 		for (MappingSubject subj: getMappingSubjects()){
 			if (subj.getSElementId().getSIdentifiableElement() instanceof SCorpus){
@@ -82,7 +81,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	@Override
 	public DOCUMENT_STATUS mapSDocument() {
 		this.initialize();
-		System.out.println("MERGING SDOCUMENT: "+getMappingSubjects());
 		if (this.getMappingSubjects().size() != 0){
 			boolean isEmpty= true;
 			
@@ -262,15 +260,15 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 					throw new PepperModuleException(this, "Could not choose a base SDocument");
 				}
 				
-				// allign all texts and create the nonEquivalentTokenSets
+				// align all texts and create the nonEquivalentTokenSets
 				/// base text -- < Other Document -- nonEquivalentTokens >
-				Hashtable<STextualDS, Hashtable<SDocument,HashSet<SToken>>> nonEquivalentTokenSets = this.allignAllTexts();;
+				Hashtable<STextualDS, Hashtable<SDocument,HashSet<SToken>>> nonEquivalentTokenSets = this.allignAllTexts();
 				
 				/// choose the perfect STextualDS of the base Document
 				SDocument baseDoc = this.container.getBaseDocument();
 				STextualDS baseText = chooseBaseText(baseDoc, nonEquivalentTokenSets);
 				if (baseText == null){
-					throw new PepperModuleException(this, "Could not choose a base STextualDS");
+					throw new PepperModuleException(this, "Could not choose a base STextualDS.");
 				}
 				// set the base text
 				this.container.setBaseText(baseText);
