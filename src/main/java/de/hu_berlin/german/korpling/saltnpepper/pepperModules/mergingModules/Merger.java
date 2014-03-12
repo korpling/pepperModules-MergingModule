@@ -423,7 +423,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 			}
 			System.out.println("SUBJECT (SCORPUS): "+ mapper.getMappingSubjects());
 		}
-		
+		mapper.setBaseCorpusStructure(getBaseCorpusStructure());
 		return(mapper);
 	}
 }	

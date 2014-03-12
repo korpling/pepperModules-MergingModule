@@ -37,11 +37,13 @@ import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.MappingSubject;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperMapper;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.exceptions.PepperModuleException;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.impl.PepperMapperImpl;
+import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Edge;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Label;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.LabelableElement;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Node;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpus;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpusGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDocumentGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SPointingRelation;
@@ -72,14 +74,33 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	
 	@Override
 	public DOCUMENT_STATUS mapSCorpus() {
-		
-		for (MappingSubject subj: getMappingSubjects()){
-			if (subj.getSElementId().getSIdentifiableElement() instanceof SCorpus){
-				//TODO move all annotations (SMetaAnnotation)
-				subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
+		if (this.getMappingSubjects().size() != 0){
+			SCorpus baseCorpus= null;
+			//emit corpus in base corpus-structure
+			for (MappingSubject subj: getMappingSubjects()){
+				if (subj.getSElementId().getSIdentifiableElement() instanceof SCorpus){
+					SCorpus sCorp= (SCorpus) subj.getSElementId().getSIdentifiableElement();
+					if (sCorp.getSCorpusGraph().equals(getBaseCorpusStructure())){
+						baseCorpus= sCorp;
+						break;
+					}
+				}
+			}
+			//copy all annotations of corpus
+			for (MappingSubject subj: getMappingSubjects()){
+				if (subj.getSElementId().getSIdentifiableElement() instanceof SCorpus){
+					SCorpus sCorp= (SCorpus) subj.getSElementId().getSIdentifiableElement();
+					if (sCorp.equals(baseCorpus)){//corpus is base corpus
+						subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
+					}else{// corpus is not base corpus
+						copySAnnotation(sCorp, baseCorpus);
+						copySMetaAnnotation(sCorp, baseCorpus);
+						subj.setMappingResult(DOCUMENT_STATUS.DELETED);
+					}
+					
+				}
 			}
 		}
-		
 		return(DOCUMENT_STATUS.COMPLETED);
 	}
 	
@@ -88,6 +109,30 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		this.initialize();
 		if (this.getMappingSubjects().size() != 0){
 			boolean isEmpty= true;
+			
+			SDocument baseDocument= null;
+			//emit corpus in base corpus-structure
+			for (MappingSubject subj: getMappingSubjects()){
+				if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
+					SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
+					if (sDoc.getSCorpusGraph().equals(getBaseCorpusStructure())){
+						baseDocument= sDoc;
+						break;
+					}
+				}
+			}
+			if (baseDocument== null)
+				throw new PepperModuleException(this, "This might be a bug, no base document was found.");
+			//copy all annotations of corpus
+			for (MappingSubject subj: getMappingSubjects()){
+				if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
+					SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
+					if (!sDoc.equals(baseDocument)){// document is not base corpus
+						copySAnnotation(sDoc, baseDocument);
+						copySMetaAnnotation(sDoc, baseDocument);
+					}
+				}
+			}
 			
 			//emit if document contains content
 			for (MappingSubject subj: getMappingSubjects()){
@@ -108,6 +153,22 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		return(DOCUMENT_STATUS.COMPLETED);
 	}
 	
+	/** Determines which {@link SCorpusGraph} is the base corpus graph, in which everything has to be merged in.**/
+	private SCorpusGraph baseCorpusStructure= null;
+	/**
+	 * Returns the {@link SCorpusGraph} is the base corpus graph, in which everything has to be merged in.
+	 * @return
+	 */
+	public SCorpusGraph getBaseCorpusStructure() {
+		return baseCorpusStructure;
+	}
+	/**
+	 * Sets the {@link SCorpusGraph} is the base corpus graph, in which everything has to be merged in.
+	 * @param baseCorpusStructure
+	 */
+	public void setBaseCorpusStructure(SCorpusGraph baseCorpusStructure) {
+		this.baseCorpusStructure = baseCorpusStructure;
+	}
 	/**
 	 * This method chooses the base {@link SDocument}.
 	 * @return The base {@link SDocument}
@@ -1179,7 +1240,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param from
 	 * @param to
 	 */
-	public void moveAllLabels(LabelableElement from, LabelableElement to) {
+	public void moveAllLabels(LabelableElement from, LabelableElement to, boolean ignoreSElementId) {
 		List<Label> fromAnnotations = from.getLabels();
 		if (fromAnnotations != null) {
 			

@@ -325,9 +325,10 @@ public class MergerTest extends PepperManipulatorTest{
 	 *  /  \   |   
 	 * d1  d2  d3
 	 * </pre>
+	 * @throws InterruptedException 
 	 */
 	@Test
-	public void test_MERGE_DOCUMENTS_1(){
+	public void test_MERGE_DOCUMENTS_1() throws InterruptedException{
 		//graph 1
 		SCorpusGraph graph1= SaltFactory.eINSTANCE.createSCorpusGraph();
 		SCorpus c1_1= SaltFactory.eINSTANCE.createSCorpus();
@@ -402,7 +403,6 @@ public class MergerTest extends PepperManipulatorTest{
 		
 		this.start();
 		
-		
 		/**
 		  *     c1
 		  *    /  \     
@@ -415,12 +415,12 @@ public class MergerTest extends PepperManipulatorTest{
 		assertEquals(2, graph1.getSCorpusRelations().size());
 		assertEquals(3, graph1.getSCorpusDocumentRelations().size());
 		
-		assertEquals(3, c1_1.getSMetaAnnotations().size());
-		assertEquals(3, c2_1.getSMetaAnnotations().size());
-		assertEquals(3, c3_1.getSMetaAnnotations().size());
-		assertEquals(3, d1_1.getSMetaAnnotations().size());
-		assertEquals(3, d2_1.getSMetaAnnotations().size());
-		assertEquals(3, d3_1.getSMetaAnnotations().size());
+		assertEquals("all meta-annotations: "+c1_1.getSMetaAnnotations(),3, c1_1.getSMetaAnnotations().size());
+		assertEquals("all meta-annotations: "+c2_1.getSMetaAnnotations(),3, c2_1.getSMetaAnnotations().size());
+		assertEquals("all meta-annotations: "+c3_1.getSMetaAnnotations(), 2, c3_1.getSMetaAnnotations().size());
+		assertEquals("all meta-annotations: "+d1_1.getSMetaAnnotations(), 3, d1_1.getSMetaAnnotations().size());
+		assertEquals("all meta-annotations: "+d2_1.getSMetaAnnotations(), 2, d2_1.getSMetaAnnotations().size());
+		assertEquals("all meta-annotations: "+d3_1.getSMetaAnnotations(), 2, d3_1.getSMetaAnnotations().size());
 	}
 	
 	/**

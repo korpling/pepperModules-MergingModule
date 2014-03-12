@@ -563,7 +563,7 @@ public class MergerMapperTest extends MergerMapper{
 		tok2.addSAnnotation(anno3);
 		
 		MergerMapper mm = new MergerMapper();
-		mm.moveAllLabels(tok1, tok2,false);
+		mm.moveAllLabels(tok1, tok2, true);
 
 		assertEquals("annotext1", tok2.getSAnnotation("anno1").getSValueSTEXT());
 		assertEquals("annotext22", tok2.getSAnnotation("anno2")
@@ -585,11 +585,9 @@ public class MergerMapperTest extends MergerMapper{
 		meta.setName(annoName);
 		meta.setValue(annoValue);
 		
-		// meta for sCorp:  metaAnno=metaValue
 		sCorp.addSMetaAnnotation(meta);
 		
-		// move metaAnno=metaValue from sCorp to sDoc
-		mm.moveAllLabels(sCorp, sDoc,false);
+		mm.moveAllLabels(sCorp, sDoc, true);
 		
 		assertEquals(1, sDoc.getSMetaAnnotations().size());
 		assertNotNull(sDoc.getSMetaAnnotation(annoName));
@@ -601,24 +599,14 @@ public class MergerMapperTest extends MergerMapper{
 		String annoValue2= "metaValue_1";
 		meta2.setName(annoName2);
 		meta2.setValue(annoValue2);
-		// meta2 for sCorp: metaAnno=metaValue_1
+		
 		sCorp.addSMetaAnnotation(meta2);
 		
-		// move metaAnno=metaValue_1 from sCorp to sDoc
-		mm.moveAllLabels(sCorp, sDoc,false);
+		mm.moveAllLabels(sCorp, sDoc, true);
 		
 		assertEquals(2, sDoc.getSMetaAnnotations().size());
 		assertNotNull(sDoc.getSMetaAnnotation(annoName2));
-		System.out.println("MetaAnno 1: sName = "+sDoc.getSMetaAnnotation(annoName).getSName());
-		System.out.println("MetaAnno 1: sValue = "+sDoc.getSMetaAnnotation(annoName).getSValueSTEXT());
-		System.out.println("MetaAnno 2: sName = "+sDoc.getSMetaAnnotation(annoName2).getSName());
-		System.out.println("MetaAnno 2: sValue = "+sDoc.getSMetaAnnotation(annoName2).getSValueSTEXT());
-		System.out.println("MetaAnno 1: qName = "+sDoc.getSMetaAnnotation(annoName).getQName());
-		System.out.println("MetaAnno 1: sValue = "+sDoc.getSMetaAnnotation(annoName).getSValueSTEXT());
-		System.out.println("MetaAnno 2: qName = "+sDoc.getSMetaAnnotation(annoName2).getQName());
-		System.out.println("MetaAnno 2: sValue = "+sDoc.getSMetaAnnotation(annoName2).getSValueSTEXT());
-		// assert metaAnno_1=metaValue_1 == metaAnno_1=meta_value_1
-		assertEquals("Expected SName to be "+annoName2 + MergerMapper.LABEL_NAME_EXTENSION+" but it was "+sDoc.getSMetaAnnotation(annoName2).getSName(),annoName2 + MergerMapper.LABEL_NAME_EXTENSION, sDoc.getSMetaAnnotation(annoName2).getSName());
+		assertEquals(annoName2 + MergerMapper.LABEL_NAME_EXTENSION, sDoc.getSMetaAnnotation(annoName2).getSName());
 		assertEquals(annoValue2, sDoc.getSMetaAnnotation(annoName2).getValue());
 	}
 	
