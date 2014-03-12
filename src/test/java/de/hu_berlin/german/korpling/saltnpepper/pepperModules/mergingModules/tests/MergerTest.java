@@ -309,6 +309,121 @@ public class MergerTest extends PepperManipulatorTest{
 	}
 	
 	/**
+	 * Tests the merging on level {@link MERGING_LEVEL#MERGE_DOCUMENTS}:
+	 * <pre> 
+	 *   |    c1      |    c1       |  c1          
+	 *   |   /  \     |   /  \      |   |          
+	 *   |  c2   c3   |  c2   c3    |  c2 
+	 *   | /  \   |   | /  \   |    |   |
+	 *   |d1  d2  d3  |d1  d2  d3   |  d1
+	 * </pre>
+	 * result (autodetect):
+	 * <pre>
+	 *     c1
+	 *    /  \     
+	 *   c2   c3   
+	 *  /  \   |   
+	 * d1  d2  d3
+	 * </pre>
+	 */
+	@Test
+	public void test_MERGE_DOCUMENTS_1(){
+		//graph 1
+		SCorpusGraph graph1= SaltFactory.eINSTANCE.createSCorpusGraph();
+		SCorpus c1_1= SaltFactory.eINSTANCE.createSCorpus();
+		c1_1.setSName("c1");
+		c1_1.createSMetaAnnotation(null, "anno1", "someValue");
+		graph1.addSNode(c1_1);
+		SCorpus c2_1= SaltFactory.eINSTANCE.createSCorpus();
+		c2_1.setSName("c2");
+		c2_1.createSMetaAnnotation(null, "anno1", "someValue");
+		graph1.addSSubCorpus(c1_1, c2_1);
+		SDocument d1_1= SaltFactory.eINSTANCE.createSDocument();
+		d1_1.setSName("d1");
+		d1_1.createSMetaAnnotation(null, "anno1", "someValue");
+		graph1.addSDocument(c2_1, d1_1);
+		SDocument d2_1= SaltFactory.eINSTANCE.createSDocument();
+		d2_1.setSName("d2");
+		d2_1.createSMetaAnnotation(null, "anno1", "someValue");
+		graph1.addSDocument(c2_1, d2_1);
+		SCorpus c3_1= SaltFactory.eINSTANCE.createSCorpus();
+		c3_1.setSName("c3");
+		c3_1.createSMetaAnnotation(null, "anno1", "someValue");
+		graph1.addSSubCorpus(c1_1, c3_1);
+		SDocument d3_1= SaltFactory.eINSTANCE.createSDocument();
+		d3_1.setSName("d3");
+		d3_1.createSMetaAnnotation(null, "anno1", "someValue");
+		graph1.addSDocument(c3_1, d3_1);
+		this.getFixture().getSaltProject().getSCorpusGraphs().add(graph1);
+		
+		//graph2
+		SCorpusGraph graph2= SaltFactory.eINSTANCE.createSCorpusGraph();
+		SCorpus c1_2= SaltFactory.eINSTANCE.createSCorpus();
+		c1_2.setSName("c1");
+		c1_2.createSMetaAnnotation(null, "anno2", "someValue");
+		graph2.addSNode(c1_2);
+		SCorpus c2_2= SaltFactory.eINSTANCE.createSCorpus();
+		c2_2.setSName("c2");
+		c2_2.createSMetaAnnotation(null, "anno2", "someValue");
+		graph2.addSSubCorpus(c1_2, c2_2);
+		SDocument d1_2= SaltFactory.eINSTANCE.createSDocument();
+		d1_2.setSName("d1");
+		d1_2.createSMetaAnnotation(null, "anno2", "someValue");
+		graph2.addSDocument(c2_2, d1_2);
+		SDocument d2_2= SaltFactory.eINSTANCE.createSDocument();
+		d2_2.setSName("d2");
+		d2_2.createSMetaAnnotation(null, "anno2", "someValue");
+		graph2.addSDocument(c2_2, d2_2);
+		SCorpus c3_2= SaltFactory.eINSTANCE.createSCorpus();
+		c3_2.setSName("c3");
+		c3_2.createSMetaAnnotation(null, "anno2", "someValue");
+		graph2.addSSubCorpus(c1_2, c3_2);
+		SDocument d3_2= SaltFactory.eINSTANCE.createSDocument();
+		d3_2.setSName("d3");
+		d3_2.createSMetaAnnotation(null, "anno2", "someValue");
+		graph2.addSDocument(c3_2, d3_2);
+		this.getFixture().getSaltProject().getSCorpusGraphs().add(graph2);
+		
+		//graph3
+		SCorpusGraph graph3= SaltFactory.eINSTANCE.createSCorpusGraph();
+		SCorpus c1_3= SaltFactory.eINSTANCE.createSCorpus();
+		c1_3.setSName("c1");
+		c1_3.createSMetaAnnotation(null, "anno3", "someValue");
+		graph3.addSNode(c1_3);
+		SCorpus c2_3= SaltFactory.eINSTANCE.createSCorpus();
+		c2_3.setSName("c2");
+		c2_3.createSMetaAnnotation(null, "anno3", "someValue");
+		graph3.addSSubCorpus(c1_3, c2_3);
+		SDocument d1_3= SaltFactory.eINSTANCE.createSDocument();
+		d1_3.setSName("d1");
+		d1_3.createSMetaAnnotation(null, "anno3", "someValue");
+		graph3.addSDocument(c2_3, d1_3);
+		this.getFixture().getSaltProject().getSCorpusGraphs().add(graph3);
+		
+		this.start();
+		
+		
+		/**
+		  *     c1
+		  *    /  \     
+		  *   c2   c3   
+		  *  /  \   |   
+		  * d1  d2  d3
+		 */
+		assertEquals(3, graph1.getSCorpora().size());
+		assertEquals(3, graph1.getSDocuments().size());
+		assertEquals(2, graph1.getSCorpusRelations().size());
+		assertEquals(3, graph1.getSCorpusDocumentRelations().size());
+		
+		assertEquals(3, c1_1.getSMetaAnnotations().size());
+		assertEquals(3, c2_1.getSMetaAnnotations().size());
+		assertEquals(3, c3_1.getSMetaAnnotations().size());
+		assertEquals(3, d1_1.getSMetaAnnotations().size());
+		assertEquals(3, d2_1.getSMetaAnnotations().size());
+		assertEquals(3, d3_1.getSMetaAnnotations().size());
+	}
+	
+	/**
 	 * Tests the merging of three corpus graphs having some document content
 	 * 
 	 * 	 c1     |    c1    |     c1
