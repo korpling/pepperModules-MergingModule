@@ -663,14 +663,24 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		 *                 5->6
 		 *                 6->7
 		 */
+		for (String key : ((MergerProperties)getProperties()).getEscapeMapping().keySet()){
+			System.out.println("Key: \""+ key + "\" , Value: \""+ ((MergerProperties)getProperties()).getEscapeMapping().get(key)+"\"");
+		}
+		
 		List<Integer> normalizedToOriginalMapping = new Vector<Integer>();
 		int start = 0;
+		//System.out.println("Normalizing \""+sTextualDS.getSText()+"\"");
+		//System.out.print("Normalized: ");
 		for (char c : sTextualDS.getSText().toCharArray()){
-			String stringToEscape = ((MergerProperties)getProperties()).getEscapeMapping().get(c);
+			String originalString = new String();
+			originalString += c;
+			String stringToEscape = ((MergerProperties)getProperties()).getEscapeMapping().get(originalString);
 			if (stringToEscape == null){
+				//System.out.print(c);
 				normalizedToOriginalMapping.add(start);
 			} else {
 				if (stringToEscape.length() > 0){
+					//System.out.print(stringToEscape);
 					for (char x : stringToEscape.toCharArray())
 					{// one char is mapped to many. all chars have the same index in the original text
 						normalizedToOriginalMapping.add(start);
@@ -683,6 +693,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			}
 			start += 1;
 		}
+		//System.out.print('\n');
 		return normalizedToOriginalMapping;
 	}
 	
@@ -744,7 +755,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		StringBuilder normalizedTextBuilder = new StringBuilder();
 		// normalize the text
 		for (char c : sTextualDS.getSText().toCharArray()){
-			String stringToEscape = escapeTable.get(c);
+			String originalString = new String();
+			originalString += c;
+			String stringToEscape = escapeTable.get(originalString);
 			// fill the StringBuilder
 			if (stringToEscape != null){
 				normalizedTextBuilder.append(stringToEscape);
@@ -793,7 +806,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				
 				// normalize the text
 				for (char c : sTextualDS.getSText().toCharArray()){
-					String stringToEscape = ((MergerProperties)getProperties()).getEscapeMapping().get(c);
+					String originalString = new String();
+					originalString += c;
+					String stringToEscape = ((MergerProperties)getProperties()).getEscapeMapping().get(originalString);
 					// fill the StringBuilder
 					if (stringToEscape != null){
 						normalizedTextBuilder.append(stringToEscape);

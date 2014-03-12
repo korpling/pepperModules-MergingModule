@@ -326,6 +326,8 @@ public class MergerMapperTest extends MergerMapper{
 		
 		List<Integer> template = new Vector<Integer>();
 		
+		//assertTrue(! ((MergerProperties)this.getProperties()).getEscapeMapping().isEmpty());
+		
 		/**
 		 * Example2: dipl: " thäs is"
 	     *                  01234567
