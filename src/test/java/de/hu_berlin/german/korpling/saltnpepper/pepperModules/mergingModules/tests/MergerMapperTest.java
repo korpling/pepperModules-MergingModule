@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Vector;
 
 import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.common.util.URI;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -19,6 +20,7 @@ import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.Mer
 import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.MergerProperties;
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpus;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpusGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDocumentGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SSpan;
@@ -645,4 +647,39 @@ public class MergerMapperTest extends MergerMapper{
 		assertEquals(rel1.getTarget(), tok1);
 	}
 
+	/**
+	 * Checks, that algorithm chooses the expected base document automatically.
+	 */
+	@Test
+	public void testChooseBaseDocument(){
+		SCorpusGraph g1= SaltFactory.eINSTANCE.createSCorpusGraph();
+		SDocument d1_1= g1.createSDocument(URI.createURI("/c1/d1"));
+		System.out.println("id: "+ d1_1.getSElementId());
+		d1_1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		d1_1.getSDocumentGraph().createSTextualDS("a sample text");
+		MappingSubject subj_1= new MappingSubject();
+		subj_1.setSElementId(d1_1.getSElementId());
+		getFixture().getMappingSubjects().add(subj_1);
+		
+		SCorpusGraph g2= SaltFactory.eINSTANCE.createSCorpusGraph();
+		SDocument d1_2= g2.createSDocument(URI.createURI("/c1/d1"));
+		d1_2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		d1_2.getSDocumentGraph().createSTextualDS("This is a sample text.");
+		MappingSubject subj_2= new MappingSubject();
+		subj_2.setSElementId(d1_2.getSElementId());
+		getFixture().getMappingSubjects().add(subj_2);
+		
+		SCorpusGraph g3= SaltFactory.eINSTANCE.createSCorpusGraph();
+		SDocument d1_3= g3.createSDocument(URI.createURI("/c1/d1"));
+		d1_3.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		d1_3.getSDocumentGraph().createSTextualDS("a sample");
+		MappingSubject subj_3= new MappingSubject();
+		subj_3.setSElementId(d1_3.getSElementId());
+		getFixture().getMappingSubjects().add(subj_3);
+		
+		//TODO what is necessary, to run test
+		
+		MappingSubject result= this.chooseBaseDocument();
+		assertEquals(subj_2, result);
+	}
 }
