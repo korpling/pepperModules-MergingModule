@@ -418,7 +418,7 @@ public class TokenMergeContainer {
 			if (this.normalizedTextMap.containsKey(sDocument)){
 				this.normalizedTextMap.remove(sDocument);
 			}
-			if (sDocument.equals(this.baseDocument)){
+			if (sDocument== this.baseDocument){
 				this.normalizedBaseTextToOriginalBaseText.clear();
 			}
 			for (SToken tok : this.equivalentToken.keySet()){

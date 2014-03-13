@@ -83,7 +83,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			for (MappingSubject subj: getMappingSubjects()){
 				if (subj.getSElementId().getSIdentifiableElement() instanceof SCorpus){
 					SCorpus sCorp= (SCorpus) subj.getSElementId().getSIdentifiableElement();
-					if (sCorp.equals(baseCorpus)){//corpus is base corpus
+					if (sCorp== baseCorpus){//corpus is base corpus
 						subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
 					}else{// corpus is not base corpus
 						SaltFactory.eINSTANCE.moveSAnnotations(sCorp, baseCorpus);
@@ -120,7 +120,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			for (MappingSubject subj: getMappingSubjects()){
 				if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
 					SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
-					if (!sDoc.equals(baseDocument)){// document is not base corpus
+					if (sDoc !=baseDocument){// document is not base corpus
 						SaltFactory.eINSTANCE.moveSAnnotations(sDoc, baseDocument);
 						SaltFactory.eINSTANCE.moveSMetaAnnotations(sDoc, baseDocument);
 					}
@@ -215,7 +215,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				for (MappingSubject subj : this.getMappingSubjects())
 				{ // for all documents
 					SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
-					if (! sDoc.equals(container.getBaseDocument()))
+					if (sDoc != container.getBaseDocument())
 					{// ignore the base document and merge the others
 						logger.info("Merging document: " + sDoc);
 						if (sDoc.getSDocumentGraph().getSTextualDSs() != null)
@@ -512,7 +512,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		for (MappingSubject subj : this.getMappingSubjects()){
 			boolean hasTexts = true;
 			SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
-			if (! sDoc.equals(container.getBaseDocument()))
+			if (sDoc!= container.getBaseDocument())
 			{// ignore the base document and align all other
 				if (sDoc.getSDocumentGraph().getSTextualDSs() != null)
 				{ // there are possibly texts
