@@ -16,6 +16,7 @@ import org.junit.Test;
 
 import de.hu_berlin.german.korpling.saltnpepper.pepper.common.DOCUMENT_STATUS;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.MappingSubject;
+import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperModuleProperty;
 import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.MergerMapper;
 import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.MergerProperties;
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
@@ -681,5 +682,43 @@ public class MergerMapperTest extends MergerMapper{
 		
 		MappingSubject result= this.chooseBaseDocument();
 		assertEquals(subj_2, result);
+	}
+	
+	/**
+	 * Checks, that algorithm chooses the expected base document which was set manually.
+	 */
+	@Test
+	public void testChooseBaseDocument_manual(){
+		SCorpusGraph g1= SaltFactory.eINSTANCE.createSCorpusGraph();
+		SDocument d1_1= g1.createSDocument(URI.createURI("/c1/d1"));
+		d1_1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		d1_1.getSDocumentGraph().createSTextualDS("a sample text");
+		MappingSubject subj_1= new MappingSubject();
+		subj_1.setSElementId(d1_1.getSElementId());
+		getFixture().getMappingSubjects().add(subj_1);
+		
+		SCorpusGraph g2= SaltFactory.eINSTANCE.createSCorpusGraph();
+		SDocument d1_2= g2.createSDocument(URI.createURI("/c1/d1"));
+		d1_2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		d1_2.getSDocumentGraph().createSTextualDS("This is a sample text.");
+		MappingSubject subj_2= new MappingSubject();
+		subj_2.setSElementId(d1_2.getSElementId());
+		getFixture().getMappingSubjects().add(subj_2);
+		
+		SCorpusGraph g3= SaltFactory.eINSTANCE.createSCorpusGraph();
+		SDocument d1_3= g3.createSDocument(URI.createURI("/c1/d1"));
+		d1_3.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		d1_3.getSDocumentGraph().createSTextualDS("a sample");
+		MappingSubject subj_3= new MappingSubject();
+		subj_3.setSElementId(d1_3.getSElementId());
+		getFixture().getMappingSubjects().add(subj_3);
+		
+		PepperModuleProperty prop= this.getFixture().getProperties().getProperty(MergerProperties.PROP_FIRST_AS_BASE);
+		prop.setValue(Boolean.TRUE);
+		
+		//TODO what is necessary, to run test
+		
+		MappingSubject result= this.chooseBaseDocument();
+		assertEquals(subj_1, result);
 	}
 }

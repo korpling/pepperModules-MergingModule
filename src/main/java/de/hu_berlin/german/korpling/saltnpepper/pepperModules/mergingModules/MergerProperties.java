@@ -18,6 +18,8 @@ public class MergerProperties extends PepperModuleProperties {
 	public static final String PREFIX= "merger.";
 	public static final String PROP_PUNCTUATIONS= PREFIX+"punctuations";
 	public static final String PROP_ESCAPE_MAPPING= PREFIX+"escapeMapping";
+	/** If this property is set to 'true', the base document is always the one, which belongs to the first SCorpusGraph (the first importer in Pepper workflow description). The value either could be 'true' or false. **/
+	public static final String PROP_FIRST_AS_BASE= PREFIX+"firstAsBase";
 
 	/** Default punctuation characters **/
 	public static final String  PUNCTUATION_DEFAULT = "'.',',',':',';','!','?','(',')','{','}','<','>'";
@@ -47,6 +49,11 @@ public class MergerProperties extends PepperModuleProperties {
 				String.class,
 				"Determines the mapping used in normalization step, to map special characters like umlauts. This value is a comma separated list of mappings: \"REPLACED_CHARACTER\" : \"REPLACEMENT\" (, \"REPLACED_CHARACTER\" : \"REPLACEMENT\")*",
 				ESCAPE_MAPPING_DEFAULT));
+		this.addProperty(new PepperModuleProperty<Boolean>(
+				PROP_FIRST_AS_BASE,
+				Boolean.class,
+				"If this property is set to 'true', the base document is always the one, which belongs to the first SCorpusGraph (the first importer in Pepper workflow description). The value either could be 'true' or 'false'. If this value is set to false, the base document is computed automically (normally the one with the largest primary text).",
+				false, false));
 	}
 	
 	/** punctuation characters specified by the user. If the user didn't specify any**/
@@ -90,7 +97,6 @@ public class MergerProperties extends PepperModuleProperties {
 	 * @return
 	 */
 	public Map<String,String> getEscapeMapping(){
-//		Hashtable<Character,String> escapeTable = new Hashtable<Character, String>();
 		if (escapeMapping== null){
 			PepperModuleProperty<String> prop= (PepperModuleProperty<String>) getProperty(PROP_ESCAPE_MAPPING);
 			
@@ -109,21 +115,18 @@ public class MergerProperties extends PepperModuleProperties {
 						}
 					}
 				}
-				
-//				boolean quoteStarted= false;
-//				for (char ch: escaping.toCharArray()){
-//					String key= null;
-//					String value= null;
-//					if (','== ch){
-//						key= null;
-//						value= null;
-//					}else if ('\"'==ch){
-//						quoteStarted= !quoteStarted;
-//					}
-//				}
 			}
 		}
 		return(escapeMapping);
 	}
-		
+	/**
+	 * If this property is set to 'true', the base document is always the one, which belongs to the 
+	 * first SCorpusGraph (the first importer in Pepper workflow description). 
+	 * The value either could be 'true' or false.
+	 * @return
+	 */
+	public Boolean isFirstAsBase(){
+		PepperModuleProperty<String> prop= (PepperModuleProperty<String>) getProperty(PROP_FIRST_AS_BASE);
+		return(Boolean.valueOf(prop.getValue()));
+	}
 }
