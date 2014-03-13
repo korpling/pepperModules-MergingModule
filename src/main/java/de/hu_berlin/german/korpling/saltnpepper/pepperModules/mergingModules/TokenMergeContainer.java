@@ -22,6 +22,8 @@ import java.util.List;
 
 import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
@@ -34,6 +36,8 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
  */
 public class TokenMergeContainer {
 		
+	private static final Logger logger = LoggerFactory.getLogger(TokenMergeContainer.class);
+	
 		/**
 		 * This class contains all tokens which were aligned and allows a search for specific {@link SToken} objects
 		 * by their start position. Moreover, a search for the start and length of a specific {@link SToken} object
@@ -229,8 +233,6 @@ public class TokenMergeContainer {
 					this.baseDocument = doc;
 				}
 			}
-			System.out.println("!!!!!set basedocument to " + doc);
-			System.out.println("!!!!!set base text to \""+this.baseText.getSText()+"\"");
 			this.normalizedTextMap.put(sTextualDS, normalizedText);
 		}
 		
@@ -347,16 +349,17 @@ public class TokenMergeContainer {
 		 */
 		public void addTokenMapping(SToken baseTextToken, SToken otherTextToken, STextualDS otherSText){
 			if (otherTextToken.equals(baseTextToken)){
-				System.out.println("Sorry, you tried to add a token as it's own mapping");
+				logger.warn("Sorry, you tried to add a token as it's own mapping");
 				return;
 			}
-		System.out.println("Adding mapping for base text token "
+		/*
+			System.out.println("Adding mapping for base text token "
 				+ baseTextToken.getSDocumentGraph().getSDocument().getSId()
 				+ "/"
 				+ baseTextToken.getSName() + " and token "
 				+ otherTextToken.getSDocumentGraph().getSDocument().getSId()
 				+ "/"
-				+ otherTextToken.getSName());
+				+ otherTextToken.getSName());*/
 		if (this.equivalentToken.get(baseTextToken) != null)
 			{// there is a mapping for the base text token
 				if (! this.equivalentToken.get(baseTextToken).containsKey(otherSText))
@@ -366,11 +369,11 @@ public class TokenMergeContainer {
 				} 
 				else 
 				{ // there is a mapping for the base token in the otherSText
-					if (this.equivalentToken.get(baseTextToken).get(otherSText).equals(otherTextToken)){
-						System.out.println("Info: There is already a mapping for the base SToken "+baseTextToken.getSName()+" in STextualDS "+otherSText.getSName()+ " to token "+otherTextToken.getSName());
-					} else {
-						System.out.println("Warning: There is already a mapping for the base SToken "+baseTextToken.getSName()+" in STextualDS "+otherSText.getSName()+ " to some other token which is not "+otherTextToken.getSName());
-					}
+//					if (this.equivalentToken.get(baseTextToken).get(otherSText).equals(otherTextToken)){
+//						System.out.println("Info: There is already a mapping for the base SToken "+baseTextToken.getSName()+" in STextualDS "+otherSText.getSName()+ " to token "+otherTextToken.getSName());
+//					} else {
+//						System.out.println("Warning: There is already a mapping for the base SToken "+baseTextToken.getSName()+" in STextualDS "+otherSText.getSName()+ " to some other token which is not "+otherTextToken.getSName());
+//					}
 					
 				}
 			} 

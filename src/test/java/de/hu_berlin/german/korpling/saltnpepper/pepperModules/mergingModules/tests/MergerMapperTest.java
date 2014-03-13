@@ -540,8 +540,8 @@ public class MergerMapperTest extends MergerMapper{
 		// assert base document = sDoc1 & baseText = norm
 		assertEquals("The base Document should be document 1. but it is not!",sDoc1, this.container.getBaseDocument());
 		assertEquals("The base text should be norm of document 1. but it is not!",sTextDS1, this.container.getBaseText());
-		System.out.println("Base text is: "+this.container.getBaseText().getSName());
-		System.out.println("Base text SText is: "+this.container.getBaseText().getSText());
+//		System.out.println("Base text is: "+this.container.getBaseText().getSName());
+//		System.out.println("Base text SText is: "+this.container.getBaseText().getSText());
 	}
 	
 	@Test

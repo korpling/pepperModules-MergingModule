@@ -377,7 +377,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		}
 		if (baseText != null){
 			logger.info("Chose base text. It is text with id"+baseText.getSId());
-			System.out.println("Chose base text. It is text with id "+ baseText.getSId());
 		}
 		return baseText;
 	}
