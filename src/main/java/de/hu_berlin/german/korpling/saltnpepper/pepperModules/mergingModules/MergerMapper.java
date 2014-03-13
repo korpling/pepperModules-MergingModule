@@ -990,14 +990,13 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				updateEdges(other, match, match.getSId());
 				// change annotations
 				if (otherNode.getSAnnotations() != null){
-					for (SAnnotation anno : otherNode.getSAnnotations()){
-					//	copySAnnotation(anno.getSAnnotatableElement(), match);
-					}
+					System.out.println("Copying annotations for node "+otherNode.getSElementId());
+					copySAnnotation(otherNode, match);
+					
 				}
 				if (otherNode.getSMetaAnnotations() != null){
-					for (SMetaAnnotation anno : otherNode.getSMetaAnnotations()){
-						//copySMetaAnnotation(anno.getSMetaAnnotatableElement(), match);
-					}
+					System.out.println("Copying meta annotations for node "+otherNode.getSElementId());
+					copySMetaAnnotation(otherNode, match);
 				}
 				
 				//moveAllLabels(otherNode, match, true);
@@ -1205,7 +1204,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				// if to contains an SAnnotation with the same namespace and name
 				String newSName = fromSAnno.getSName();
 				if (to.getSAnnotation(fromSAnno.getQName()) != null){
-					int i = 0;
+					int i = 1;
 					while (to.getSAnnotation(fromSAnno.getQName()+"_"+i) != null)
 					{ // while there is an anno "annoQName_i" , increment i
 						i++;
@@ -1214,7 +1213,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				}
 				SAnnotation toSAnno= to.createSAnnotation(fromSAnno.getSNS(), newSName, fromSAnno.getValueString());
 				//recursive for toSAnno
-				copySAnnotation(fromSAnno.getSAnnotatableElement(), toSAnno.getSAnnotatableElement());
+				//copySAnnotation(fromSAnno.getSAnnotatableElement(), toSAnno.getSAnnotatableElement());
 			}
 		}
 	}
@@ -1230,7 +1229,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			for (SMetaAnnotation fromSAnno: from.getSMetaAnnotations()){
 				String newSName = fromSAnno.getSName();
 				if (to.getSMetaAnnotation(fromSAnno.getQName()) != null){
-					int i = 0;
+					int i = 1;
 					while (to.getSMetaAnnotation(fromSAnno.getQName()+"_"+i) != null)
 					{ // while there is a meta anno "annoQName_i" , increment i
 						i++;
@@ -1240,7 +1239,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				
 				SMetaAnnotation toSAnno= to.createSMetaAnnotation(fromSAnno.getSNS(), newSName, fromSAnno.getValueString());
 				//recursive for toSAnno
-				copySMetaAnnotation(fromSAnno.getSMetaAnnotatableElement(), toSAnno.getSMetaAnnotatableElement());
+				//copySMetaAnnotation(fromSAnno.getSMetaAnnotatableElement(), toSAnno.getSMetaAnnotatableElement());
 			}
 		}
 	}
@@ -1260,45 +1259,53 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	public void moveAllLabels(LabelableElement from, LabelableElement to, boolean ignoreSElementId) {
 		List<Label> fromAnnotations = from.getLabels();
 		if (fromAnnotations != null) {
-			
+			if (from instanceof SAnnotatableElement && to instanceof SAnnotatableElement){
+				copySAnnotation((SAnnotatableElement)from, (SAnnotatableElement)to);
+			}
+			if (from instanceof SMetaAnnotatableElement && to instanceof SMetaAnnotatableElement){
+				copySMetaAnnotation((SMetaAnnotatableElement)from, (SMetaAnnotatableElement)to);
+			}
 			while (!from.getLabels().isEmpty()) {
 				// actually I should not be able to remove labels directly, don't I?
 				Label fromLabel = from.getLabels().remove(0);
-				Label toLabel = to.getLabel(fromLabel.getQName());
-				if (ignoreSElementId){
-					if (toLabel instanceof SElementId){
-						continue;
-					}
-				}
-				if (toLabel == null) {
-					// add as new label
-					to.addLabel(fromLabel);
-					System.out.println("moved anno: " + fromLabel.toString());
-				} else {
-					// target contains a label with the same qname
-					Object fromVal = fromLabel.getValue();
-					Object toVal = toLabel.getValue();
-					if (fromVal == toVal && fromVal == null){
-						System.out.println("ERRRRROR: FromVal is null");
-						fromLabel.setQName(fromLabel.getQName() + LABEL_NAME_EXTENSION);
-						to.addLabel(fromLabel);
-					} else if (!fromVal.equals(toVal)) {
-						// same qname but different values
-						fromLabel.setQName(fromLabel.getQName()
-								+ LABEL_NAME_EXTENSION);
-						to.addLabel(fromLabel);
-						logger.warn(String
-								.format("Changed annotation name to\"%s\" from \"%s\" because %s != %s",
-										fromLabel.getQName(),
-							 			toLabel.getQName(), toLabel.getValue(),
-										fromLabel.getValue()));
-					} else {
-						System.out.println(String.format(
-								"found same annotation:\n\t%s %s to\n%s %s",
-								fromLabel.getQName(), toLabel.getQName(),
-								toLabel.getQName(), toLabel.getValue()));
-					}
-				}
+				
+				
+				//Label toLabel = to.getLabel(fromLabel.getQName());
+				
+//				if (ignoreSElementId){
+//					if (toLabel instanceof SElementId){
+//						continue;
+//					}
+//				}
+//				if (toLabel == null) {
+//					// add as new label
+//					to.addLabel(fromLabel);
+//					System.out.println("moved anno: " + fromLabel.toString());
+//				} else {
+//					// target contains a label with the same qname
+//					Object fromVal = fromLabel.getValue();
+//					Object toVal = toLabel.getValue();
+//					if (fromVal == toVal && fromVal == null){
+//						System.out.println("ERRRRROR: FromVal is null");
+//						fromLabel.setQName(fromLabel.getQName() + LABEL_NAME_EXTENSION);
+//						to.addLabel(fromLabel);
+//					} else if (!fromVal.equals(toVal)) {
+//						// same qname but different values
+//						fromLabel.setQName(fromLabel.getQName()
+//								+ LABEL_NAME_EXTENSION);
+//						to.addLabel(fromLabel);
+//						logger.warn(String
+//								.format("Changed annotation name to\"%s\" from \"%s\" because %s != %s",
+//										fromLabel.getQName(),
+//							 			toLabel.getQName(), toLabel.getValue(),
+//										fromLabel.getValue()));
+//					} else {
+//						System.out.println(String.format(
+//								"found same annotation:\n\t%s %s to\n%s %s",
+//								fromLabel.getQName(), toLabel.getQName(),
+//								toLabel.getQName(), toLabel.getValue()));
+//					}
+//				}
 //				else {
 //					// identical annotations
 ////					from.removeLabel(fromLabel.getQName());

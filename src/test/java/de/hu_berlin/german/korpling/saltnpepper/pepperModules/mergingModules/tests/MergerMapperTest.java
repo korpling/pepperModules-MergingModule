@@ -594,7 +594,9 @@ public class MergerMapperTest extends MergerMapper{
 		
 		mm.moveAllLabels(sCorp, sDoc, true);
 		
+		// sDoc contains a SMetaAnnotation
 		assertEquals(1, sDoc.getSMetaAnnotations().size());
+		// the SMetaAnnotation is "metaAnno"
 		assertNotNull(sDoc.getSMetaAnnotation(annoName));
 		assertEquals(annoName, sDoc.getSMetaAnnotation(annoName).getSName());
 		assertEquals(annoValue, sDoc.getSMetaAnnotation(annoName).getValue());
