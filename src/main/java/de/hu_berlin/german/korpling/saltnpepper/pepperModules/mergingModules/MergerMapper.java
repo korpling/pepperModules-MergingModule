@@ -215,12 +215,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				// set the base text
 				this.container.setBaseText(baseText);
 				
-				// clear the nonEquivalentTokensMap from all base text candidates which were not approved
-				for (STextualDS text : this.container.getBaseDocument().getSDocumentGraph().getSTextualDSs()){
-					if (! text.equals(this.container.getBaseText())){
-						nonEquivalentTokenSets.remove(text);
-					}
-				}
+				// clear the table of non-equivalent tokens
+				nonEquivalentTokenSets.clear();
 				
 				// merge!
 				for (MappingSubject subj : this.getMappingSubjects())
@@ -236,7 +232,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 							HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 							// We state : all tokens are unique
 							nonEquivalentTokenInOtherTexts.addAll(sDoc.getSDocumentGraph().getSTokens());
-							logger.info("(Re-)alligning the texts of "+sDoc.getSElementId()+ " to the base text");
+							logger.info("Aligning the texts of "+sDoc.getSElementId()+ " to the base text");
 							for (STextualDS sTextualDS : sDoc.getSDocumentGraph().getSTextualDSs()){
 								// align the texts
 								this.alignTexts(this.container.getBaseText(), sTextualDS, nonEquivalentTokenInOtherTexts);
@@ -270,8 +266,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 						}
 					} 
 				}
-				// clear the table of non-equivalent tokens
-				nonEquivalentTokenSets.clear();
 			}
 			
 			
