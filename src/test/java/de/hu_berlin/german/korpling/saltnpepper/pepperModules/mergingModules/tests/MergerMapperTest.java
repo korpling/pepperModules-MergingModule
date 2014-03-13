@@ -121,7 +121,7 @@ public class MergerMapperTest extends MergerMapper{
 		*/
 		
 		this.isTestMode = true;
-		this.mapSDocument();
+		this.mergeSDocumentGraph();
 		
 		
 		// First test: the first document must be the base document
