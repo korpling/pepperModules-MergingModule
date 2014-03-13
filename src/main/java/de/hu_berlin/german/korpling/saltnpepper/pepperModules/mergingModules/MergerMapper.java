@@ -21,11 +21,9 @@ package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Queue;
 import java.util.Set;
 import java.util.Vector;
 
@@ -42,13 +40,12 @@ import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.impl.PepperMapper
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Edge;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.GRAPH_TRAVERSE_TYPE;
-import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Node;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpus;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpusGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDocumentGraph;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SPointingRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SSpan;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SSpanningRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SStructure;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STYPE_NAME;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
@@ -179,9 +176,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		}
 	}
 	
+	private Map<SToken, SToken> token2TokenMap= null;
 	
-	
-
 	public void mergeSDocumentGraph() {
 		if (this.getMappingSubjects().size() != 0){
 			MappingSubject baseDocument = null;
@@ -225,22 +221,22 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 					if (sDoc != container.getBaseDocument())
 					{// ignore the base document and merge the others
 						logger.info("Merging document: " + sDoc);
+						token2TokenMap = new Hashtable<SToken, SToken>();
+						
 						if (sDoc.getSDocumentGraph().getSTextualDSs() != null)
 						{ // there should be texts
 							logger.info("\ttext based search");
 							logger.info("Aligning the texts of "+sDoc.getSElementId()+ " to the base text");
-							
-							Map<SToken,SToken> equivalenceMap = new Hashtable<SToken, SToken>();
 							
 							Set<SToken> nonEquivalentTokensOfOtherText = new HashSet<SToken>();
 							nonEquivalentTokensOfOtherText.addAll(sDoc.getSDocumentGraph().getSTokens());
 							
 							for (STextualDS sTextualDS : sDoc.getSDocumentGraph().getSTextualDSs()){
 								// align the texts
-								this.alignTexts(this.container.getBaseText(), sTextualDS,nonEquivalentTokensOfOtherText , equivalenceMap);
+								this.alignTexts(this.container.getBaseText(), sTextualDS,nonEquivalentTokensOfOtherText , token2TokenMap);
 							}
 							// merge the document content
-							this.mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(), sDoc, equivalenceMap);
+							mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(), sDoc);
 							// we are finished with the document. Free the memory
 							if (! this.isTestMode){
 								logger.info("Finishing document: " + (SDocument)baseDocument.getSElementId().getSIdentifiableElement());
@@ -251,9 +247,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 							// there are no texts. So, just copy everything into the base document graph
 							logger.info("\tno text found");
 							
-							Map<SToken,SToken> equivalenceMap = new Hashtable<SToken, SToken>();
 							// merge the document content
-							this.mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(),sDoc, equivalenceMap);
+							mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(),sDoc);
 							// we are finished with the document. Free the memory
 							
 							if (! this.isTestMode){
@@ -949,6 +944,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		return equiMap;
 	}
 	
+	
 	/**
 	 * This method merges the Document content of the other {@link SDocument} to the base {@link SDocument} and
 	 * uses the set of {@link SToken} which are contained in the other {@link SDocument} but not in the base {@link SDocument}
@@ -959,24 +955,61 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param equivalenceMap Map with tokens of the other dokument as key and their equivalent tokens in the base
 	 * @return
 	 */
-	protected SDocument mergeDocumentContent(SDocument base, SDocument other, Map<SToken,SToken> equivalenceMap){
-		//chooseFinalBaseText();
-		System.out.println(String.format("== Start merge between %s and %s", base.getSId(), other.getSId()));
-		logger.debug(String.format("Start merge between %s and %s", base.getSId(), other.getSId()));
-		Map<SNode,SNode> matchingToken = mergeTokenContent(base, other);
-		// TODO: may use the reversed map only?
-//		matchingToken = reverseMap(matchingToken);
-		System.out.println("== Matching token:");
-		for (Entry<SNode, SNode> node : matchingToken.entrySet()) {
-			System.out.println(String.format("%s\t-->\t%s", node.getKey(),node.getValue()));
-		}
-		mergeSDocumentGraphs(matchingToken, base.getSDocumentGraph(), other.getSDocumentGraph());
-		//mergeSpanContent(base, other);
-		//mergeStructureContent(base, other);
-		moveAll(matchingToken,base.getSDocumentGraph(), other.getSDocumentGraph());
-		System.out.println(String.format("== finished merge between %s and %s", base.getSId(), other.getSId()));
-		return base;
+	protected void mergeDocumentContent(SDocument base, SDocument other){
+				
+		SDocumentGraph fromGraph= other.getSDocumentGraph();
+		SDocumentGraph toGraph= base.getSDocumentGraph();
+		MergeHandler handler= new MergeHandler();
+		handler.setFromGraph(fromGraph);
+		handler.setToGraph(toGraph);
+		fromGraph.traverse(fromGraph.getSTokens(), GRAPH_TRAVERSE_TYPE.BOTTOM_UP_BREADTH_FIRST, "merger", handler);
+		
+//		//chooseFinalBaseText();
+//		System.out.println(String.format("== Start merge between %s and %s", base.getSId(), other.getSId()));
+//		logger.debug(String.format("Start merge between %s and %s", base.getSId(), other.getSId()));
+//		Map<SNode,SNode> matchingToken = mergeTokenContent(base, other);
+//		// TODO: may use the reversed map only?
+////		matchingToken = reverseMap(matchingToken);
+//		System.out.println("== Matching token:");
+//		for (Entry<SNode, SNode> node : matchingToken.entrySet()) {
+//			System.out.println(String.format("%s\t-->\t%s", node.getKey(),node.getValue()));
+//		}
+//		mergeSNodes(matchingToken, base.getSDocumentGraph(), other.getSDocumentGraph());
+//		//mergeSpanContent(base, other);
+//		//mergeStructureContent(base, other);
+//		moveAll(matchingToken,base.getSDocumentGraph(), other.getSDocumentGraph());
+//		System.out.println(String.format("== finished merge between %s and %s", base.getSId(), other.getSId()));
+//		return base;
 	}
+	
+//	/**
+//	 * This method merges the Document content of the other {@link SDocument} to the base {@link SDocument} and
+//	 * uses the set of {@link SToken} which are contained in the other {@link SDocument} but not in the base {@link SDocument}
+//	 * to determine which {@link SToken} has no equivalent in the base {@link SDocument}.
+//	 * @param base
+//	 * @param other
+//	 * @param nonEquivalentTokenInOtherTexts
+//	 * @param equivalenceMap Map with tokens of the other dokument as key and their equivalent tokens in the base
+//	 * @return
+//	 */
+//	protected SDocument mergeDocumentContent(SDocument base, SDocument other, Map<SToken,SToken> equivalenceMap){
+//		//chooseFinalBaseText();
+//		System.out.println(String.format("== Start merge between %s and %s", base.getSId(), other.getSId()));
+//		logger.debug(String.format("Start merge between %s and %s", base.getSId(), other.getSId()));
+//		Map<SNode,SNode> matchingToken = mergeTokenContent(base, other);
+//		// TODO: may use the reversed map only?
+////		matchingToken = reverseMap(matchingToken);
+//		System.out.println("== Matching token:");
+//		for (Entry<SNode, SNode> node : matchingToken.entrySet()) {
+//			System.out.println(String.format("%s\t-->\t%s", node.getKey(),node.getValue()));
+//		}
+//		mergeSNodes(matchingToken, base.getSDocumentGraph(), other.getSDocumentGraph());
+//		//mergeSpanContent(base, other);
+//		//mergeStructureContent(base, other);
+//		moveAll(matchingToken,base.getSDocumentGraph(), other.getSDocumentGraph());
+//		System.out.println(String.format("== finished merge between %s and %s", base.getSId(), other.getSId()));
+//		return base;
+//	}
 	
 	private void moveAll(Map<SNode, SNode> matchingToken,
 			SDocumentGraph base, SDocumentGraph other) {
@@ -1025,22 +1058,22 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		}
 	}
 
-	/**
-	 * breath first search for matching tokens
-	 * 
-	 * @param matchingToken
-	 * @param fromGraph
-	 * @param toGraph
-	 */
-	private void mergeSDocumentGraphs(Map<SNode, SNode> matchingToken, SDocumentGraph fromGraph,
-			SDocumentGraph toGraph) {
-		
-		MergeHandler handler= new MergeHandler();
-		handler.setFromGraph(fromGraph);
-		handler.setToGraph(toGraph);
-		fromGraph.traverse(fromGraph.getSTokens(), GRAPH_TRAVERSE_TYPE.BOTTOM_UP_BREADTH_FIRST, "merger", handler);
-		
-		
+//	/**
+//	 * breath first search for matching tokens
+//	 * 
+//	 * @param matchingToken
+//	 * @param fromGraph
+//	 * @param toGraph
+//	 */
+//	private void mergeSNodes(Map<SNode, SNode> matchingToken, SDocumentGraph fromGraph,
+//			SDocumentGraph toGraph) {
+//		
+//		MergeHandler handler= new MergeHandler();
+//		handler.setFromGraph(fromGraph);
+//		handler.setToGraph(toGraph);
+//		fromGraph.traverse(fromGraph.getSTokens(), GRAPH_TRAVERSE_TYPE.BOTTOM_UP_BREADTH_FIRST, "merger", handler);
+//		
+//		
 //		// for every equivalent token:
 //		Queue<SNode> searchQueue = new LinkedList<SNode>();
 //		searchQueue.addAll(matchingToken.keySet());
@@ -1102,7 +1135,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 //			}
 //		}
 		
-	}
+//	}
 	
 	class NodeParameters{
 		String canonicalClassName;
@@ -1186,15 +1219,70 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 									SNode currNode, 
 									SRelation sRelation,
 									SNode fromNode, long order) {
+			SNode otherNode= null;
+			
 			if (currNode instanceof SToken){
+				otherNode= token2TokenMap.get(currNode);
+				//TODO may be not necessary any more, when Mario creates all token-mapping partners
+//				if (otherNode!= null){// move all annotations
+//					//find text to node
+//						List<Edge> outEdges= fromGraph.getOutEdges(currNode.getSId());
+//						STextualDS text= null;
+//						for (Edge edge : outEdges){
+//							if (edge instanceof STextualRelation){
+//								text= ((STextualRelation) edge).getSTextualDS();
+//								break;
+//							}
+//						}
+//					container.getAlignedTokenStart(text, (SToken)currNode);
+//					toGraph.createSToken(sSequentialDS, sStart, sEnd);
+//				}
 				
 			}else if (currNode instanceof SSpan){
 				EList<STYPE_NAME> sTypes= new BasicEList<STYPE_NAME>();
 				sTypes.add(STYPE_NAME.SSPANNING_RELATION);
 				List<SToken> overlappedTokens= fromGraph.getOverlappedSTokens(currNode, sTypes);
+				if (overlappedTokens!= null){
+					List<SSpan> equivalentNodes= new Vector<SSpan>();
+					Map<SNode, Integer> nodeOccurance= new Hashtable<SNode, Integer>();
+					EList<SToken> otherTokens= new BasicEList<SToken>();
+					/**
+					 * for all equivalent nodes in toGraph, find node, which overlaps all of them,
+					 * if one was found, this could be the equivalence node
+					 */
+					for (SToken sToken: overlappedTokens){
+						SToken otherToken= token2TokenMap.get(sToken);
+						otherTokens.add(otherToken);
+						for (Edge inEdge:toGraph.getInEdges(otherToken.getSId())){
+							if (inEdge instanceof SSpanningRelation){
+								SSpan sSpan= ((SSpanningRelation)inEdge).getSSpan();
+								Integer occurance = nodeOccurance.get(sSpan); 
+								if (occurance!= null){
+									occurance++;
+								}else{
+									occurance= 1;
+								}
+								nodeOccurance.put(sSpan, occurance);
+								if (overlappedTokens.size()==occurance){//span overlaps all tokens and therefore is a equivalence candidate
+									equivalentNodes.add(sSpan);
+								}
+							}
+						}
+					}
+					if (equivalentNodes.size()== 1){//exactly one matching candidate was found
+						otherNode= equivalentNodes.get(0); 
+					}else{// zero or more than one equivalence candidates have been found --> create a new node
+						toGraph.createSSpan(otherTokens);
+					}
+					
+				}
 				
 			}else if (currNode instanceof SStructure){
 				
+			}
+			if (otherNode!= null){
+				SaltFactory.eINSTANCE.moveSAnnotations(currNode, otherNode);
+				SaltFactory.eINSTANCE.moveSMetaAnnotations(currNode, otherNode);
 			}
 		}
 	
