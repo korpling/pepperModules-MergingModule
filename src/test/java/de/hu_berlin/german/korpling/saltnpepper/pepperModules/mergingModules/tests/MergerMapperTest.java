@@ -609,9 +609,13 @@ public class MergerMapperTest extends MergerMapper{
 		
 		mm.moveAllLabels(sCorp, sDoc, true);
 		
+		// assert that there are 2 SMetaAnnotation objects in the target document
 		assertEquals(2, sDoc.getSMetaAnnotations().size());
+		// assert that there is a SMetaAnnotation object with name "metaAnno"
 		assertNotNull(sDoc.getSMetaAnnotation(annoName2));
-		assertEquals(annoName2 + MergerMapper.LABEL_NAME_EXTENSION, sDoc.getSMetaAnnotation(annoName2).getSName());
+		// assert that there is a SMetaAnnotation object with name "metaAnno_1"
+		// TODO : does it make sense?
+		assertEquals(annoName2 + "_1", sDoc.getSMetaAnnotation(annoName2).getSName());
 		assertEquals(annoValue2, sDoc.getSMetaAnnotation(annoName2).getValue());
 	}
 	

@@ -989,7 +989,18 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				// change edges 
 				updateEdges(other, match, match.getSId());
 				// change annotations
-				moveAllLabels(otherNode, match, true);
+				if (otherNode.getSAnnotations() != null){
+					for (SAnnotation anno : otherNode.getSAnnotations()){
+					//	copySAnnotation(anno.getSAnnotatableElement(), match);
+					}
+				}
+				if (otherNode.getSMetaAnnotations() != null){
+					for (SMetaAnnotation anno : otherNode.getSMetaAnnotations()){
+						//copySMetaAnnotation(anno.getSMetaAnnotatableElement(), match);
+					}
+				}
+				
+				//moveAllLabels(otherNode, match, true);
 				// change layers?
 				
 			}else{
@@ -1191,8 +1202,19 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		if 	(	(from != null)&&
 				(to != null)){
 			for (SAnnotation fromSAnno: from.getSAnnotations()){
-				SAnnotation toSAnno= to.createSAnnotation(fromSAnno.getSNS(), fromSAnno.getSName(), fromSAnno.getValueString());
+				// if to contains an SAnnotation with the same namespace and name
+				String newSName = fromSAnno.getSName();
+				if (to.getSAnnotation(fromSAnno.getQName()) != null){
+					int i = 0;
+					while (to.getSAnnotation(fromSAnno.getQName()+"_"+i) != null)
+					{ // while there is an anno "annoQName_i" , increment i
+						i++;
+					} // while there is an anno "annoQName_i" , increment i
+					newSName = fromSAnno.getSName() + "_" + i;
+				}
+				SAnnotation toSAnno= to.createSAnnotation(fromSAnno.getSNS(), newSName, fromSAnno.getValueString());
 				//recursive for toSAnno
+				copySAnnotation(fromSAnno.getSAnnotatableElement(), toSAnno.getSAnnotatableElement());
 			}
 		}
 	}
@@ -1206,8 +1228,19 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		if 	(	(from != null)&&
 				(to != null)){
 			for (SMetaAnnotation fromSAnno: from.getSMetaAnnotations()){
-				SMetaAnnotation toSAnno= to.createSMetaAnnotation(fromSAnno.getSNS(), fromSAnno.getSName(), fromSAnno.getValueString());
+				String newSName = fromSAnno.getSName();
+				if (to.getSMetaAnnotation(fromSAnno.getQName()) != null){
+					int i = 0;
+					while (to.getSMetaAnnotation(fromSAnno.getQName()+"_"+i) != null)
+					{ // while there is a meta anno "annoQName_i" , increment i
+						i++;
+					} // while there is a meta anno "annoQName_i" , increment i
+					newSName = fromSAnno.getSName() + "_" + i;
+				}
+				
+				SMetaAnnotation toSAnno= to.createSMetaAnnotation(fromSAnno.getSNS(), newSName, fromSAnno.getValueString());
 				//recursive for toSAnno
+				copySMetaAnnotation(fromSAnno.getSMetaAnnotatableElement(), toSAnno.getSMetaAnnotatableElement());
 			}
 		}
 	}
