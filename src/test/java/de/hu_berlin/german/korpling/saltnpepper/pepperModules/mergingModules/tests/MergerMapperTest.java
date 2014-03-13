@@ -692,6 +692,7 @@ public class MergerMapperTest extends MergerMapper{
 		
 		System.out.println("base: "+ System.identityHashCode(subj_2));
 		System.out.println("result: "+ System.identityHashCode(result));
+		System.out.println(((SDocument)result.getSElementId().getSIdentifiableElement()).getSDocumentGraph().getSTextualDSs().get(0).getSText());
 		assertEquals(subj_2, result);
 		assertEquals(d1_2,this.container.getBaseDocument());
 	}
