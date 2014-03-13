@@ -324,14 +324,26 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 */
 	protected MappingSubject chooseBaseDocument(){
 		MappingSubject baseDocument= null;
-		for (MappingSubject subj : this.getMappingSubjects()){
-			if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
+		if (((MergerProperties)getProperties()).isFirstAsBase()){
+			for (MappingSubject subj: getMappingSubjects()){
+				if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
+					SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
+					if (sDoc.getSCorpusGraph().equals(getBaseCorpusStructure())){
+						baseDocument= subj;
+						break;
+					}
+				}
+			}
+		} else {
+			for (MappingSubject subj : this.getMappingSubjects()){
+				if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
 				
-				SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
-				if (sDoc.equals(container.getBaseDocument())){
-					logger.info("Chose base document. It is document with id"+container.getBaseDocument().getSId());
-					baseDocument= subj;
-					baseDocument.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
+					SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
+					if (sDoc.equals(container.getBaseDocument())){
+						logger.info("Chose base document. It is document with id"+container.getBaseDocument().getSId());
+						baseDocument= subj;
+						baseDocument.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
+					}
 				}
 			}
 		}

@@ -126,7 +126,7 @@ public class MergerProperties extends PepperModuleProperties {
 	 * @return
 	 */
 	public Boolean isFirstAsBase(){
-		PepperModuleProperty<String> prop= (PepperModuleProperty<String>) getProperty(PROP_FIRST_AS_BASE);
+		PepperModuleProperty<Boolean> prop= (PepperModuleProperty<Boolean>) getProperty(PROP_FIRST_AS_BASE);
 		return(Boolean.valueOf(prop.getValue()));
 	}
 }

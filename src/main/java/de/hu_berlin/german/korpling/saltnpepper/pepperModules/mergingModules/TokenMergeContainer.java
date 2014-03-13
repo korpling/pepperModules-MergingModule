@@ -229,7 +229,8 @@ public class TokenMergeContainer {
 					this.baseDocument = doc;
 				}
 			}
-			System.out.println("set basedocument to " + doc);
+			System.out.println("!!!!!set basedocument to " + doc);
+			System.out.println("!!!!!set base text to \""+this.baseText.getSText()+"\"");
 			this.normalizedTextMap.put(sTextualDS, normalizedText);
 		}
 		
