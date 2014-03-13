@@ -228,17 +228,19 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 						if (sDoc.getSDocumentGraph().getSTextualDSs() != null)
 						{ // there should be texts
 							logger.info("\ttext based search");
-							// get the set of tokens in the document which do not have an equivalent in the base text
-							HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-							// We state : all tokens are unique
-							nonEquivalentTokenInOtherTexts.addAll(sDoc.getSDocumentGraph().getSTokens());
 							logger.info("Aligning the texts of "+sDoc.getSElementId()+ " to the base text");
+							
+							Map<SToken,SToken> equivalenceMap = new Hashtable<SToken, SToken>();
+							
+							Set<SToken> nonEquivalentTokensOfOtherText = new HashSet<SToken>();
+							nonEquivalentTokensOfOtherText.addAll(sDoc.getSDocumentGraph().getSTokens());
+							
 							for (STextualDS sTextualDS : sDoc.getSDocumentGraph().getSTextualDSs()){
 								// align the texts
-								this.alignTexts(this.container.getBaseText(), sTextualDS, nonEquivalentTokenInOtherTexts);
+								this.alignTexts(this.container.getBaseText(), sTextualDS,nonEquivalentTokensOfOtherText , equivalenceMap);
 							}
 							// merge the document content
-							this.mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(), sDoc, nonEquivalentTokenInOtherTexts);
+							this.mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(), sDoc, equivalenceMap);
 							// we are finished with the document. Free the memory
 							if (! this.isTestMode){
 								logger.info("Finishing document: " + (SDocument)baseDocument.getSElementId().getSIdentifiableElement());
@@ -248,13 +250,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 						} else {
 							// there are no texts. So, just copy everything into the base document graph
 							logger.info("\tno text found");
-							HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-							if (sDoc.getSDocumentGraph().getSTokens() != null){
-								// all tokens are unique
-								nonEquivalentTokenInOtherTexts.addAll(sDoc.getSDocumentGraph().getSTokens());
-							}
+							
+							Map<SToken,SToken> equivalenceMap = new Hashtable<SToken, SToken>();
 							// merge the document content
-							this.mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(),sDoc, nonEquivalentTokenInOtherTexts);
+							this.mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(),sDoc, equivalenceMap);
 							// we are finished with the document. Free the memory
 							
 							if (! this.isTestMode){
@@ -540,8 +539,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 								nonEquivalentTokenInOtherTexts.addAll(sDoc.getSDocumentGraph().getSTokens());
 							}
 							for (STextualDS otherText : sDoc.getSDocumentGraph().getSTextualDSs())
-							{ // allign the current base text with all texts of the other document
-								this.alignTexts(baseText, otherText,nonEquivalentTokenInOtherTexts);
+							{ // align the current base text with all texts of the other document
+								Map<SToken,SToken> equivalenceMap = new Hashtable<SToken, SToken>();
+								this.alignTexts(baseText, otherText,nonEquivalentTokenInOtherTexts,equivalenceMap);
 							}
 							/// save all unique token of the other document
 							if (nonEquivalentTokenSets.containsKey(baseText))
@@ -596,10 +596,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param baseText the base {@link STextualDS}
 	 * @param otherText the other {@link STextualDS}
 	 * @param nonEquivalentTokenInOtherTexts A HashSet which contains all tokens which do not have an equivalent in the base text
+	 * @param equivalenceMap A map of tokens in the other text with their equivalent token in the base text as value
 	 * @return true on success and false on failure
 	 * @author eladrion
 	 */
-	protected boolean alignTexts(STextualDS baseText, STextualDS otherText, HashSet<SToken> nonEquivalentTokenInOtherTexts){
+	protected boolean alignTexts(STextualDS baseText, STextualDS otherText, Set<SToken> nonEquivalentTokenInOtherTexts, Map<SToken,SToken> equivalenceMap){
 		if (baseText == null)
 			throw new PepperModuleException(this, "Cannot align the Text of the documents since the base SDocument reference is NULL");
 		if (otherText == null)
@@ -647,6 +648,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 						if (this.container.getAlignedTokenLength(baseText, baseTextToken) == otherTokenLength)
 						{ // start and lengths are identical. We found an equivalence class
 							this.container.addTokenMapping(baseTextToken, otherTextToken, otherText);
+							equivalenceMap.put(otherTextToken, baseTextToken);
 							nonEquivalentTokenInOtherTexts.remove(otherTextToken);
 						} // start and lengths are identical. We found an equivalence class
 						else 
@@ -925,9 +927,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param base
 	 * @param other
 	 * @param nonEquivalentTokenInOtherTexts
+	 * @param equivalenceMap Map with tokens of the other dokument as key and their equivalent tokens in the base
 	 * @return
 	 */
-	protected SDocument mergeDocumentContent(SDocument base, SDocument other, HashSet<SToken> nonEquivalentTokenInOtherTexts){
+	protected SDocument mergeDocumentContent(SDocument base, SDocument other, Map<SToken,SToken> equivalenceMap){
 		//chooseFinalBaseText();
 		System.out.println(String.format("== Start merge between %s and %s", base.getSId(), other.getSId()));
 		logger.debug(String.format("Start merge between %s and %s", base.getSId(), other.getSId()));
