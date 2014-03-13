@@ -592,7 +592,9 @@ public class MergerMapperTest extends MergerMapper{
 		
 		sCorp.addSMetaAnnotation(meta);
 		
-		mm.moveAllLabels(sCorp, sDoc, true);
+		//mm.moveAllLabels(sCorp, sDoc, true);
+		mm.moveSMetaAnnotation(sCorp, sDoc);
+		assertNull(sCorp.getSMetaAnnotation(annoName));
 		
 		// sDoc contains a SMetaAnnotation
 		assertEquals(1, sDoc.getSMetaAnnotations().size());
@@ -601,6 +603,7 @@ public class MergerMapperTest extends MergerMapper{
 		assertEquals(annoName, sDoc.getSMetaAnnotation(annoName).getSName());
 		assertEquals(annoValue, sDoc.getSMetaAnnotation(annoName).getValue());
 		
+		sCorp = SaltFactory.eINSTANCE.createSCorpus();
 		SMetaAnnotation meta2 = SaltFactory.eINSTANCE.createSMetaAnnotation();
 		String annoName2 = "metaAnno";
 		String annoValue2= "metaValue_1";
@@ -609,7 +612,8 @@ public class MergerMapperTest extends MergerMapper{
 		
 		sCorp.addSMetaAnnotation(meta2);
 		
-		mm.moveAllLabels(sCorp, sDoc, true);
+		//mm.moveAllLabels(sCorp, sDoc, true);
+		mm.moveSMetaAnnotation(sCorp, sDoc);
 		
 		// assert that there are 2 SMetaAnnotation objects in the target document
 		assertEquals(2, sDoc.getSMetaAnnotations().size());

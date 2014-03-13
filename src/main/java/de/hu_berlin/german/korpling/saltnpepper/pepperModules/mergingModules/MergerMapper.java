@@ -93,8 +93,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 					if (sCorp.equals(baseCorpus)){//corpus is base corpus
 						subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
 					}else{// corpus is not base corpus
-						copySAnnotation(sCorp, baseCorpus);
-						copySMetaAnnotation(sCorp, baseCorpus);
+						moveSAnnotation(sCorp, baseCorpus);
+						moveSMetaAnnotation(sCorp, baseCorpus);
 						subj.setMappingResult(DOCUMENT_STATUS.DELETED);
 					}
 					
@@ -128,8 +128,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
 					SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
 					if (!sDoc.equals(baseDocument)){// document is not base corpus
-						copySAnnotation(sDoc, baseDocument);
-						copySMetaAnnotation(sDoc, baseDocument);
+						moveSAnnotation(sDoc, baseDocument);
+						moveSMetaAnnotation(sDoc, baseDocument);
 					}
 				}
 			}
@@ -991,12 +991,12 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				// change annotations
 				if (otherNode.getSAnnotations() != null){
 					System.out.println("Copying annotations for node "+otherNode.getSElementId());
-					copySAnnotation(otherNode, match);
+					moveSAnnotation(otherNode, match);
 					
 				}
 				if (otherNode.getSMetaAnnotations() != null){
 					System.out.println("Copying meta annotations for node "+otherNode.getSElementId());
-					copySMetaAnnotation(otherNode, match);
+					moveSMetaAnnotation(otherNode, match);
 				}
 				
 				//moveAllLabels(otherNode, match, true);
@@ -1197,7 +1197,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param from
 	 * @param to
 	 */
-	public void copySAnnotation(SAnnotatableElement from, SAnnotatableElement to){
+	public void moveSAnnotation(SAnnotatableElement from, SAnnotatableElement to){
 		if 	(	(from != null)&&
 				(to != null)){
 			for (SAnnotation fromSAnno: from.getSAnnotations()){
@@ -1209,12 +1209,28 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 					{ // while there is an anno "annoQName_i" , increment i
 						i++;
 					} // while there is an anno "annoQName_i" , increment i
-					newSName = fromSAnno.getSName() + "_" + i;
+					fromSAnno.setSName(newSName);
+					to.addSAnnotation(fromSAnno);
+				} else {
+					// move
+					to.addSAnnotation(fromSAnno);
 				}
 				SAnnotation toSAnno= to.createSAnnotation(fromSAnno.getSNS(), newSName, fromSAnno.getValueString());
 				//recursive for toSAnno
 				//copySAnnotation(fromSAnno.getSAnnotatableElement(), toSAnno.getSAnnotatableElement());
 			}
+			/*
+			List<Label> fromAnnotations = from.getLabels();
+			List<Label> toRemove = new Vector<Label>();
+			for (Label label : fromAnnotations){
+				if (label instanceof SAnnotation){
+					// actually I should not be able to remove labels directly, don't I?
+					toRemove.add(label);
+				}
+			}
+			for (Label label : toRemove){
+				from.getLabels().remove(label);
+			}*/
 		}
 	}
 	
@@ -1223,7 +1239,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param from
 	 * @param to
 	 */
-	public void copySMetaAnnotation(SMetaAnnotatableElement from, SMetaAnnotatableElement to){
+	public void moveSMetaAnnotation(SMetaAnnotatableElement from, SMetaAnnotatableElement to){
 		if 	(	(from != null)&&
 				(to != null)){
 			for (SMetaAnnotation fromSAnno: from.getSMetaAnnotations()){
@@ -1235,12 +1251,30 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 						i++;
 					} // while there is a meta anno "annoQName_i" , increment i
 					newSName = fromSAnno.getSName() + "_" + i;
+					fromSAnno.setSName(newSName);
+					to.addSMetaAnnotation(fromSAnno);
+					
+				} else {
+					// move
+					to.addSMetaAnnotation(fromSAnno);
 				}
 				
-				SMetaAnnotation toSAnno= to.createSMetaAnnotation(fromSAnno.getSNS(), newSName, fromSAnno.getValueString());
 				//recursive for toSAnno
 				//copySMetaAnnotation(fromSAnno.getSMetaAnnotatableElement(), toSAnno.getSMetaAnnotatableElement());
 			}
+			/*
+			List<Label> fromAnnotations = from.getLabels();
+			List<Label> toRemove = new Vector<Label>();
+			for (Label label : fromAnnotations){
+				if (label instanceof SMetaAnnotation){
+					// actually I should not be able to remove labels directly, don't I?
+					toRemove.add(label);
+				}
+			}
+			for (Label label : toRemove){
+				from.getLabels().remove(label);
+			}*/
+				
 		}
 	}
 	
@@ -1260,10 +1294,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		List<Label> fromAnnotations = from.getLabels();
 		if (fromAnnotations != null) {
 			if (from instanceof SAnnotatableElement && to instanceof SAnnotatableElement){
-				copySAnnotation((SAnnotatableElement)from, (SAnnotatableElement)to);
+				moveSAnnotation((SAnnotatableElement)from, (SAnnotatableElement)to);
 			}
 			if (from instanceof SMetaAnnotatableElement && to instanceof SMetaAnnotatableElement){
-				copySMetaAnnotation((SMetaAnnotatableElement)from, (SMetaAnnotatableElement)to);
+				moveSMetaAnnotation((SMetaAnnotatableElement)from, (SMetaAnnotatableElement)to);
 			}
 			while (!from.getLabels().isEmpty()) {
 				// actually I should not be able to remove labels directly, don't I?
