@@ -185,15 +185,15 @@ public class MergerMapperTest extends MergerMapper{
 	public void testMap3Documents_sameTokenizationDocumentStatus() {
 		// set up empty documents
 		SDocument sDoc1= SaltFactory.eINSTANCE.createSDocument();
-		SDocument sDoc2= SaltFactory.eINSTANCE.createSDocument();
-		SDocument sDoc3= SaltFactory.eINSTANCE.createSDocument();
-		
 		sDoc1.setSId("sdoc1");
-		sDoc2.setSId("sdoc2");
-		sDoc3.setSId("sdoc3");
-
 		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		
+		SDocument sDoc2= SaltFactory.eINSTANCE.createSDocument();
+		sDoc2.setSId("sdoc2");
 		sDoc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+				
+		SDocument sDoc3= SaltFactory.eINSTANCE.createSDocument();
+		sDoc3.setSId("sdoc3");
 		sDoc3.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		
 		MappingSubject sub1 = new MappingSubject();
@@ -237,7 +237,7 @@ public class MergerMapperTest extends MergerMapper{
 		SaltSample.createMorphologyAnnotations(template);
 		
 		this.isTestMode = false;
-		this.mapSDocument();
+		this.mergeSDocumentGraph();
 		
 		assertEquals(DOCUMENT_STATUS.COMPLETED, sub1.getMappingResult());
 		assertEquals(DOCUMENT_STATUS.DELETED,   sub2.getMappingResult());
