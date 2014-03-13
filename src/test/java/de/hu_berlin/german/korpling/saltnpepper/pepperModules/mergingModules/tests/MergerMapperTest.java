@@ -529,7 +529,7 @@ public class MergerMapperTest extends MergerMapper{
 		getFixture().getMappingSubjects().add(sub2);
 		
 		
-		this.mapSDocument();
+		this.mergeSDocumentGraph();
 		
 		//test the result
 		
