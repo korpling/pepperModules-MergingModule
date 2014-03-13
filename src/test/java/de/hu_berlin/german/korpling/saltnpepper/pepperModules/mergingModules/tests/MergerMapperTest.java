@@ -736,6 +736,8 @@ public class MergerMapperTest extends MergerMapper{
 			}
 		}
 		
+		getFixture().setBaseCorpusStructure(g3);
+		
 		MappingSubject result= this.chooseBaseDocument();
 		//result = this.container.getBaseDocument();
 		//assertEquals(subj_2, result);
