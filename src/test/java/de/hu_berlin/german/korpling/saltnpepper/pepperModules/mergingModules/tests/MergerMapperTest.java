@@ -657,7 +657,6 @@ public class MergerMapperTest extends MergerMapper{
 	public void testChooseBaseDocument(){
 		SCorpusGraph g1= SaltFactory.eINSTANCE.createSCorpusGraph();
 		SDocument d1_1= g1.createSDocument(URI.createURI("/c1/d1"));
-		System.out.println("id: "+ d1_1.getSElementId());
 		d1_1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		d1_1.getSDocumentGraph().createSTextualDS("a sample text");
 		MappingSubject subj_1= new MappingSubject();
@@ -690,8 +689,10 @@ public class MergerMapperTest extends MergerMapper{
 		}
 		
 		MappingSubject result= this.chooseBaseDocument();
-		//result = this.container.getBaseDocument();
-		//assertEquals(subj_2, result);
+		
+		System.out.println("base: "+ System.identityHashCode(subj_2));
+		System.out.println("result: "+ System.identityHashCode(result));
+		assertEquals(subj_2, result);
 		assertEquals(d1_2,this.container.getBaseDocument());
 	}
 	
@@ -739,8 +740,8 @@ public class MergerMapperTest extends MergerMapper{
 		getFixture().setBaseCorpusStructure(g3);
 		
 		MappingSubject result= this.chooseBaseDocument();
-		//result = this.container.getBaseDocument();
-		//assertEquals(subj_2, result);
+		
+		assertEquals(subj_3, result);
 		assertEquals(d1_3,this.container.getBaseDocument());
 	}
 }

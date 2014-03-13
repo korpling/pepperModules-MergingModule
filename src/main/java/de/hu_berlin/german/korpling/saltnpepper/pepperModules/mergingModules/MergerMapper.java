@@ -323,21 +323,17 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 */
 	protected MappingSubject chooseBaseDocument(){
 		MappingSubject baseDocument= null;
-		if (((MergerProperties)getProperties()).isFirstAsBase()){
-			for (MappingSubject subj: getMappingSubjects()){
-				if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
-					SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
+		for (MappingSubject subj: getMappingSubjects()){
+			if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
+				SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
+				System.out.println("any subj: "+ System.identityHashCode(subj));
+				if (((MergerProperties)getProperties()).isFirstAsBase()){
 					if (sDoc.getSCorpusGraph().equals(getBaseCorpusStructure())){
 						baseDocument= subj;
+						System.out.println("baseDoc: "+ System.identityHashCode(baseDocument));
 						break;
 					}
-				}
-			}
-		} else {
-			for (MappingSubject subj : this.getMappingSubjects()){
-				if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
-				
-					SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
+				}else{
 					if (sDoc.equals(container.getBaseDocument())){
 						logger.info("Chose base document. It is document with id"+container.getBaseDocument().getSId());
 						baseDocument= subj;
