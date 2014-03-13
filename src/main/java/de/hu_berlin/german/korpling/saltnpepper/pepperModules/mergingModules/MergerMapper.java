@@ -29,6 +29,8 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.Vector;
 
+import org.eclipse.emf.common.util.BasicEList;
+import org.eclipse.emf.common.util.EList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,16 +41,21 @@ import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.exceptions.Pepper
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.impl.PepperMapperImpl;
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Edge;
+import de.hu_berlin.german.korpling.saltnpepper.salt.graph.GRAPH_TRAVERSE_TYPE;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Node;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpus;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpusGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDocumentGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SPointingRelation;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SSpan;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SStructure;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STYPE_NAME;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SGraph;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SGraphTraverseHandler;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SRelation;
 
@@ -963,7 +970,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		for (Entry<SNode, SNode> node : matchingToken.entrySet()) {
 			System.out.println(String.format("%s\t-->\t%s", node.getKey(),node.getValue()));
 		}
-		mergeSearch(matchingToken, base.getSDocumentGraph(), other.getSDocumentGraph());
+		mergeSDocumentGraphs(matchingToken, base.getSDocumentGraph(), other.getSDocumentGraph());
 		//mergeSpanContent(base, other);
 		//mergeStructureContent(base, other);
 		moveAll(matchingToken,base.getSDocumentGraph(), other.getSDocumentGraph());
@@ -1022,71 +1029,78 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * breath first search for matching tokens
 	 * 
 	 * @param matchingToken
-	 * @param g
-	 * @param otherG
+	 * @param fromGraph
+	 * @param toGraph
 	 */
-	private void mergeSearch(Map<SNode, SNode> matchingToken, SDocumentGraph g,
-			SDocumentGraph otherG) {
-		// for every equivalent token:
-		Queue<SNode> searchQueue = new LinkedList<SNode>();
-		searchQueue.addAll(matchingToken.keySet());
-		List<SNode> nonMatchingNode = new LinkedList<SNode>();
-		Set<Node> visited = new HashSet<Node>();
-		System.out.println(String.format("Start merge search (tokens:%s):", searchQueue.size()));
-		for (Edge e : g.getEdges()) {
-			System.out.println(e.getSource().getId() + "\t--" + e.getId() + "->\t" + e.getTarget().getId());
-		}
-		while (!searchQueue.isEmpty()) {
-			SNode node = searchQueue.remove();
-			SNode otherNode = matchingToken.get(node);
-			visited.add(node);
-//			simultaneousEquivalenceCheck(node, otherNode, matchingToken);
-//			System.out.println("Before: " + g.getOutEdges(otherNode.getSId()).size());
-			
-			otherNode.setGraph(g);
-//			System.out.println("After: " + g.getOutEdges(otherNode.getSId()).size());
-
-			// check every parent for equivalence on the base graph side
-//			EList<Edge> in = otherG.getInEdges(otherNode.getSId());
-			List<Edge> out = otherG.getOutEdges(otherNode.getSId());
-//			out.addAll(in);
-			for (Edge edge : out) {
-				Node parent = edge.getSource();
-				Node target = edge.getTarget();
-				
-				if(matchingToken.containsKey(parent)){
-					edge.setSource(matchingToken.get(parent));
-					edge.setGraph(g);
-				}
-				if(matchingToken.containsKey(target)){
-					System.out.println("Before: " + edge.getTarget());
-//					edge.setTarget(matchingToken.get(parent));
-//					edge.setGraph(g);
-					System.out.println("After: " + edge.getTarget());
-				}
-				
-				Node[] nodes = {parent, target};
-				for (Node n : nodes) {
-					System.out.println("\tchecking " + parent);
-					if (edge instanceof SPointingRelation) {
-						continue;
-					} else if (visited.contains(parent)) {
-						continue;
-						
-					} else {
-						searchQueue.add((SNode) parent);
-						
-						
-						
-					}
-				}
-				
-			} // end for
+	private void mergeSDocumentGraphs(Map<SNode, SNode> matchingToken, SDocumentGraph fromGraph,
+			SDocumentGraph toGraph) {
+		
+		MergeHandler handler= new MergeHandler();
+		handler.setFromGraph(fromGraph);
+		handler.setToGraph(toGraph);
+		fromGraph.traverse(fromGraph.getSTokens(), GRAPH_TRAVERSE_TYPE.BOTTOM_UP_BREADTH_FIRST, "merger", handler);
+		
+		
+//		// for every equivalent token:
+//		Queue<SNode> searchQueue = new LinkedList<SNode>();
+//		searchQueue.addAll(matchingToken.keySet());
+//		List<SNode> nonMatchingNode = new LinkedList<SNode>();
+//		Set<Node> visited = new HashSet<Node>();
+//		System.out.println(String.format("Start merge search (tokens:%s):", searchQueue.size()));
+//		for (Edge e : fromGraph.getEdges()) {
+//			System.out.println(e.getSource().getId() + "\t--" + e.getId() + "->\t" + e.getTarget().getId());
+//		}
+//		while (!searchQueue.isEmpty()) {
+//			SNode node = searchQueue.remove();
+//			SNode otherNode = matchingToken.get(node);
+//			visited.add(node);
+////			simultaneousEquivalenceCheck(node, otherNode, matchingToken);
+////			System.out.println("Before: " + g.getOutEdges(otherNode.getSId()).size());
 //			
-			for (SNode unmatched : nonMatchingNode) {
-//				unmatched.set
-			}
-		}
+//			otherNode.setGraph(fromGraph);
+////			System.out.println("After: " + g.getOutEdges(otherNode.getSId()).size());
+//
+//			// check every parent for equivalence on the base graph side
+////			EList<Edge> in = otherG.getInEdges(otherNode.getSId());
+//			List<Edge> out = toGraph.getOutEdges(otherNode.getSId());
+////			out.addAll(in);
+//			for (Edge edge : out) {
+//				Node parent = edge.getSource();
+//				Node target = edge.getTarget();
+//				
+//				if(matchingToken.containsKey(parent)){
+//					edge.setSource(matchingToken.get(parent));
+//					edge.setGraph(fromGraph);
+//				}
+//				if(matchingToken.containsKey(target)){
+//					System.out.println("Before: " + edge.getTarget());
+////					edge.setTarget(matchingToken.get(parent));
+////					edge.setGraph(g);
+//					System.out.println("After: " + edge.getTarget());
+//				}
+//				
+//				Node[] nodes = {parent, target};
+//				for (Node n : nodes) {
+//					System.out.println("\tchecking " + parent);
+//					if (edge instanceof SPointingRelation) {
+//						continue;
+//					} else if (visited.contains(parent)) {
+//						continue;
+//						
+//					} else {
+//						searchQueue.add((SNode) parent);
+//						
+//						
+//						
+//					}
+//				}
+//				
+//			} // end for
+////			
+//			for (SNode unmatched : nonMatchingNode) {
+////				unmatched.set
+//			}
+//		}
 		
 	}
 	
@@ -1142,6 +1156,59 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 					return false;
 				}
 			}
+			return true;
+		}
+	}
+
+	class MergeHandler implements SGraphTraverseHandler{
+		private SDocumentGraph fromGraph= null;
+		public SDocumentGraph getFromGraph() {
+			return fromGraph;
+		}
+
+		public void setFromGraph(SDocumentGraph fromGraph) {
+			this.fromGraph = fromGraph;
+		}
+
+		private SDocumentGraph toGraph= null;
+		
+		public SDocumentGraph getToGraph() {
+			return toGraph;
+		}
+
+		public void setToGraph(SDocumentGraph toGraph) {
+			this.toGraph = toGraph;
+		}
+
+		@Override
+		public void nodeReached(	GRAPH_TRAVERSE_TYPE traversalType,
+									String traversalId, 
+									SNode currNode, 
+									SRelation sRelation,
+									SNode fromNode, long order) {
+			if (currNode instanceof SToken){
+				
+			}else if (currNode instanceof SSpan){
+				EList<STYPE_NAME> sTypes= new BasicEList<STYPE_NAME>();
+				sTypes.add(STYPE_NAME.SSPANNING_RELATION);
+				List<SToken> overlappedTokens= fromGraph.getOverlappedSTokens(currNode, sTypes);
+				
+			}else if (currNode instanceof SStructure){
+				
+			}
+		}
+	
+		@Override
+		public void nodeLeft(GRAPH_TRAVERSE_TYPE traversalType, String traversalId,
+				SNode currNode, SRelation edge, SNode fromNode, long order) {
+			// TODO Auto-generated method stub
+			
+		}
+	
+		@Override
+		public boolean checkConstraint(GRAPH_TRAVERSE_TYPE traversalType,
+				String traversalId, SRelation edge, SNode currNode, long order) {
+			// TODO Auto-generated method stub
 			return true;
 		}
 	}
