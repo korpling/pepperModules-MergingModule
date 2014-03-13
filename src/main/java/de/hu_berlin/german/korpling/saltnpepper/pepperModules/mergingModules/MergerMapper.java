@@ -603,6 +603,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		if (otherText == null)
 			throw new PepperModuleException(this, "Cannot align the Text of the documents since the other SDocument reference is NULL");
 		
+		// TODO REVISE THIS CODE
+		
 		boolean returnVal = false;
 		// first we need the two normalized texts
 		String normalizedBaseText = this.container.getNormalizedText(baseText);
@@ -613,40 +615,71 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			this.container.setBaseTextPositionByNormalizedTextPosition(baseText,this.createBaseTextNormOriginalMapping(this.container.getBaseText()));
 		}
 		
-		int offset = indexOfOmitChars(normalizedBaseText.toLowerCase(),normalizedOtherText.toLowerCase(),true, ((MergerProperties)getProperties()).getPunctuations());
+		int offset = -1;
+		
+		// set the bigger and smaller text
+		STextualDS biggerText = baseText;
+		STextualDS smallerText = otherText;
+		
+		if (normalizedBaseText.length() >= normalizedOtherText.length())
+		{ // if the other text fits into the base text by size
+			offset = indexOfOmitChars(normalizedBaseText.toLowerCase(),normalizedOtherText.toLowerCase(),true, ((MergerProperties)getProperties()).getPunctuations());
+		} // if the other text fits into the base text by size 
+		else 
+		{ // if the base text fits into the other text by size
+			offset = indexOfOmitChars(normalizedOtherText.toLowerCase(),normalizedOtherText.toLowerCase(),true, ((MergerProperties)getProperties()).getPunctuations());
+			biggerText = otherText;
+			smallerText = baseText;
+		} // if the base text fits into the other text by size
+		
 		if (offset != -1)
-		{// if the normalized other text is conatined in the normalized base text
+		{// if the normalized bigger text is contained in the normalized smaller text
+			
 			returnVal = true;
 			//System.out.println("Text to merge has an offset of "+offset);
 			// get the tokens of the other text.
 			List<SToken> textTokens = new Vector<SToken>();
-			for (Edge e : otherText.getSDocumentGraph().getInEdges(otherText.getSId())){
+			for (Edge e : smallerText.getSDocumentGraph().getInEdges(smallerText.getSId()))
+			{ // get all tokens of the smaller text
 				if (e instanceof STextualRelation){
 					textTokens.add(((STextualRelation)e).getSToken());
 				}
-			}
+			} // get all tokens of the smaller text
 			
-			for (SToken otherTextToken : textTokens)
+			for (SToken smallerTextToken : textTokens)
 			{
 				// get the aligned token start and length
-				int otherTokenStart = this.container.getAlignedTokenStart(otherText, otherTextToken);
-				int otherTokenLength = this.container.getAlignedTokenLength(otherText, otherTextToken);
+				int smallerTextTokenStart = this.container.getAlignedTokenStart(smallerText, smallerTextToken);
+				int smallerTextTokenLength = this.container.getAlignedTokenLength(smallerText, smallerTextToken);
 				
-				if (otherTokenStart != -1 && otherTokenLength != -1)
-				{ // get the base text token:
-					// get the aligned token from the base document which has the start of offset+startOfOtherToken
-					//System.out.println("Other token ("+otherTextToken.getSName()+") start and length: "+otherTokenStart+"/"+otherTokenLength);
-					SToken baseTextToken = this.container.getAlignedTokenByStart(baseText, (otherTokenStart+offset));
+				if (smallerTextTokenStart != -1 && smallerTextTokenLength != -1)
+				{ // the token of the smaller text has a start and end in the smaller text:
 					
-					if (baseTextToken != null)
-					{// there is some baseTextToken which has the same start
+					// get the aligned token from the base document which has the start of offset+startOfOtherToken
+					SToken biggerTextToken = this.container.getAlignedTokenByStart(biggerText, (smallerTextTokenStart+offset));
+					if (biggerTextToken != null)
+					{// there is some token in the bigger text which has the same start
 						//System.out.println("Base Token "+ baseTextToken.getSName() + " and other token "+otherTextToken.getSName()+ "have the same start");
 						//System.out.println("Lengths are: "+this.container.getAlignedTokenLength(baseText, baseTextToken)+ " and "+otherTokenLength);
-						if (this.container.getAlignedTokenLength(baseText, baseTextToken) == otherTokenLength)
+						if (this.container.getAlignedTokenLength(biggerText, biggerTextToken) == smallerTextTokenLength)
 						{ // start and lengths are identical. We found an equivalence class
-							this.container.addTokenMapping(baseTextToken, otherTextToken, otherText);
-							equivalenceMap.put(otherTextToken, baseTextToken);
-							nonEquivalentTokenInOtherTexts.remove(otherTextToken);
+							
+							// we want to have equivalences: otherTextToken --> baseTextToken
+							if (biggerText.equals(baseText))
+							{ // if the base text is the bigger text
+								this.container.addTokenMapping(biggerTextToken, smallerTextToken, smallerText);
+								equivalenceMap.put(smallerTextToken, biggerTextToken);
+								nonEquivalentTokenInOtherTexts.remove(smallerTextToken);
+							} // if the base text is the bigger text
+							else
+							{ // if the base text is the smaller text
+								// smallerText = baseText
+								// smallerTextToken = baseTextToken
+								this.container.addTokenMapping(smallerTextToken, biggerTextToken, biggerText);
+								equivalenceMap.put(biggerTextToken, smallerTextToken);
+								nonEquivalentTokenInOtherTexts.remove(biggerTextToken);
+							} // if the base text is the smaller text
+							
 						} // start and lengths are identical. We found an equivalence class
 						else 
 						{ // start is identical but the length is not. No equvalence
@@ -658,7 +691,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				} 
 				else 
 				{ // the other token has either no start or no length -> ERROR
-					logger.error("The SToken "+otherText.getSId()+" of the STextualDS "+otherText.getSId()+ " has no proper start or length. It was probably not aligned correctly.");
+					logger.error("The SToken "+smallerText.getSId()+" of the STextualDS "+smallerText.getSId()+ " has no proper start or length. It was probably not aligned correctly.");
 				} // the other token has either no start or no length -> ERROR
 			}
 			
