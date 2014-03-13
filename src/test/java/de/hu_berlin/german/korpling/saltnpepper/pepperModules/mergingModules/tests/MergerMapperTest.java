@@ -680,10 +680,19 @@ public class MergerMapperTest extends MergerMapper{
 		subj_3.setSElementId(d1_3.getSElementId());
 		getFixture().getMappingSubjects().add(subj_3);
 		
-		//TODO what is necessary, to run test
+		this.initialize();
+		// normalize all texts
+		for (MappingSubject subj : getFixture().getMappingSubjects()){
+			if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
+				SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
+				this.normalizeTextualLayer(sDoc);
+			}
+		}
 		
 		MappingSubject result= this.chooseBaseDocument();
-		assertEquals(subj_2, result);
+		//result = this.container.getBaseDocument();
+		//assertEquals(subj_2, result);
+		assertEquals(d1_2,this.container.getBaseDocument());
 	}
 	
 	/**
@@ -718,9 +727,18 @@ public class MergerMapperTest extends MergerMapper{
 		PepperModuleProperty prop= this.getFixture().getProperties().getProperty(MergerProperties.PROP_FIRST_AS_BASE);
 		prop.setValue(Boolean.TRUE);
 		
-		//TODO what is necessary, to run test
+		this.initialize();
+		// normalize all texts
+		for (MappingSubject subj : getFixture().getMappingSubjects()){
+			if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
+				SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
+				this.normalizeTextualLayer(sDoc);
+			}
+		}
 		
 		MappingSubject result= this.chooseBaseDocument();
-		assertEquals(subj_1, result);
+		//result = this.container.getBaseDocument();
+		//assertEquals(subj_2, result);
+		assertEquals(d1_3,this.container.getBaseDocument());
 	}
 }

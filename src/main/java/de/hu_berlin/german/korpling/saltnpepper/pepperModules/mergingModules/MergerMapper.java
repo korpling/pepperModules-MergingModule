@@ -346,6 +346,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				}
 			}
 		}
+		this.container.setBaseDocument((SDocument)baseDocument.getSElementId().getSIdentifiableElement());
 		return baseDocument;
 	}
 	
