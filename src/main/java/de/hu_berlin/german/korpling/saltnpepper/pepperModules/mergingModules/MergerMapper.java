@@ -39,8 +39,6 @@ import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.exceptions.Pepper
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.impl.PepperMapperImpl;
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Edge;
-import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Label;
-import de.hu_berlin.german.korpling.saltnpepper.salt.graph.LabelableElement;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Node;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpus;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpusGraph;
@@ -50,12 +48,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotatableElement;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotation;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SElementId;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SGraph;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SMetaAnnotatableElement;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SMetaAnnotation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SRelation;
 
@@ -93,8 +86,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 					if (sCorp.equals(baseCorpus)){//corpus is base corpus
 						subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
 					}else{// corpus is not base corpus
-						moveSAnnotation(sCorp, baseCorpus);
-						moveSMetaAnnotation(sCorp, baseCorpus);
+						SaltFactory.eINSTANCE.moveSAnnotations(sCorp, baseCorpus);
+						SaltFactory.eINSTANCE.moveSMetaAnnotations(sCorp, baseCorpus);
 						subj.setMappingResult(DOCUMENT_STATUS.DELETED);
 					}
 					
@@ -128,8 +121,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
 					SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
 					if (!sDoc.equals(baseDocument)){// document is not base corpus
-						moveSAnnotation(sDoc, baseDocument);
-						moveSMetaAnnotation(sDoc, baseDocument);
+						SaltFactory.eINSTANCE.moveSAnnotations(sDoc, baseDocument);
+						SaltFactory.eINSTANCE.moveSMetaAnnotations(sDoc, baseDocument);
 					}
 				}
 			}
@@ -326,16 +319,16 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		for (MappingSubject subj: getMappingSubjects()){
 			if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument){
 				SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
-				System.out.println("any subj: "+ System.identityHashCode(subj));
+				
 				if (((MergerProperties)getProperties()).isFirstAsBase()){
 					if (sDoc.getSCorpusGraph().equals(getBaseCorpusStructure())){
 						baseDocument= subj;
-						System.out.println("baseDoc: "+ System.identityHashCode(baseDocument));
 						break;
 					}
 				}else{
-					if (sDoc.equals(container.getBaseDocument())){
+					if (sDoc==container.getBaseDocument()){
 						logger.info("Chose base document. It is document with id"+container.getBaseDocument().getSId());
+						
 						baseDocument= subj;
 						baseDocument.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
 					}
@@ -991,12 +984,12 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				// change annotations
 				if (otherNode.getSAnnotations() != null){
 					System.out.println("Copying annotations for node "+otherNode.getSElementId());
-					moveSAnnotation(otherNode, match);
+					SaltFactory.eINSTANCE.moveSAnnotations(otherNode, match);
 					
 				}
 				if (otherNode.getSMetaAnnotations() != null){
 					System.out.println("Copying meta annotations for node "+otherNode.getSElementId());
-					moveSMetaAnnotation(otherNode, match);
+					SaltFactory.eINSTANCE.moveSMetaAnnotations(otherNode, match);
 				}
 				
 				//moveAllLabels(otherNode, match, true);
@@ -1151,200 +1144,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				}
 			}
 			return true;
-		}
-	}
-	
-//	/**
-//	 * check if an Node satisfies the equivalence all criteria 
-//	 * 1) the number of children matches
-//	 * 2) every child is has an already tested equivalence 
-//	 * @param otherG 
-//	 * @param otherParent
-//	 * @param childConfiguration
-//	 * @param matchingToken
-//	 */
-//	private boolean checkEquivalenz(Graph otherG, Node otherParent, List<Node> childConfiguration,
-//			Map<SNode, SNode> matchingToken) {
-//		EList<Edge> outEdges = otherG.getOutEdges(otherParent.getId());
-//		// 1) the number of children matches
-//		if (outEdges.size() != childConfiguration.size()){
-//			return false;
-//		}
-//		// 2) every child is has an already tested equivalence 
-//		for (Edge edge : outEdges) {
-//			Node child = edge.getTarget();
-//			if(!matchingToken.containsKey(child)){
-//				return false;
-//			}
-//		}
-//		return true;
-//	}
-	/**
-	 * Adds every map entry in reversed order
-	 * @param map
-	 * @return 
-	 */
-	private Map<SNode, SNode> reverseMap(Map<SNode, SNode> map) {
-		Map<SNode, SNode> ret = new HashMap<SNode, SNode>();
-		for (Map.Entry<SNode, SNode> entry : map.entrySet()) {
-			ret.put(entry.getValue(), entry.getKey());
-		}
-		return ret;
-		
-	}
-	/**
-	 * Copies all {@link SAnnotation} objects from <code>from</code> to <code>to</code>.
-	 * @param from
-	 * @param to
-	 */
-	public void moveSAnnotation(SAnnotatableElement from, SAnnotatableElement to){
-		if 	(	(from != null)&&
-				(to != null)){
-			for (SAnnotation fromSAnno: from.getSAnnotations()){
-				// if to contains an SAnnotation with the same namespace and name
-				String newSName = fromSAnno.getSName();
-				if (to.getSAnnotation(fromSAnno.getQName()) != null){
-					int i = 1;
-					while (to.getSAnnotation(fromSAnno.getQName()+"_"+i) != null)
-					{ // while there is an anno "annoQName_i" , increment i
-						i++;
-					} // while there is an anno "annoQName_i" , increment i
-					fromSAnno.setSName(newSName);
-					to.addSAnnotation(fromSAnno);
-				} else {
-					// move
-					to.addSAnnotation(fromSAnno);
-				}
-				SAnnotation toSAnno= to.createSAnnotation(fromSAnno.getSNS(), newSName, fromSAnno.getValueString());
-				//recursive for toSAnno
-				//copySAnnotation(fromSAnno.getSAnnotatableElement(), toSAnno.getSAnnotatableElement());
-			}
-			/*
-			List<Label> fromAnnotations = from.getLabels();
-			List<Label> toRemove = new Vector<Label>();
-			for (Label label : fromAnnotations){
-				if (label instanceof SAnnotation){
-					// actually I should not be able to remove labels directly, don't I?
-					toRemove.add(label);
-				}
-			}
-			for (Label label : toRemove){
-				from.getLabels().remove(label);
-			}*/
-		}
-	}
-	
-	/**
-	 * Copies all {@link SAnnotation} objects from <code>from</code> to <code>to</code>.
-	 * @param from
-	 * @param to
-	 */
-	public void moveSMetaAnnotation(SMetaAnnotatableElement from, SMetaAnnotatableElement to){
-		if 	(	(from != null)&&
-				(to != null)){
-			for (SMetaAnnotation fromSAnno: from.getSMetaAnnotations()){
-				String newSName = fromSAnno.getSName();
-				if (to.getSMetaAnnotation(fromSAnno.getQName()) != null){
-					int i = 1;
-					while (to.getSMetaAnnotation(fromSAnno.getQName()+"_"+i) != null)
-					{ // while there is a meta anno "annoQName_i" , increment i
-						i++;
-					} // while there is a meta anno "annoQName_i" , increment i
-					newSName = fromSAnno.getSName() + "_" + i;
-					fromSAnno.setSName(newSName);
-					to.addSMetaAnnotation(fromSAnno);
-					
-				} else {
-					// move
-					to.addSMetaAnnotation(fromSAnno);
-				}
-				
-				//recursive for toSAnno
-				//copySMetaAnnotation(fromSAnno.getSMetaAnnotatableElement(), toSAnno.getSMetaAnnotatableElement());
-			}
-			/*
-			List<Label> fromAnnotations = from.getLabels();
-			List<Label> toRemove = new Vector<Label>();
-			for (Label label : fromAnnotations){
-				if (label instanceof SMetaAnnotation){
-					// actually I should not be able to remove labels directly, don't I?
-					toRemove.add(label);
-				}
-			}
-			for (Label label : toRemove){
-				from.getLabels().remove(label);
-			}*/
-				
-		}
-	}
-	
-	/**
-	 * moves annotations from one element to another. 
-	 * 
-	 * If two annotations have different values, 
-	 * than the method will extend the annotation name to make
-	 * coping possible. 
-	 * 
-	 * Existing annotations will not be copied, but removed from the first element.
-	 * 
-	 * @param from
-	 * @param to
-	 */
-	public void moveAllLabels(LabelableElement from, LabelableElement to, boolean ignoreSElementId) {
-		List<Label> fromAnnotations = from.getLabels();
-		if (fromAnnotations != null) {
-			if (from instanceof SAnnotatableElement && to instanceof SAnnotatableElement){
-				moveSAnnotation((SAnnotatableElement)from, (SAnnotatableElement)to);
-			}
-			if (from instanceof SMetaAnnotatableElement && to instanceof SMetaAnnotatableElement){
-				moveSMetaAnnotation((SMetaAnnotatableElement)from, (SMetaAnnotatableElement)to);
-			}
-			while (!from.getLabels().isEmpty()) {
-				// actually I should not be able to remove labels directly, don't I?
-				Label fromLabel = from.getLabels().remove(0);
-				
-				
-				//Label toLabel = to.getLabel(fromLabel.getQName());
-				
-//				if (ignoreSElementId){
-//					if (toLabel instanceof SElementId){
-//						continue;
-//					}
-//				}
-//				if (toLabel == null) {
-//					// add as new label
-//					to.addLabel(fromLabel);
-//					System.out.println("moved anno: " + fromLabel.toString());
-//				} else {
-//					// target contains a label with the same qname
-//					Object fromVal = fromLabel.getValue();
-//					Object toVal = toLabel.getValue();
-//					if (fromVal == toVal && fromVal == null){
-//						System.out.println("ERRRRROR: FromVal is null");
-//						fromLabel.setQName(fromLabel.getQName() + LABEL_NAME_EXTENSION);
-//						to.addLabel(fromLabel);
-//					} else if (!fromVal.equals(toVal)) {
-//						// same qname but different values
-//						fromLabel.setQName(fromLabel.getQName()
-//								+ LABEL_NAME_EXTENSION);
-//						to.addLabel(fromLabel);
-//						logger.warn(String
-//								.format("Changed annotation name to\"%s\" from \"%s\" because %s != %s",
-//										fromLabel.getQName(),
-//							 			toLabel.getQName(), toLabel.getValue(),
-//										fromLabel.getValue()));
-//					} else {
-//						System.out.println(String.format(
-//								"found same annotation:\n\t%s %s to\n%s %s",
-//								fromLabel.getQName(), toLabel.getQName(),
-//								toLabel.getQName(), toLabel.getValue()));
-//					}
-//				}
-//				else {
-//					// identical annotations
-////					from.removeLabel(fromLabel.getQName());
-//				}
-			}
 		}
 	}
 }

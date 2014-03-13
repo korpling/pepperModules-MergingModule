@@ -29,6 +29,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SSpanningRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotatableElement;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SMetaAnnotation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltSample.SaltSample;
@@ -544,88 +545,6 @@ public class MergerMapperTest extends MergerMapper{
 	}
 	
 	@Test
-	public void testMovingLabels() throws Exception {
-		SToken tok1 = SaltFactory.eINSTANCE.createSToken();
-		SToken tok2 = SaltFactory.eINSTANCE.createSToken();
-		
-		// identical annotation --> no need to copy
-		SAnnotation anno1 = SaltFactory.eINSTANCE.createSAnnotation();
-		anno1.setName("anno1");
-		anno1.setSValue("annotext1");
-		
-		// new annotation --> should be copied
-		SAnnotation anno2 = SaltFactory.eINSTANCE.createSAnnotation();
-		anno2.setName("anno2");
-		anno2.setSValue("annotext2");
-		
-		// annotation with different value --> name will be changed
-		SAnnotation anno3 = SaltFactory.eINSTANCE.createSAnnotation();
-		anno3.setName("anno2");
-		anno3.setSValue("annotext22");
-
-		tok1.addSAnnotation(anno1);
-		tok1.addSAnnotation(anno2);
-		tok2.addSAnnotation(anno3);
-		
-		MergerMapper mm = new MergerMapper();
-		mm.moveAllLabels(tok1, tok2, true);
-
-		assertEquals("annotext1", tok2.getSAnnotation("anno1").getSValueSTEXT());
-		assertEquals("annotext22", tok2.getSAnnotation("anno2")
-				.getSValueSTEXT());
-		assertEquals("annotext2",
-				tok2.getSAnnotation("anno2" + MergerMapper.LABEL_NAME_EXTENSION)
-						.getSValueSTEXT());
-	}
-	
-	@Test
-	public void testMetaAnnotationMove() throws Exception {
-		MergerMapper mm = new MergerMapper();
-		SCorpus sCorp = SaltFactory.eINSTANCE.createSCorpus();
-		SDocument sDoc = SaltFactory.eINSTANCE.createSDocument();
-		
-		SMetaAnnotation meta = SaltFactory.eINSTANCE.createSMetaAnnotation();
-		String annoName = "metaAnno";
-		String annoValue= "metaValue";
-		meta.setName(annoName);
-		meta.setValue(annoValue);
-		
-		sCorp.addSMetaAnnotation(meta);
-		
-		//mm.moveAllLabels(sCorp, sDoc, true);
-		mm.moveSMetaAnnotation(sCorp, sDoc);
-		assertNull(sCorp.getSMetaAnnotation(annoName));
-		
-		// sDoc contains a SMetaAnnotation
-		assertEquals(1, sDoc.getSMetaAnnotations().size());
-		// the SMetaAnnotation is "metaAnno"
-		assertNotNull(sDoc.getSMetaAnnotation(annoName));
-		assertEquals(annoName, sDoc.getSMetaAnnotation(annoName).getSName());
-		assertEquals(annoValue, sDoc.getSMetaAnnotation(annoName).getValue());
-		
-		sCorp = SaltFactory.eINSTANCE.createSCorpus();
-		SMetaAnnotation meta2 = SaltFactory.eINSTANCE.createSMetaAnnotation();
-		String annoName2 = "metaAnno";
-		String annoValue2= "metaValue_1";
-		meta2.setName(annoName2);
-		meta2.setValue(annoValue2);
-		
-		sCorp.addSMetaAnnotation(meta2);
-		
-		//mm.moveAllLabels(sCorp, sDoc, true);
-		mm.moveSMetaAnnotation(sCorp, sDoc);
-		
-		// assert that there are 2 SMetaAnnotation objects in the target document
-		assertEquals(2, sDoc.getSMetaAnnotations().size());
-		// assert that there is a SMetaAnnotation object with name "metaAnno"
-		assertNotNull(sDoc.getSMetaAnnotation(annoName2));
-		// assert that there is a SMetaAnnotation object with name "metaAnno_1"
-		// TODO : does it make sense?
-		assertEquals(annoName2 + "_1", sDoc.getSMetaAnnotation(annoName2).getSName());
-		assertEquals(annoValue2, sDoc.getSMetaAnnotation(annoName2).getValue());
-	}
-	
-	@Test
 	public void testMovingNodes() throws Exception {
 		SDocument sDoc1 = SaltFactory.eINSTANCE.createSDocument();
 		SDocument sDoc2 = SaltFactory.eINSTANCE.createSDocument();
@@ -699,10 +618,6 @@ public class MergerMapperTest extends MergerMapper{
 		}
 		
 		MappingSubject result= this.chooseBaseDocument();
-		
-		System.out.println("base: "+ System.identityHashCode(subj_2));
-		System.out.println("result: "+ System.identityHashCode(result));
-		System.out.println(((SDocument)result.getSElementId().getSIdentifiableElement()).getSDocumentGraph().getSTextualDSs().get(0).getSText());
 		assertEquals(subj_2, result);
 		assertEquals(d1_2,this.container.getBaseDocument());
 	}
