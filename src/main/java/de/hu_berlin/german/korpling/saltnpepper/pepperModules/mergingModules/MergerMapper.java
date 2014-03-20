@@ -51,8 +51,11 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotatableElement;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SGraphTraverseHandler;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SMetaAnnotatableElement;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SRelation;
 
@@ -233,7 +236,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 							
 							for (STextualDS sTextualDS : sDoc.getSDocumentGraph().getSTextualDSs()){
 								// align the texts
-								this.alignTexts(this.container.getBaseText(), sTextualDS,nonEquivalentTokensOfOtherText , token2TokenMap);
+								this.alignTexts(this.container.getBaseText(), sTextualDS,nonEquivalentTokensOfOtherText , token2TokenMap, true);
 							}
 							// merge the document content
 							mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(), sDoc);
@@ -246,7 +249,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 						} else {
 							// there are no texts. So, just copy everything into the base document graph
 							logger.info("\tno text found");
-							
+							logger.warn("There is no text! Will not copy the tokens!");
 							// merge the document content
 							mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(),sDoc);
 							// we are finished with the document. Free the memory
@@ -589,9 +592,24 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param nonEquivalentTokenInOtherTexts A HashSet which contains all tokens which do not have an equivalent in the base text
 	 * @param equivalenceMap A map of tokens in the other text with their equivalent token in the base text as value
 	 * @return true on success and false on failure
-	 * @author eladrion
 	 */
 	protected boolean alignTexts(STextualDS baseText, STextualDS otherText, Set<SToken> nonEquivalentTokenInOtherTexts, Map<SToken,SToken> equivalenceMap){
+		return this.alignTexts(baseText, otherText, nonEquivalentTokenInOtherTexts, equivalenceMap,false);
+	}
+	
+	/**
+	 * This method aligns the normalized texts of the given {@link STextualDS} objects
+	 * and <b>also</b> aligns the {@link SToken} including the creation of equivalent {@link SToken}
+	 * information. If a {@link SToken} has an equivalent {@link SToken} in the base text, it is removed from
+	 * the nonEquivalentTokenInOtherTexts set.
+	 * @param baseText the base {@link STextualDS}
+	 * @param otherText the other {@link STextualDS}
+	 * @param nonEquivalentTokenInOtherTexts A HashSet which contains all tokens which do not have an equivalent in the base text
+	 * @param equivalenceMap A map of tokens in the other text with their equivalent token in the base text as value
+	 * @param copyTokens states whether tokens should be integrated into the base text
+	 * @return true on success and false on failure
+	 */
+	protected boolean alignTexts(STextualDS baseText, STextualDS otherText, Set<SToken> nonEquivalentTokenInOtherTexts, Map<SToken,SToken> equivalenceMap, boolean copyTokens){
 		if (baseText == null)
 			throw new PepperModuleException(this, "Cannot align the Text of the documents since the base SDocument reference is NULL");
 		if (otherText == null)
@@ -648,7 +666,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				
 				if (smallerTextTokenStart != -1 && smallerTextTokenLength != -1)
 				{ // the token of the smaller text has a start and end in the smaller text:
-					
+					boolean copyToken = false;
 					// get the aligned token from the base document which has the start of offset+startOfOtherToken
 					SToken biggerTextToken = this.container.getAlignedTokenByStart(biggerText, (smallerTextTokenStart+offset));
 					if (biggerTextToken != null)
@@ -663,6 +681,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 							{ // if the base text is the bigger text
 								this.container.addTokenMapping(biggerTextToken, smallerTextToken, smallerText);
 								equivalenceMap.put(smallerTextToken, biggerTextToken);
+								if (copyTokens)
+								{ // copy all SAnnotations and SMetaAnnotations
+									this.copyAnnos(smallerTextToken,biggerTextToken, true);
+								} // copy all SAnnotations and SMetaAnnotations
 								nonEquivalentTokenInOtherTexts.remove(smallerTextToken);
 							} // if the base text is the bigger text
 							else
@@ -671,17 +693,71 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 								// smallerTextToken = baseTextToken
 								this.container.addTokenMapping(smallerTextToken, biggerTextToken, biggerText);
 								equivalenceMap.put(biggerTextToken, smallerTextToken);
+								if (copyTokens)
+								{ // copy all SAnnotations and SMetaAnnotations
+									this.copyAnnos(biggerTextToken,smallerTextToken, true);
+								} // copy all SAnnotations and SMetaAnnotations
 								nonEquivalentTokenInOtherTexts.remove(biggerTextToken);
 							} // if the base text is the smaller text
 							
 						} // start and lengths are identical. We found an equivalence class
 						else 
-						{ // start is identical but the length is not. No equvalence
-						} // start is identical but the length is not. No equvalence
+						{ // start is identical but the length is not. No equivalence
+							copyToken = true;
+						} // start is identical but the length is not. No equivalence
 					}
 					else
-					{ // start is not identical. No equvalence
-					} // start is not identical. No equvalence
+					{ // start is not identical. No equivalence
+						copyToken = true;
+					} // start is not identical. No equivalence
+					if (copyTokens && copyToken)
+					{ // The token is not contained in the base text. Copy it!
+						if (biggerText.equals(baseText))
+						{ // if the base text is the bigger text
+							// Compute the normalized start and end value of the token which will be created in the base text
+							int newStart = offset + this.container.getAlignedTokenStart(otherText, smallerTextToken);
+							int newEnd = newStart + this.container.getAlignedTokenLength(otherText, smallerTextToken);
+							// set the de-normalized start and end value in the base text for the new token
+							newStart = this.container.getBaseTextPositionByNormalizedTextPosition(baseText, newStart);
+							newEnd = this.container.getBaseTextPositionByNormalizedTextPosition(baseText, newEnd);
+							// create the new token in the base text with the new start and end value
+							SToken tok = baseText.getSDocumentGraph().createSToken(baseText, newStart, newEnd);
+							// copy/move annotations and meta-annotations
+							this.copyAnnos(smallerTextToken,tok,true);
+							// set the new token as equivalent for the smaller text token (this is the token of the text-to-merge in this case)
+							equivalenceMap.put(smallerTextToken, tok);
+						} // if the base text is the bigger text
+						else
+						{ // if the base text is the smaller text
+							// Compute the normalized start and end value of the token which should be created in the base text
+							int newStart = this.container.getAlignedTokenStart(otherText, biggerTextToken) - offset;
+							int newEnd = newStart + this.container.getAlignedTokenLength(otherText, biggerTextToken);
+							// if the new token would not be in the base texts range, set start and end to 0
+							if (newStart < 0)
+							{ // the token starts before the beginning or after the end of the base text
+								newStart = 0;
+								newEnd = 0;
+							} // the token starts before the beginning or after the end of the base text
+							else
+							{ // The token starts in the interval of the base text
+								if ( (newStart > baseText.getSText().length()) || (newEnd > baseText.getSText().length()))
+								{ // The token starts or ends after the end of the base text
+									// set the new start and end to the end of the normalized base text
+									newStart = this.container.getNormalizedText(baseText).length();
+									newEnd = this.container.getNormalizedText(baseText).length();
+								} // The token starts or ends after the end of the base text
+							} // The token starts in the interval of the base text
+							// set the de-normalized start and end value in the base text for the new token
+							newStart = this.container.getBaseTextPositionByNormalizedTextPosition(baseText, newStart);
+							newEnd = this.container.getBaseTextPositionByNormalizedTextPosition(baseText, newEnd);
+							// create the new token in the base text with the new start and end value
+							SToken tok = baseText.getSDocumentGraph().createSToken(baseText, newStart, newEnd);
+							// copy/move annotations and meta-annotations from the token of the other (bigger) text to the new token
+							this.copyAnnos(biggerTextToken,tok, true);
+							// set the new token as equivalent for the other(bigger) text token (this is the token of the text-to-merge in this case)
+							equivalenceMap.put(biggerTextToken, tok);
+						} // if the base text is the smaller text
+					} // the token is not contained in the bigger text. Copy it!
 				} 
 				else 
 				{ // the other token has either no start or no length -> ERROR
@@ -694,6 +770,47 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		return returnVal;
 	}
 	
+	private void copyAnnos(SToken sourceToken, SToken targetToken, boolean move) {
+		if (move){
+			SaltFactory.eINSTANCE.moveSAnnotations(sourceToken, targetToken);
+			SaltFactory.eINSTANCE.moveSMetaAnnotations(sourceToken, targetToken);
+		} else {
+			/*
+			if (sourceToken.getSAnnotations() != null){
+				if (!sourceToken.getSAnnotations().isEmpty()){
+					copySAnnotations(sourceToken, targetToken);
+				}
+			}
+			if (sourceToken.getSMetaAnnotations() != null){
+				if (!sourceToken.getSMetaAnnotations().isEmpty()){
+					copySMetaAnnotations(sourceToken, targetToken);
+				}
+			}
+			*/
+		}
+	}
+	
+	/*
+	private void copySAnnotations(SAnnotatableElement from, SAnnotatableElement to){
+		for (SAnnotation sAnnotation : from.getSAnnotations()){
+			// if to contains an SAnnotation with the same namespace and name
+			String newSName = sAnnotation.getSName();
+			if (to.getSAnnotation(sAnnotation.getQName()) != null){
+				int i = 1;
+				while (to.getSAnnotation(sAnnotation.getQName()+"_"+i) != null)
+				{ // while there is an anno "annoQName_i" , increment i
+					i++;
+				} // while there is an anno "annoQName_i" , increment i
+				newSName = sAnnotation.getSName() + "_" + i;
+			} 
+			SAnnotation newSAnnotation = to.
+		}
+	}
+	
+	private void copySMetaAnnotations(SMetaAnnotatableElement from, SMetaAnnotatableElement to){
+		
+	}*/
+
 	/* *******************************************************************
 	 * Alignment and Normalization Helper Methods
 	 * *******************************************************************/
