@@ -160,19 +160,128 @@ public class MergerMapperTest extends MergerMapper{
 			i++;
 		}*/
 		
+		SaltFactory.eINSTANCE.save_DOT(sDoc1.getSDocumentGraph(), URI.createFileURI("/home/florian/Test/merging/mergedDoc.dot"));
+		
 		// the count of tokens in sDoc1 must be the same as before!
 		assertEquals(template.getSDocumentGraph().getSTokens().size(),     sDoc1.getSDocumentGraph().getSTokens().size());
+		assertEquals(template.getSDocumentGraph().getSSpans().size(),      sDoc1.getSDocumentGraph().getSSpans().size());
+		assertEquals(template.getSDocumentGraph().getSSpanningRelations().size(),      sDoc1.getSDocumentGraph().getSSpanningRelations().size());
 		
 		assertEquals(template.getSDocumentGraph().getSNodes().size(),     sDoc1.getSDocumentGraph().getSNodes().size());
 		assertEquals(template.getSDocumentGraph().getSRelations().size(), sDoc1.getSDocumentGraph().getSRelations().size());
 		
-		assertEquals(template.getSDocumentGraph().getSTokens().size(),     sDoc1.getSDocumentGraph().getSTokens().size());
-		assertEquals(template.getSDocumentGraph().getSSpans().size(),      sDoc1.getSDocumentGraph().getSSpans().size());
 		assertEquals(template.getSDocumentGraph().getSStructures().size(), sDoc1.getSDocumentGraph().getSStructures().size());
 		
 		assertNotNull(sDoc1.getSDocumentGraph());
 		assertNull(sDoc2.getSDocumentGraph());
 		assertNull(sDoc3.getSDocumentGraph());
+	}
+	
+	/**
+	 * Tests one {@link SDocumentGraph} containing {@link SSpan}s and one {@link SDocumentGraph}, which does not.
+	 * In the end, the one which does not should contain all spans, which are contained by the other {@link SDocumentGraph}.
+	 */
+	@Test
+	public void testMergeSpans() {
+		// set up empty documents
+		SDocument sDoc1= SaltFactory.eINSTANCE.createSDocument();
+		sDoc1.setSId("sdoc1");
+		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		MappingSubject sub1 = new MappingSubject();
+		sub1.setSElementId(sDoc1.getSElementId());
+		getFixture().getMappingSubjects().add(sub1); 
+		SaltSample.createPrimaryData(sDoc1);
+		SaltSample.createTokens(sDoc1);
+		
+		SDocument sDoc2= SaltFactory.eINSTANCE.createSDocument();
+		sDoc2.setSId("sdoc2");
+		sDoc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		MappingSubject sub2 = new MappingSubject();
+		sub2.setSElementId(sDoc2.getSElementId());
+		getFixture().getMappingSubjects().add(sub2);
+		SaltSample.createPrimaryData(sDoc2);
+		SaltSample.createTokens(sDoc2);
+		SaltSample.createInformationStructureSpan(sDoc2);
+		SaltSample.createInformationStructureAnnotations(sDoc2);
+		
+		// template document contains all annotations
+		SDocument template= SaltFactory.eINSTANCE.createSDocument();
+		template.setSId("template");
+		template.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		SaltSample.createPrimaryData(template);
+		SaltSample.createTokens(template);
+		SaltSample.createInformationStructureSpan(template);
+		SaltSample.createInformationStructureAnnotations(template);
+
+		assertEquals(0, sDoc1.getSDocumentGraph().getSSpans().size());
+		assertEquals(0, sDoc1.getSDocumentGraph().getSSpanningRelations().size());
+		
+		this.isTestMode = true;
+		this.mergeSDocumentGraph();
+		
+		assertNotNull(sDoc1.getSDocumentGraph());
+		assertEquals(template.getSDocumentGraph().getSTokens().size(), sDoc1.getSDocumentGraph().getSTokens().size());
+		assertEquals(template.getSDocumentGraph().getSSpans().size(), sDoc1.getSDocumentGraph().getSSpans().size());
+		assertEquals(template.getSDocumentGraph().getSSpanningRelations().size(), sDoc1.getSDocumentGraph().getSSpanningRelations().size());
+		
+		assertEquals(template.getSDocumentGraph().getSNodes().size(),     sDoc1.getSDocumentGraph().getSNodes().size());
+		assertEquals(template.getSDocumentGraph().getSRelations().size(), sDoc1.getSDocumentGraph().getSRelations().size());
+	}
+	
+	/**
+	 * Tests two {@link SDocumentGraph} containing {@link SSpan}s the same spans, one contains annotations, the other one does not.
+	 * In the end, both shall have the same annotations.
+	 */
+	@Test
+	public void testMergeSpans2() {
+		// set up empty documents
+		SDocument sDoc1= SaltFactory.eINSTANCE.createSDocument();
+		sDoc1.setSId("sdoc1");
+		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		MappingSubject sub1 = new MappingSubject();
+		sub1.setSElementId(sDoc1.getSElementId());
+		getFixture().getMappingSubjects().add(sub1); 
+		SaltSample.createPrimaryData(sDoc1);
+		SaltSample.createTokens(sDoc1);
+		SaltSample.createInformationStructureSpan(sDoc1);
+		
+		SDocument sDoc2= SaltFactory.eINSTANCE.createSDocument();
+		sDoc2.setSId("sdoc2");
+		sDoc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		MappingSubject sub2 = new MappingSubject();
+		sub2.setSElementId(sDoc2.getSElementId());
+		getFixture().getMappingSubjects().add(sub2);
+		SaltSample.createPrimaryData(sDoc2);
+		SaltSample.createTokens(sDoc2);
+		SaltSample.createInformationStructureSpan(sDoc2);
+		SaltSample.createInformationStructureAnnotations(sDoc2);
+		
+		// template document contains all annotations
+		SDocument template= SaltFactory.eINSTANCE.createSDocument();
+		template.setSId("template");
+		template.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		SaltSample.createPrimaryData(template);
+		SaltSample.createTokens(template);
+		SaltSample.createInformationStructureSpan(template);
+		SaltSample.createInformationStructureAnnotations(template);
+		
+		this.isTestMode = true;
+		this.mergeSDocumentGraph();
+		
+		assertNotNull(sDoc1.getSDocumentGraph());
+		assertEquals(template.getSDocumentGraph().getSTokens().size(), sDoc1.getSDocumentGraph().getSTokens().size());
+		assertEquals(template.getSDocumentGraph().getSSpans().size(), sDoc1.getSDocumentGraph().getSSpans().size());
+		assertEquals(template.getSDocumentGraph().getSSpanningRelations().size(), sDoc1.getSDocumentGraph().getSSpanningRelations().size());
+		
+		assertEquals(template.getSDocumentGraph().getSSpans().get(0).getSAnnotations().size(), sDoc1.getSDocumentGraph().getSSpans().get(0).getSAnnotations().size());
+		assertTrue(template.getSDocumentGraph().getSSpans().get(0).getSAnnotations().containsAll(sDoc1.getSDocumentGraph().getSSpans().get(0).getSAnnotations()));
+		
+		assertEquals(template.getSDocumentGraph().getSSpans().get(1).getSAnnotations().size(), sDoc1.getSDocumentGraph().getSSpans().get(1).getSAnnotations().size());
+		assertTrue(template.getSDocumentGraph().getSSpans().get(1).getSAnnotations().containsAll(sDoc1.getSDocumentGraph().getSSpans().get(1).getSAnnotations()));
+		
+		
+		assertEquals(template.getSDocumentGraph().getSNodes().size(),     sDoc1.getSDocumentGraph().getSNodes().size());
+		assertEquals(template.getSDocumentGraph().getSRelations().size(), sDoc1.getSDocumentGraph().getSRelations().size());
 	}
 	
 	/**

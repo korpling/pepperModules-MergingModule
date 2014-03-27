@@ -1079,7 +1079,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		MergeHandler handler= new MergeHandler();
 		handler.setFromGraph(fromGraph);
 		handler.setToGraph(toGraph);
-		fromGraph.traverse(fromGraph.getSTokens(), GRAPH_TRAVERSE_TYPE.BOTTOM_UP_BREADTH_FIRST, "merger", handler);
+		fromGraph.traverse(fromGraph.getSTokens(), GRAPH_TRAVERSE_TYPE.BOTTOM_UP_BREADTH_FIRST, "merger", handler, false);
 		
 //		//chooseFinalBaseText();
 //		System.out.println(String.format("== Start merge between %s and %s", base.getSId(), other.getSId()));
@@ -1358,14 +1358,16 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			}else if (currNode instanceof SSpan){
 				EList<STYPE_NAME> sTypes= new BasicEList<STYPE_NAME>();
 				sTypes.add(STYPE_NAME.SSPANNING_RELATION);
+				// find all tokens in fromGraph overlapped by current span (contained in fromGraph)
 				List<SToken> overlappedTokens= fromGraph.getOverlappedSTokens(currNode, sTypes);
 				if (overlappedTokens!= null){
-					List<SSpan> equivalentNodes= new Vector<SSpan>();
+					// find all spans in toGraph, which are possible merging partners for current span in fromGraph
+					List<SSpan> mergingPartners= new Vector<SSpan>();
 					Map<SNode, Integer> nodeOccurance= new Hashtable<SNode, Integer>();
 					EList<SToken> otherTokens= new BasicEList<SToken>();
 					/**
-					 * for all equivalent nodes in toGraph, find node, which overlaps all of them,
-					 * if one was found, this could be the equivalence node
+					 * for all merging partners in toGraph of current span, find partner, which overlaps all equivalence tokens to tokens in subtree of current span
+					 * if one merging partner was found, this could be the equivalence node
 					 */
 					for (SToken sToken: overlappedTokens){
 						SToken otherToken= token2TokenMap.get(sToken);
@@ -1381,17 +1383,16 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 								}
 								nodeOccurance.put(sSpan, occurance);
 								if (overlappedTokens.size()==occurance){//span overlaps all tokens and therefore is a equivalence candidate
-									equivalentNodes.add(sSpan);
+									mergingPartners.add(sSpan);
 								}
 							}
 						}
 					}
-					if (equivalentNodes.size()== 1){//exactly one matching candidate was found
-						otherNode= equivalentNodes.get(0); 
+					if (mergingPartners.size()== 1){//exactly one matching candidate was found
+						otherNode= mergingPartners.get(0); 
 					}else{// zero or more than one equivalence candidates have been found --> create a new node
 						toGraph.createSSpan(otherTokens);
 					}
-					
 				}
 				
 			}else if (currNode instanceof SStructure){
