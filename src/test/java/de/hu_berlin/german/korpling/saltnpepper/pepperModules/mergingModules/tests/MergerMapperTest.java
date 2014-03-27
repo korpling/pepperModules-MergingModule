@@ -32,6 +32,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotatableElement;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SMetaAnnotation;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltSample.SaltSample;
 
 public class MergerMapperTest extends MergerMapper{
@@ -511,7 +512,7 @@ public class MergerMapperTest extends MergerMapper{
 		
 		// test 2 : align must return true
 		HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-		Hashtable<SToken,SToken> equivalenceMap = new Hashtable<SToken,SToken>();
+		Hashtable<SNode,SNode> equivalenceMap = new Hashtable<SNode,SNode>();
 		assertTrue(this.alignTexts(sDoc2.getSDocumentGraph().getSTextualDSs().get(0), sDoc1.getSDocumentGraph().getSTextualDSs().get(0),nonEquivalentTokenInOtherTexts,equivalenceMap));
 		
 		

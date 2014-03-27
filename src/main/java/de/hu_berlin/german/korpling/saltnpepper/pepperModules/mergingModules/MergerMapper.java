@@ -179,7 +179,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		}
 	}
 	
-	private Map<SToken, SToken> token2TokenMap= null;
+	private Map<SNode, SNode> node2NodeMap= null;
 	
 	public void mergeSDocumentGraph() {
 		if (this.getMappingSubjects().size() != 0){
@@ -224,7 +224,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 					if (sDoc != container.getBaseDocument())
 					{// ignore the base document and merge the others
 						logger.info("Merging document: " + sDoc);
-						token2TokenMap = new Hashtable<SToken, SToken>();
+						
+						node2NodeMap = new Hashtable<SNode, SNode>(this.container.getBaseDocument().getSDocumentGraph().getSNodes().size() + sDoc.getSDocumentGraph().getSNodes().size());
 						
 						if (sDoc.getSDocumentGraph().getSTextualDSs() != null)
 						{ // there should be texts
@@ -236,7 +237,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 							
 							for (STextualDS sTextualDS : sDoc.getSDocumentGraph().getSTextualDSs()){
 								// align the texts
-								this.alignTexts(this.container.getBaseText(), sTextualDS,nonEquivalentTokensOfOtherText , token2TokenMap, true);
+								this.alignTexts(this.container.getBaseText(), sTextualDS,nonEquivalentTokensOfOtherText , node2NodeMap, true);
 							}
 							// merge the document content
 							mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(), sDoc);
@@ -534,7 +535,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 							}
 							for (STextualDS otherText : sDoc.getSDocumentGraph().getSTextualDSs())
 							{ // align the current base text with all texts of the other document
-								Map<SToken,SToken> equivalenceMap = new Hashtable<SToken, SToken>();
+								Map<SNode,SNode> equivalenceMap = new Hashtable<SNode,SNode>();
 								this.alignTexts(baseText, otherText,nonEquivalentTokenInOtherTexts,equivalenceMap);
 							}
 							/// save all unique token of the other document
@@ -593,7 +594,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param equivalenceMap A map of tokens in the other text with their equivalent token in the base text as value
 	 * @return true on success and false on failure
 	 */
-	protected boolean alignTexts(STextualDS baseText, STextualDS otherText, Set<SToken> nonEquivalentTokenInOtherTexts, Map<SToken,SToken> equivalenceMap){
+	protected boolean alignTexts(STextualDS baseText, STextualDS otherText, Set<SToken> nonEquivalentTokenInOtherTexts, Map<SNode,SNode> equivalenceMap){
 		return this.alignTexts(baseText, otherText, nonEquivalentTokenInOtherTexts, equivalenceMap,false);
 	}
 	
@@ -609,7 +610,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param copyTokens states whether tokens should be integrated into the base text
 	 * @return true on success and false on failure
 	 */
-	protected boolean alignTexts(STextualDS baseText, STextualDS otherText, Set<SToken> nonEquivalentTokenInOtherTexts, Map<SToken,SToken> equivalenceMap, boolean copyTokens){
+	protected boolean alignTexts(STextualDS baseText, STextualDS otherText, Set<SToken> nonEquivalentTokenInOtherTexts, Map<SNode,SNode> equivalenceMap, boolean copyTokens){
 		if (baseText == null)
 			throw new PepperModuleException(this, "Cannot align the Text of the documents since the base SDocument reference is NULL");
 		if (otherText == null)
@@ -1339,7 +1340,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			SNode otherNode= null;
 			
 			if (currNode instanceof SToken){
-				otherNode= token2TokenMap.get(currNode);
+				otherNode= node2NodeMap.get(currNode);
 				//TODO may be not necessary any more, when Mario creates all token-mapping partners
 //				if (otherNode!= null){// move all annotations
 //					//find text to node
@@ -1370,7 +1371,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 					 * if one merging partner was found, this could be the equivalence node
 					 */
 					for (SToken sToken: overlappedTokens){
-						SToken otherToken= token2TokenMap.get(sToken);
+						SToken otherToken= (SToken)node2NodeMap.get((SNode)sToken);
 						otherTokens.add(otherToken);
 						for (Edge inEdge:toGraph.getInEdges(otherToken.getSId())){
 							if (inEdge instanceof SSpanningRelation){
