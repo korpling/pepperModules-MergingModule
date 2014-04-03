@@ -31,6 +31,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotatableElement;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotation;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SLayer;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SMetaAnnotation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltSample.SaltSample;
@@ -161,7 +162,7 @@ public class MergerMapperTest extends MergerMapper{
 			i++;
 		}*/
 		
-		SaltFactory.eINSTANCE.save_DOT(sDoc1.getSDocumentGraph(), URI.createFileURI("/home/florian/Test/merging/mergedDoc.dot"));
+		//SaltFactory.eINSTANCE.save_DOT(sDoc1.getSDocumentGraph(), URI.createFileURI("/home/florian/Test/merging/mergedDoc.dot"));
 		
 		// the count of tokens in sDoc1 must be the same as before!
 		assertEquals(template.getSDocumentGraph().getSTokens().size(),     sDoc1.getSDocumentGraph().getSTokens().size());
@@ -498,9 +499,8 @@ public class MergerMapperTest extends MergerMapper{
 		EList<SToken> baseTextToken = sDoc2.getSDocumentGraph().getSortedSTokenByText();
 		EList<SToken> otherTextToken = sDoc1.getSDocumentGraph().getSortedSTokenByText();
 		
-		//System.out.println("Testing Alignment");
 		
-		
+		System.out.println("Testing Alignment");
 		
 		//TODO check alignTests
 		this.normalizeTextualLayer(sDoc1);
@@ -534,6 +534,339 @@ public class MergerMapperTest extends MergerMapper{
 		
 		
 		
+	}
+	
+	/**
+	 * Tests the method {@link #mergeTokens(de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS, de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS)} and checks
+	 * if correct equivalence classes for an artificial test case are created.
+	 * <br/>
+	 * The test case uses two texts:
+	 * 
+	 * <ol>
+	 * 	<li>{@value SaltSample#PRIMARY_TEXT_EN}</li>
+	 *  <li>Well. {@value SaltSample#PRIMARY_TEXT_EN} I am not sure!</li>
+	 * </ol> 
+	 */
+	@Test
+	public void testMergeTokens_case1(){
+		SDocument sDoc1= SaltFactory.eINSTANCE.createSDocument();
+		sDoc1.setSId("doc1");
+		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		SaltSample.createPrimaryData(sDoc1);
+		
+		SLayer morphLayer = SaltFactory.eINSTANCE.createSLayer();
+		morphLayer.setSName("morphology");
+		sDoc1.getSDocumentGraph().addSLayer(morphLayer);
+		SaltSample.createToken(0,2,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//Is
+		SaltSample.createToken(3,7,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//this
+		SaltSample.createToken(8,15,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//example
+		SaltSample.createToken(16,20,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//more
+		SaltSample.createToken(21,32,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//complicated
+		SaltSample.createToken(33,37,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//than
+		SaltSample.createToken(38,40,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//it
+		SaltSample.createToken(41,48,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//supposed
+		SaltSample.createToken(49,51,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//to
+		//SaltSample.createToken(52,55,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//be?
+		SaltSample.createToken(52,54,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//be
+		SaltSample.createToken(54,55,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//?
+		
+		SDocument sDoc2= SaltFactory.eINSTANCE.createSDocument();
+		sDoc2.setSId("doc2");
+		sDoc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		sDoc2.getSDocumentGraph().createSTextualDS("Well. "+SaltSample.PRIMARY_TEXT_EN+" I am not sure!");
+		sDoc2.getSDocumentGraph().tokenize();
+		
+		EList<SToken> baseTextToken = sDoc2.getSDocumentGraph().getSortedSTokenByText();
+		EList<SToken> otherTextToken = sDoc1.getSDocumentGraph().getSortedSTokenByText();
+		
+		//System.out.println("Testing Alignment");
+		System.out.println("DEBUG:!!!!! Merge Tokens 1 START");
+		this.normalizeTextualLayer(sDoc1);
+		//System.out.println("Testing Alignment");
+		this.normalizeTextualLayer(sDoc2);
+		
+		// test 1 : sDoc2 must be the base document
+		assertEquals(sDoc2, this.container.getBaseDocument());
+		
+		
+		
+		// test 2 : align must return true
+		HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+		Hashtable<SNode,SNode> equivalenceMap = new Hashtable<SNode,SNode>();
+		assertTrue(this.alignTexts(sDoc2.getSDocumentGraph().getSTextualDSs().get(0), sDoc1.getSDocumentGraph().getSTextualDSs().get(0),nonEquivalentTokenInOtherTexts,equivalenceMap));
+		System.out.println("Equivalent Tokens of other text:");
+		for (SNode tok : equivalenceMap.keySet()){
+			System.out.print("\t"+tok.getSName());
+		}
+		System.out.println("");
+		System.out.println("Equivalences:");
+		for (SNode node : equivalenceMap.keySet()){
+			System.out.println(node.getSName() + " -> " + equivalenceMap.get(node).getSName());
+		}
+		System.out.println("DEBUG:!!!!! Merge Tokens 1 END");
+		assertEquals(otherTextToken.size(),equivalenceMap.size());
+		
+		System.out.println("DEBUG!!!!!!!!!!!!!!!: Equivalence map size: "+equivalenceMap.size());
+		
+		// test 3 : the token alignment is correct : the equivalence classes are correct
+		int j = 0;
+		for (int i = 2 ; i < 11 ; i++){
+			SToken base = baseTextToken.get(i);
+			SToken otherToken = otherTextToken.get(j);
+			STextualDS otherText = sDoc1.getSDocumentGraph().getSTextualDSs().get(0); 
+			assertEquals("Base Token "+base.getSName() + 
+					" (start: "
+					+this.container.getAlignedTokenStart(this.container.getBaseText(), base)+
+					") and other token "+otherToken.getSName()+ " (start: "+
+					this.container.getAlignedTokenStart(otherText, otherToken)
+					+") should be equal.",this.container.getTokenMapping(base, otherText),otherToken);
+			j++;
+		}
+		
+		int equivalenceMapSize = equivalenceMap.size();
+		// assert that the merging did not change something
+		this.mergeTokens(sDoc2.getSDocumentGraph().getSTextualDSs().get(0), sDoc1.getSDocumentGraph().getSTextualDSs().get(0), equivalenceMap);
+		assertEquals(equivalenceMapSize, equivalenceMap.size());
+		
+		j = 0;
+		for (int i = 2 ; i < 11 ; i++){
+			SToken base = baseTextToken.get(i);
+			SToken otherToken = otherTextToken.get(j);
+			STextualDS otherText = sDoc1.getSDocumentGraph().getSTextualDSs().get(0); 
+			assertEquals("Base Token "+base.getSName() + 
+					" (start: "
+					+this.container.getAlignedTokenStart(this.container.getBaseText(), base)+
+					") and other token "+otherToken.getSName()+ " (start: "+
+					this.container.getAlignedTokenStart(otherText, otherToken)
+					+") should be equal.",this.container.getTokenMapping(base, otherText),otherToken);
+			j++;
+		}
+	}
+	
+	/**
+	 * Tests the method {@link #mergeTokens(de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS, de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS)} and checks
+	 * if correct equivalence classes for an artificial test case are created.
+	 * <br/>
+	 * The test case uses two texts:
+	 * 
+	 * <ol>
+	 * 	<li>{@value SaltSample#PRIMARY_TEXT_EN}</li>
+	 *  <li>Well. {@value SaltSample#PRIMARY_TEXT_EN} I am not sure!</li>
+	 * </ol> 
+	 * 
+	 * In this test, the first text is used as base text and one token of the first text is removed
+	 */
+	@Test
+	public void testMergeTokens_case2(){
+		SDocument sDoc1= SaltFactory.eINSTANCE.createSDocument();
+		sDoc1.setSId("doc1");
+		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		SaltSample.createPrimaryData(sDoc1);
+		
+		SLayer morphLayer = SaltFactory.eINSTANCE.createSLayer();
+		morphLayer.setSName("morphology");
+		sDoc1.getSDocumentGraph().addSLayer(morphLayer);
+		SaltSample.createToken(0,2,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//Is
+		SaltSample.createToken(3,7,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//this
+		SaltSample.createToken(8,15,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//example
+		SaltSample.createToken(16,20,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//more
+		//SaltSample.createToken(21,32,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//complicated
+		SaltSample.createToken(33,37,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//than
+		SaltSample.createToken(38,40,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//it
+		SaltSample.createToken(41,48,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//supposed
+		SaltSample.createToken(49,51,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//to
+		//SaltSample.createToken(52,55,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//be?
+		SaltSample.createToken(52,54,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//be
+		SaltSample.createToken(54,55,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//?
+		
+		SDocument sDoc2= SaltFactory.eINSTANCE.createSDocument();
+		sDoc2.setSId("doc2");
+		sDoc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		sDoc2.getSDocumentGraph().createSTextualDS("Well. "+SaltSample.PRIMARY_TEXT_EN+" I am not sure!");
+		sDoc2.getSDocumentGraph().tokenize();
+		
+		EList<SToken> baseTextToken = sDoc1.getSDocumentGraph().getSortedSTokenByText();
+		EList<SToken> otherTextToken = sDoc2.getSDocumentGraph().getSortedSTokenByText();
+		
+		//System.out.println("Testing Alignment");
+		System.out.println("DEBUG:!!!!! MERGE TOKENS 2 START");
+		this.normalizeTextualLayer(sDoc1);
+		//System.out.println("Testing Alignment");
+		this.normalizeTextualLayer(sDoc2);
+		
+		// test 1 : sDoc2 must be the base document
+		this.container.setBaseDocument(sDoc1);
+		this.container.setBaseText(sDoc1.getSDocumentGraph().getSTextualDSs().get(0));
+		
+		
+		
+		// test 2 : align must return true
+		HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+		Hashtable<SNode,SNode> equivalenceMap = new Hashtable<SNode,SNode>();
+		assertTrue(this.alignTexts(sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc2.getSDocumentGraph().getSTextualDSs().get(0),nonEquivalentTokenInOtherTexts,equivalenceMap));
+		System.out.println("Equivalent Tokens of other text:");
+		for (SNode tok : equivalenceMap.keySet()){
+			System.out.print("\t"+tok.getSName());
+		}
+		
+		System.out.println("");
+		System.out.println("Equivalences:");
+		for (SNode node : equivalenceMap.keySet()){
+			System.out.println(node.getSName() + " -> " + equivalenceMap.get(node).getSName());
+		}
+		System.out.println("DEBUG:!!!!! MERGE TOKENS 2 END");
+		assertEquals(baseTextToken.size(),equivalenceMap.size());
+		
+		System.out.println("DEBUG!!!!!!!!!!!!!!!: Equivalence map size: "+equivalenceMap.size());
+		
+		// test 3 : the token alignment is correct : the equivalence classes are correct
+		Hashtable<SNode,SNode> templateMap = new Hashtable<SNode, SNode>();
+//		templateMap.put(otherTextToken.get(0), baseTextToken.get(2));
+//		templateMap.put(otherTextToken.get(1), baseTextToken.get(3));
+//		templateMap.put(otherTextToken.get(2), baseTextToken.get(4));
+//		templateMap.put(otherTextToken.get(3), baseTextToken.get(5));
+//		templateMap.put(otherTextToken.get(4), baseTextToken.get(7));
+//		templateMap.put(otherTextToken.get(5), baseTextToken.get(8));
+//		templateMap.put(otherTextToken.get(6), baseTextToken.get(9));
+//		templateMap.put(otherTextToken.get(7), baseTextToken.get(10));
+//		templateMap.put(otherTextToken.get(8), baseTextToken.get(11));
+//		templateMap.put(otherTextToken.get(9), baseTextToken.get(12));
+		
+		templateMap.put(otherTextToken.get(2), baseTextToken.get(0));
+		templateMap.put(otherTextToken.get(3), baseTextToken.get(1));
+		templateMap.put(otherTextToken.get(4), baseTextToken.get(2));
+		templateMap.put(otherTextToken.get(5), baseTextToken.get(3));
+		templateMap.put(otherTextToken.get(7), baseTextToken.get(4));
+		templateMap.put(otherTextToken.get(8), baseTextToken.get(5));
+		templateMap.put(otherTextToken.get(9), baseTextToken.get(6));
+		templateMap.put(otherTextToken.get(10), baseTextToken.get(7));
+		templateMap.put(otherTextToken.get(11), baseTextToken.get(8));
+		templateMap.put(otherTextToken.get(12), baseTextToken.get(9));
+		
+		assertEquals(templateMap, equivalenceMap);
+//		int j = 0;
+//		for (int i = 2 ; i < 11 ; i++){
+//			SToken base = baseTextToken.get(i);
+//			SToken otherToken = otherTextToken.get(j);
+//			STextualDS otherText = sDoc1.getSDocumentGraph().getSTextualDSs().get(0); 
+//			assertEquals("Base Token "+base.getSName() + 
+//					" (start: "
+//					+this.container.getAlignedTokenStart(this.container.getBaseText(), base)+
+//					") and other token "+otherToken.getSName()+ " (start: "+
+//					this.container.getAlignedTokenStart(otherText, otherToken)
+//					+") should be equal.",this.container.getTokenMapping(base, otherText),otherToken);
+//			j++;
+//		}
+		
+		int equivalenceMapSize = equivalenceMap.size();
+		// assert that the merging did not change something
+		this.mergeTokens(sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc2.getSDocumentGraph().getSTextualDSs().get(0), equivalenceMap);
+		assertTrue(equivalenceMapSize != equivalenceMap.size());
+		assertEquals(baseTextToken.size()+1, equivalenceMap.size());
+		assertNotNull(equivalenceMap.get(otherTextToken.get(6)));
+		
+		
+		
+		/*
+		j = 0;
+		for (int i = 2 ; i < 11 ; i++){
+			SToken base = baseTextToken.get(i);
+			SToken otherToken = otherTextToken.get(j);
+			STextualDS otherText = sDoc1.getSDocumentGraph().getSTextualDSs().get(0); 
+			assertEquals("Base Token "+base.getSName() + 
+					" (start: "
+					+this.container.getAlignedTokenStart(this.container.getBaseText(), base)+
+					") and other token "+otherToken.getSName()+ " (start: "+
+					this.container.getAlignedTokenStart(otherText, otherToken)
+					+") should be equal.",this.container.getTokenMapping(base, otherText),otherToken);
+			j++;
+		}*/
+		
+		
+//		SDocument sDoc1= SaltFactory.eINSTANCE.createSDocument();
+//		sDoc1.setSId("doc1");
+//		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+//		SaltSample.createPrimaryData(sDoc1);
+//		
+//		SLayer morphLayer = SaltFactory.eINSTANCE.createSLayer();
+//		morphLayer.setSName("morphology");
+//		sDoc1.getSDocumentGraph().addSLayer(morphLayer);
+//		SaltSample.createToken(0,2,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//Is
+//		SaltSample.createToken(3,7,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//this
+//		SaltSample.createToken(8,15,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//example
+//		SaltSample.createToken(16,20,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//more
+//		//SaltSample.createToken(21,32,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//complicated
+//		SaltSample.createToken(33,37,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//than
+//		SaltSample.createToken(38,40,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//it
+//		SaltSample.createToken(41,48,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//supposed
+//		SaltSample.createToken(49,51,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//to
+//		//SaltSample.createToken(52,55,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//be?
+//		SaltSample.createToken(52,54,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//be
+//		SaltSample.createToken(54,55,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);		//?
+//		
+//		SDocument sDoc2= SaltFactory.eINSTANCE.createSDocument();
+//		sDoc2.setSId("doc2");
+//		sDoc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+//		sDoc2.getSDocumentGraph().createSTextualDS("Well. "+SaltSample.PRIMARY_TEXT_EN+" I am not sure!");
+//		sDoc2.getSDocumentGraph().tokenize();
+//		
+//		EList<SToken> baseTextToken = sDoc1.getSDocumentGraph().getSortedSTokenByText();
+//		EList<SToken> otherTextToken = sDoc2.getSDocumentGraph().getSortedSTokenByText();
+//		
+//		//System.out.println("Testing Alignment");
+//		
+//		this.normalizeTextualLayer(sDoc1);
+//		//System.out.println("Testing Alignment");
+//		this.normalizeTextualLayer(sDoc2);
+//		this.container.setBaseDocument(sDoc1);
+//		this.container.setBaseText(sDoc1.getSDocumentGraph().getSTextualDSs().get(0));
+//		
+//		// test 1 : align must return true
+//		HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+//		Hashtable<SNode,SNode> equivalenceMap = new Hashtable<SNode,SNode>();
+//		assertTrue(this.alignTexts(sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc2.getSDocumentGraph().getSTextualDSs().get(0),nonEquivalentTokenInOtherTexts,equivalenceMap));
+//		
+//		System.out.println("MergeTokens1: Equivalent Tokens of other text:");
+//		for (SNode tok : equivalenceMap.keySet()){
+//			System.out.print("\t"+tok.getSName());
+//		}
+//		
+//		System.out.println("");
+//		
+//		System.out.println("Equivalences:");
+//		for (SNode node : equivalenceMap.keySet()){
+//			System.out.println(node.getSName() + " -> " + equivalenceMap.get(node).getSName());
+//		}
+//		
+//		// test 2: There are 9 token equivalences
+//		assertEquals(baseTextToken.size()-1,equivalenceMap.size());
+//		
+//		// test 3 : the token alignment is correct : the equivalence classes are correct
+//		
+//		Hashtable<SNode,SNode> templateMap = new Hashtable<SNode, SNode>();
+//		templateMap.put(otherTextToken.get(2), baseTextToken.get(0));
+//		templateMap.put(otherTextToken.get(3), baseTextToken.get(1));
+//		templateMap.put(otherTextToken.get(4), baseTextToken.get(2));
+//		templateMap.put(otherTextToken.get(5), baseTextToken.get(3));
+//		templateMap.put(otherTextToken.get(7), baseTextToken.get(4));
+//		templateMap.put(otherTextToken.get(8), baseTextToken.get(5));
+//		templateMap.put(otherTextToken.get(9), baseTextToken.get(6));
+//		templateMap.put(otherTextToken.get(10), baseTextToken.get(7));
+//		templateMap.put(otherTextToken.get(11), baseTextToken.get(8));
+//		templateMap.put(otherTextToken.get(12), baseTextToken.get(9));
+//		
+//		for (SToken baseTextTok : baseTextToken){
+//			SToken otherTextTok = this.container.getTokenMapping(baseTextTok, sDoc2.getSDocumentGraph().getSTextualDSs().get(0));
+//			assertNotNull("Base text token "+baseTextTok.getSName()+" does not have an equivalent",otherTextTok);
+//		}
+//		
+//		assertEquals(templateMap, equivalenceMap);
+//		
+//		int equivalenceMapSize = equivalenceMap.size();
+//		// assert that the merging added tokens.
+//		this.mergeTokens(sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc2.getSDocumentGraph().getSTextualDSs().get(0), equivalenceMap);
+//		assertTrue(equivalenceMapSize != equivalenceMap.size());
+//		assertEquals(baseTextToken.size(), equivalenceMap.size());
 	}
 	
 	/**
