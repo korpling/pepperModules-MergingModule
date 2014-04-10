@@ -315,7 +315,6 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 				}
 			}else throw new PepperModuleException(this, "This should not have beeen happend and is a bug of module. The problem is, 'givenSlot.size()' is higher than 'mappableSlot.size()'.");
 		}
-//		logger.debug("All documents have been merged. ");
 		Collection<PepperMapperController> controllers=null;
 		HashSet<PepperMapperController> alreadyWaitedFor= new HashSet<PepperMapperController>();
 		//wait for all SDocuments to be finished
@@ -328,7 +327,6 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 			} catch (InterruptedException e) {
 				throw new PepperFWException("Cannot wait for mapper thread '"+controller+"' in "+this.getName()+" to end. ", e);
 			}
-			this.done(controller);
 		}
 		
 		Collection<SCorpus> corpora= Collections.synchronizedCollection(getBaseCorpusStructure().getSCorpora());

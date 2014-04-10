@@ -25,6 +25,7 @@ import org.eclipse.emf.common.util.EList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
@@ -415,6 +416,7 @@ public class TokenMergeContainer {
 		 * @param sDocument The {@SDocument}
 		 */
 		public void finishDocument(SDocument sDocument){
+			logger.debug("Finishing document: {}.", SaltFactory.eINSTANCE.getGlobalId(sDocument.getSElementId()));
 			if (this.alignedTextsMap.containsKey(sDocument)){
 				this.alignedTextsMap.remove(sDocument);
 			}

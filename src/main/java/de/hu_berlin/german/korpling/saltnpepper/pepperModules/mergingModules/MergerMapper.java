@@ -166,6 +166,19 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			if (!isEmpty){
 				mergeSDocumentGraph();
 			}
+			
+			//check, that base document emitted by algorithm is in base corpus-structure, if not, copy it
+			for (MappingSubject subj: getMappingSubjects()){
+				if (DOCUMENT_STATUS.COMPLETED.equals(subj.getMappingResult())){
+					SDocument sDoc= ((SDocument)subj.getSElementId().getSIdentifiableElement()); 
+					if (!sDoc.equals(baseDocument)){
+						SDocumentGraph oldGraph= sDoc.getSDocumentGraph();
+						sDoc.setSDocumentGraph(baseDocument.getSDocumentGraph());
+						baseDocument.setSDocumentGraph(oldGraph);
+					}
+				}
+			}
+			
 			logger.debug("merged documents {}. ", getMappingSubjects());
 		}
 		return(DOCUMENT_STATUS.COMPLETED);
@@ -265,7 +278,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 							mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(), sDoc);
 							// we are finished with the document. Free the memory
 							if (! this.isTestMode){
-								logger.debug("Finishing document: {}.", SaltFactory.eINSTANCE.getGlobalId(baseDocument.getSElementId()));
 								this.container.finishDocument(sDoc);
 								subj.setMappingResult(DOCUMENT_STATUS.DELETED);
 							}
