@@ -18,7 +18,6 @@
 
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
@@ -258,12 +257,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 							nonEquivalentTokensOfOtherText.addAll(sDoc.getSDocumentGraph().getSTokens());
 							
 							for (STextualDS sTextualDS : sDoc.getSDocumentGraph().getSTextualDSs()){
-								System.out.println("<<<<<<<<<<<<<<<<<<< HERE 1 "+SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()));
 								// align the texts
 								this.alignTexts(this.container.getBaseText(), sTextualDS,nonEquivalentTokensOfOtherText , node2NodeMap);
 								this.mergeTokens(this.container.getBaseText(), sTextualDS, node2NodeMap);
 							}
-							System.out.println("<<<<<<<<<<<<<<<<<<< HERE 2 "+SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()));
 							// merge the document content
 							mergeDocumentContent((SDocument)baseDocument.getSElementId().getSIdentifiableElement(), sDoc);
 							// we are finished with the document. Free the memory
@@ -272,7 +269,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 								this.container.finishDocument(sDoc);
 								subj.setMappingResult(DOCUMENT_STATUS.DELETED);
 							}
-							System.out.println("<<<<<<<<<<<<<<<<<<< HERE 3 "+SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()));
 						} else {
 							// there are no texts. So, just copy everything into the base document graph
 							logger.warn("There is no text in document {} to be merged. Will not copy the tokens!", SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()));
@@ -286,7 +282,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 								subj.setMappingResult(DOCUMENT_STATUS.DELETED);
 							}
 						}
-						System.out.println("Texts are aligned for "+SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()));
 					} 
 				}
 			}
@@ -443,8 +438,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	protected String createOriginalToNormalizedMapping(STextualDS sTextualDS, List<Integer> originalToNormalizedMapping){
 		StringBuilder normalizedTextBuilder = new StringBuilder();
 		int start = 0;
-//		System.out.println("Normalizing \""+sTextualDS.getSText()+"\"");
-		//System.out.print("Normalized: ");
 		boolean lastCharWasEscaped = false;
 		for (char c : sTextualDS.getSText().toCharArray()){
 			lastCharWasEscaped = false;
@@ -474,8 +467,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		}
 		
 		String normalizedText = normalizedTextBuilder.toString();
-//		System.out.println("Normalized: "+normalizedText);
-//		System.out.println("Mapping1: "+originalToNormalizedMapping);
 		return normalizedText;
 	}
 	
@@ -504,8 +495,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			for (STextualDS sTextualDS : sTextualDSs){
 				List<Integer> originalToNormalizedMapping = new Vector<Integer>();
 				String normalizedText = createOriginalToNormalizedMapping(sTextualDS,originalToNormalizedMapping);
-//				System.out.println("Normalized2: "+normalizedText);
-//				System.out.println("Mapping2: "+originalToNormalizedMapping);
 				for (STextualRelation textRel : sDocument.getSDocumentGraph().getSTextualRelations()){
 					if (textRel.getSTextualDS().equals(sTextualDS)){
 						SToken sToken = textRel.getSToken();
@@ -513,130 +502,17 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 						int normalizedTokenEnd = 0;
 						if (textRel.getSEnd() >= (originalToNormalizedMapping.size())){
 							if (textRel.getSEnd() >= (originalToNormalizedMapping.size()+1)){
-								System.out.println("!!!BUG!!!");
+								throw new PepperModuleException(this, "This might be a bug of MergerMapper: textRel.getSEnd() >= (originalToNormalizedMapping.size()+1).");
 							} else {
 								normalizedTokenEnd = originalToNormalizedMapping.get(originalToNormalizedMapping.size()-1) +1;
 							}
 						} else {
 							normalizedTokenEnd = originalToNormalizedMapping.get(textRel.getSEnd());
 						}
-						if (sTextualDS.getSText().substring(textRel.getSStart(), textRel.getSEnd()).equals("?")){
-							System.out.println("Normalized Token Start and End: "+normalizedTokenStart+"/"+normalizedTokenEnd);
-						}
 						this.container.addAlignedToken(sTextualDS, sToken, normalizedTokenStart, normalizedTokenEnd );
 					}
 				}
 				this.container.addNormalizedText(sDocument, sTextualDS, normalizedText);
-//				
-//				String normalizedText = null;
-//				StringBuilder normalizedTextBuilder = new StringBuilder();
-//				
-//				SToken currentToken= null;
-//				
-//				int currentLeft = -1;
-//				int currentTokenLength = 0;
-//				int currentNormalizedLeft = 0;
-//				int currentTokenStart = 0;
-//				int currentTokenOriginalStart = 0;
-//				int normalizationOffset = 0;
-//				
-//				// normalize the text
-//				for (char c : sTextualDS.getSText().toCharArray()){
-//					// increment the current left
-//					currentLeft += 1;
-//					
-//					// get the escape string
-//					String originalString = new String();
-//					originalString += c;
-//					String stringToEscape = ((MergerProperties)getProperties()).getEscapeMapping().get(originalString);
-//					// fill the StringBuilder
-//					if (stringToEscape != null)
-//					{ // there is an escape sequence
-//						normalizedTextBuilder.append(stringToEscape);
-//						// offset is 
-//						if (stringToEscape.length() == 0)
-//						{ // removed a char
-//							normalizationOffset -= 1;
-//						} // removed a char
-//						else 
-//						{
-//							if (stringToEscape.length() > 1)
-//							{ // enlarge
-//								normalizationOffset += stringToEscape.length() -1;
-//								currentTokenLength += stringToEscape.length();
-//							} // enlarge
-//						}
-//					} // there is an escape sequence
-//					else 
-//					{ // the char is not escaped
-//						normalizedTextBuilder.append(c);
-//						currentTokenLength += 1;
-//					} // the char is not escaped
-//					
-//					if (currentToken == null)
-//					{// If we are currently NOT iterating over a token's interval
-//						currentToken = tokensMappedByLeft.get(currentLeft);
-//						if (currentToken != null)
-//						{// if a token interval begins at the current left value
-////							System.out.println("Starting alignment of Token "+currentToken.getSName());
-//							//System.out.println("Found char of token: "+c);
-////							System.out.print(c);
-//							currentTokenStart = currentLeft + normalizationOffset;
-//							currentTokenOriginalStart = currentLeft;
-//							//currentTokenLength = 1;
-//						}
-//					} 
-//					else 
-//					{// If we ARE currently iterating over a token's interval
-//						//System.out.println("Aligning Token "+currentToken.getSName()+ " . Current left: "+currentLeft);
-//						if (tokensMappedByRight.containsKey(currentLeft))
-//						{// if we reached the original end-char of the token
-//							// beware: the SEnd value of a STextalRelation is the last char index of the token +1
-//							// Thus, If we have punctuations or stuff like this (e.g. "be?"), 
-//							// we need to check whether the current left is the start of a new token
-//							if (tokensMappedByLeft.containsKey(currentLeft)){
-//								currentTokenLength -= 1;
-//							}
-//							container.addAlignedToken(sTextualDS, currentToken, currentTokenStart, currentTokenStart+currentTokenLength+1 );
-////							System.out.println();
-////							System.out.println("Finished alignment of Token "+currentToken.getSName());
-////							System.out.println("Left: "+currentTokenStart+" Right: "+ (currentTokenStart+currentTokenLength));
-////							System.out.println("Original Left: "+currentTokenOriginalStart);
-////							System.out.println("Normalization offset: "+normalizationOffset);
-////							System.out.println("Token length: "+currentTokenLength);
-//							// reinitialize the normalizedTokenLeft and unmark the now processed token
-//							currentToken = null;
-//							currentTokenLength = 0;
-//							currentToken = tokensMappedByLeft.get(currentLeft);
-//							if (currentToken != null){
-//								currentTokenStart = currentLeft + normalizationOffset;
-//								currentTokenOriginalStart = currentLeft;
-//								currentTokenLength = 1;
-//							}
-//						} else {
-//							//System.out.println("Found char of token: "+c);
-////							System.out.print(c);
-//							//currentTokenLength += 1;
-//						}
-//					}
-//					
-//					//currentNormalizedLeft += 1;
-//				}
-//				if (currentToken != null)
-//				{ // there is a token which is not closed yet. do it now
-////					System.out.println();
-////					System.out.println("Finished alignment of Token "+currentToken.getSName());
-////					System.out.println("Left: "+currentTokenStart+" Right: "+(currentTokenStart+currentTokenLength));
-////					System.out.println("Original Left: "+currentTokenOriginalStart);
-////					System.out.println("Normalization offset: "+normalizationOffset);
-////					System.out.println("Token length: "+currentTokenLength);
-//					container.addAlignedToken(sTextualDS, currentToken, currentTokenStart, currentTokenStart+currentTokenLength+1 );
-//				}
-//				// now we have the normalized text
-//				normalizedText = normalizedTextBuilder.toString();
-//				//System.out.println("Normalize: "+sTextualDS.getSText()+" becomes "+normalizedText);
-//				// add it to the tokenMergeContainer
-//				this.container.addNormalizedText(sDocument, sTextualDS, normalizedText);
 			}
 		}
 	}
@@ -772,7 +648,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		{// if the normalized bigger text is contained in the normalized smaller text
 			
 			returnVal = true;
-			//System.out.println("Text to merge has an offset of "+offset);
 			// get the tokens of the other text.
 			List<SToken> textTokens = new Vector<SToken>();
 			for (Edge e : smallerText.getSDocumentGraph().getInEdges(smallerText.getSId()))
@@ -794,8 +669,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 					SToken biggerTextToken = this.container.getAlignedTokenByStart(biggerText, (smallerTextTokenStart+offset));
 					if (biggerTextToken != null)
 					{// there is some token in the bigger text which has the same start
-						//System.out.println("Token "+ biggerTextToken.getSName() + " and token "+smallerTextToken.getSName()+ " have the same start:"+(smallerTextTokenStart+offset));
-						//System.out.println("Lengths are: "+this.container.getAlignedTokenLength(baseText, baseTextToken)+ " and "+otherTokenLength);
 						if (this.container.getAlignedTokenLength(biggerText, biggerTextToken) == smallerTextTokenLength)
 						{ // start and lengths are identical. We found an equivalence class
 							
@@ -1161,9 +1034,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 							{ // the new token would be in the interval of the base text.
 								newStart = this.container.getBaseTextPositionByNormalizedTextPosition(baseText, newStart);
 								newEnd = this.container.getBaseTextPositionByNormalizedTextPosition(baseText, newEnd);
-								System.out.println("Found token to merge: "+otherTextToken.getSName()+" with start/end: "+newStart+"/"+newEnd+ " and offset "+offset);
 								baseTextToken = baseText.getSDocumentGraph().createSToken(baseText, newStart, newEnd);
-								System.out.println("Created Mapping "+otherTextToken.getSName()+" -> "+baseTextToken.getSName());
 								// mark the new token as equivalent
 								equivalenceMap.put(otherTextToken, baseTextToken);
 							} // the new token would be in the interval of the base text.
@@ -1218,18 +1089,15 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		// Move nodes first 
 		for (SNode otherNode : other.getSNodes()) {
 			if(matchingToken.containsKey(otherNode)){
-				System.out.println("merging SNode" + otherNode.getSId());
 				SNode match = matchingToken.get(otherNode);
 				// change edges 
 				updateEdges(other, match, match.getSId());
 				// change annotations
 				if (otherNode.getSAnnotations() != null){
-					System.out.println("Copying annotations for node "+otherNode.getSElementId());
 					SaltFactory.eINSTANCE.moveSAnnotations(otherNode, match);
 					
 				}
 				if (otherNode.getSMetaAnnotations() != null){
-					System.out.println("Copying meta annotations for node "+otherNode.getSElementId());
 					SaltFactory.eINSTANCE.moveSMetaAnnotations(otherNode, match);
 				}
 				
@@ -1237,7 +1105,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 				// change layers?
 				
 			}else{
-				System.out.println("Moving SNode " + otherNode.getSId());
 				String oldID = otherNode.getSId();
 				otherNode.setSGraph(base);
 				updateEdges(other, otherNode, oldID);
@@ -1245,7 +1112,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		}
 		// edges can not be moved before every node is moved
 		for (SRelation otherRelation : other.getSRelations()) {
-			System.out.println("Moving edge" + otherRelation.getSId());
 			otherRelation.setSGraph(base);
 		}
 		
@@ -1399,9 +1265,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 					 * if one merging partner was found, this could be the equivalence node
 					 */
 					for (SToken sToken: overlappedTokens){
-						SToken otherToken= token2TokenMap.get(sToken);
+						SNode otherToken= node2NodeMap.get(sToken);
 						if (otherToken!= null){
-							otherTokens.add(otherToken);
+							otherTokens.add((SToken)otherToken);
 							for (Edge inEdge:toGraph.getInEdges(otherToken.getSId())){
 								if (inEdge instanceof SSpanningRelation){
 									SSpan sSpan= ((SSpanningRelation)inEdge).getSSpan();
