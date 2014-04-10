@@ -169,12 +169,15 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			
 			//check, that base document emitted by algorithm is in base corpus-structure, if not, copy it
 			for (MappingSubject subj: getMappingSubjects()){
+				SDocument sDoc= ((SDocument)subj.getSElementId().getSIdentifiableElement());
 				if (DOCUMENT_STATUS.COMPLETED.equals(subj.getMappingResult())){
-					SDocument sDoc= ((SDocument)subj.getSElementId().getSIdentifiableElement()); 
 					if (!sDoc.equals(baseDocument)){
 						SDocumentGraph oldGraph= sDoc.getSDocumentGraph();
 						sDoc.setSDocumentGraph(baseDocument.getSDocumentGraph());
 						baseDocument.setSDocumentGraph(oldGraph);
+						subj.setMappingResult(DOCUMENT_STATUS.DELETED);
+					}else if (sDoc.equals(baseDocument)){
+						subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
 					}
 				}
 			}

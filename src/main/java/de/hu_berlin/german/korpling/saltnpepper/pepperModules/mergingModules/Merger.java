@@ -289,10 +289,24 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 		while ((isStart) || (sElementId!= null))
 		{	
 			isStart= false;
+			if (logger.isDebugEnabled()){
+//				StringBuilder str= new StringBuilder();
+//				for (List<SElementId> waitingDocs: givenSlots.values()){
+//					if (waitingDocs!= null){
+//						for (SElementId waitingDoc: waitingDocs){
+//							str.append(SaltFactory.eINSTANCE.getGlobalId(waitingDoc));
+//							str.append(", ");
+//						}
+//					}
+//				}
+				logger.debug("module '{}' is waiting for further documents, {} documents are in queue. ", this.getName(), givenSlots.values().size());
+			}
+			
 			documentController= this.getModuleController().next();
 			if (documentController== null){
 				break;
 			}
+			
 			sElementId= documentController.getsDocumentId();
 			getDocumentId2DC().put(SaltFactory.eINSTANCE.getGlobalId(sElementId), documentController);
 			
@@ -305,10 +319,24 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 			givenSlot.add(sElementId);
 			
 			if (givenSlot.size() < mappableSlot.size()){
-				documentController.sendToSleep();
-				logger.debug("Sended document controller '"+documentController.getGlobalId()+"' to sleep, until matching partner(s) was processed. ");
+				documentController.sendToSleep_FORCE();
+				//this is a bit hacky, but necessary
+				if (documentController.isAsleep()){
+					getModuleController().getJob().releaseDocument();
+				}
+				logger.debug("Sent document controller '"+documentController.getGlobalId()+"' to sleep, until matching partner(s) was processed. ");
 			}else if (givenSlot.size()== mappableSlot.size()){
 				try{
+					for (SElementId sDocumentId: givenSlot){
+						DocumentController docController= getDocumentId2DC().get(SaltFactory.eINSTANCE.getGlobalId(sDocumentId));
+						if (docController== null){
+							throw new PepperModuleException(this, "Cannot find a document controller for document '"+SaltFactory.eINSTANCE.getGlobalId(sDocumentId)+"' in list: "+getDocumentId2DC()+". ");
+						}
+						//ask for loading a document into main memory and wait if necessary
+						getModuleController().getJob().getPermissionForProcessDoument();
+						docController.awake();
+					}
+					
 					start(sElementId);
 				}catch (Exception e){
 					throw new PepperModuleException("",e);
@@ -383,9 +411,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 				mappingSubject.setSElementId(baseSNode.getSElementId());
 				mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
 				mapper.getMappingSubjects().add(mappingSubject);
-//				System.out.println("ADDED document: "+ SaltFactory.eINSTANCE.getGlobalId(mappingSubject.getSElementId()));
 			}
-//			System.out.println("SUBJECT (SDOCUMENT): "+ mapper.getMappingSubjects());
 		}else if (sElementId.getSIdentifiableElement() instanceof SCorpus){
 			List<SNode> givenSlot= mappingTable.get(sElementId.getSId());
 			if (givenSlot== null){
