@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,17 +41,11 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpusGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDocumentGraph;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SSpan;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SSpanningRelation;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SStructure;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STYPE_NAME;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SGraph;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SGraphTraverseHandler;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SRelation;
 
 /**
  * @author Mario Frank
@@ -1081,64 +1074,38 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 	 * @param equivalenceMap Map with tokens of the other dokument as key and their equivalent tokens in the base
 	 * @return
 	 */
-	protected void mergeDocumentContent(SDocument base, SDocument other){
-				
-		SDocumentGraph fromGraph= other.getSDocumentGraph();
-		SDocumentGraph toGraph= base.getSDocumentGraph();
-		MergeHandler handler= new MergeHandler();
-		handler.setFromGraph(fromGraph);
-		handler.setToGraph(toGraph);
-		EList<SToken> tokens= fromGraph.getSTokens();
+	protected void mergeDocumentContent(SDocument base, SDocument other){	
+		SDocumentGraph fromGraph = other.getSDocumentGraph();
+		SDocumentGraph toGraph = base.getSDocumentGraph();
+		MergeHandler handler = new MergeHandler(node2NodeMap, fromGraph, toGraph,this.container.baseText,container);
+//
+//		handler.setFromGraph(fromGraph);
+//		handler.setToGraph(toGraph);
+//		handler.setBaseText(this.container.baseText);
+
+		EList<SNode> tokens = fromGraph.getSRoots();
 		if (	(tokens== null)||
 				(tokens.size()== 0)){
-			throw new PepperModuleException(this, "Cannot start the traversing for merging document-structure, since no tokens exist for document '"+SaltFactory.eINSTANCE.getGlobalId(fromGraph.getSDocument().getSElementId())+"'.");
-		}
-		logger.debug("merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(other.getSElementId()));
-		fromGraph.traverse(tokens, GRAPH_TRAVERSE_TYPE.BOTTOM_UP_BREADTH_FIRST, "merger_"+SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), handler, false);
-		logger.debug("done with merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(other.getSElementId()));
-		
-	}
-	
-	private void moveAll(Map<SNode, SNode> matchingToken,
-			SDocumentGraph base, SDocumentGraph other) {
-		// Move nodes first 
-		for (SNode otherNode : other.getSNodes()) {
-			if(matchingToken.containsKey(otherNode)){
-				SNode match = matchingToken.get(otherNode);
-				// change edges 
-				updateEdges(other, match, match.getSId());
-				// change annotations
-				if (otherNode.getSAnnotations() != null){
-					SaltFactory.eINSTANCE.moveSAnnotations(otherNode, match);
-					
-				}
-				if (otherNode.getSMetaAnnotations() != null){
-					SaltFactory.eINSTANCE.moveSMetaAnnotations(otherNode, match);
-				}
-				
-				//moveAllLabels(otherNode, match, true);
-				// change layers?
-				
-			}else{
-				String oldID = otherNode.getSId();
-				otherNode.setSGraph(base);
-				updateEdges(other, otherNode, oldID);
-			}
-		}
-		// edges can not be moved before every node is moved
-		for (SRelation otherRelation : other.getSRelations()) {
-			otherRelation.setSGraph(base);
+			throw new PepperModuleException(
+					this,
+					"Cannot start the traversing for merging document-structure, since no tokens exist for document '"
+							+ SaltFactory.eINSTANCE.getGlobalId(fromGraph
+									.getSDocument().getSElementId()) + "'.");
 		}
 		
-	}
-
-	private void updateEdges(SDocumentGraph other, SNode otherNode, String oldID) {
-		for (Edge relation : other.getInEdges(oldID)) {
-			relation.setTarget(otherNode);
-		}
-		for (Edge relation : other.getOutEdges(oldID)) {
-			relation.setSource(otherNode);
-		}
+		logger.debug("merging higher document-structure for [{}, {}]",
+				SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()),
+				SaltFactory.eINSTANCE.getGlobalId(other.getSElementId()));
+		fromGraph.traverse(
+				tokens,
+				GRAPH_TRAVERSE_TYPE.TOP_DOWN_DEPTH_FIRST,
+				"merger_"
+						+ SaltFactory.eINSTANCE.getGlobalId(base
+								.getSElementId()), handler, false);
+		logger.debug(
+				"done with merging higher document-structure for [{}, {}]",
+				SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()),
+				SaltFactory.eINSTANCE.getGlobalId(other.getSElementId()));
 	}
 	
 	class NodeParameters{
@@ -1197,141 +1164,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		}
 	}
 
-	/**
-	 * This class handles the merging of higher document-structure, which means the bottom-up traversal.
-	 * @author florian
-	 *
-	 */
-	class MergeHandler implements SGraphTraverseHandler{
-		/** 
-		 * stores all {@link SRelation} objects which have already been traversed, 
-		 * this is necessary, to first detect cycles and second to not traverse a super tree twice, e.g:
-		 * <pre>
-		 *           a
-		 *           |
-		 *           b
-		 *          / \
-		 *         c   d
-		 * </pre>
-		 * In this sample, the relation between a and b should be traversed only once. With normal bottom-up
-		 * it would be traversed twice, therefore we need to store already traversed relations to avoid this.
-		**/
-		private HashSet<SRelation> traversedRelations= null; 
-		public MergeHandler(){
-			traversedRelations= new HashSet<SRelation>();
-		}
-		
-		private SDocumentGraph fromGraph= null;
-		public SDocumentGraph getFromGraph() {
-			return fromGraph;
-		}
-
-		public void setFromGraph(SDocumentGraph fromGraph) {
-			this.fromGraph = fromGraph;
-		}
-
-		private SDocumentGraph toGraph= null;
-		
-		public SDocumentGraph getToGraph() {
-			return toGraph;
-		}
-
-		public void setToGraph(SDocumentGraph toGraph) {
-			this.toGraph = toGraph;
-		}
-
-		@Override
-		public void nodeReached(	GRAPH_TRAVERSE_TYPE traversalType,
-									String traversalId, 
-									SNode currNode, 
-									SRelation sRelation,
-									SNode fromNode, long order) {
-			SNode otherNode= null;
-			
-			if (currNode instanceof SToken){
-				otherNode= node2NodeMap.get(currNode);
-				//TODO may be not necessary any more, when Mario creates all token-mapping partners
-//				if (otherNode!= null){// move all annotations
-//					//find text to node
-//						List<Edge> outEdges= fromGraph.getOutEdges(currNode.getSId());
-//						STextualDS text= null;
-//						for (Edge edge : outEdges){
-//							if (edge instanceof STextualRelation){
-//								text= ((STextualRelation) edge).getSTextualDS();
-//								break;
-//							}
-//						}
-//					container.getAlignedTokenStart(text, (SToken)currNode);
-//					toGraph.createSToken(sSequentialDS, sStart, sEnd);
-//				}
-				
-			}else if (currNode instanceof SSpan){
-				EList<STYPE_NAME> sTypes= new BasicEList<STYPE_NAME>();
-				sTypes.add(STYPE_NAME.SSPANNING_RELATION);
-				// find all tokens in fromGraph overlapped by current span (contained in fromGraph)
-				List<SToken> overlappedTokens= fromGraph.getOverlappedSTokens(currNode, sTypes);
-				if (overlappedTokens!= null){
-					// find all spans in toGraph, which are possible merging partners for current span in fromGraph
-					List<SSpan> mergingPartners= new Vector<SSpan>();
-					Map<SNode, Integer> nodeOccurance= new Hashtable<SNode, Integer>();
-					EList<SToken> otherTokens= new BasicEList<SToken>();
-					/**
-					 * for all merging partners in toGraph of current span, find partner, which overlaps all equivalence tokens to tokens in subtree of current span
-					 * if one merging partner was found, this could be the equivalence node
-					 */
-					for (SToken sToken: overlappedTokens){
-						SNode otherToken= node2NodeMap.get(sToken);
-						if (otherToken!= null){
-							otherTokens.add((SToken)otherToken);
-							for (Edge inEdge:toGraph.getInEdges(otherToken.getSId())){
-								if (inEdge instanceof SSpanningRelation){
-									SSpan sSpan= ((SSpanningRelation)inEdge).getSSpan();
-									Integer occurance = nodeOccurance.get(sSpan); 
-									if (occurance!= null){
-										occurance++;
-									}else{
-										occurance= 1;
-									}
-									nodeOccurance.put(sSpan, occurance);
-									if (overlappedTokens.size()==occurance){//span overlaps all tokens and therefore is a equivalence candidate
-										mergingPartners.add(sSpan);
-									}
-								}
-							}
-						}
-					}
-					if (mergingPartners.size()== 1){//exactly one matching candidate was found
-						otherNode= mergingPartners.get(0); 
-					}else{// zero or more than one equivalence candidates have been found --> create a new node
-						toGraph.createSSpan(otherTokens);
-					}
-				}
-				
-			}else if (currNode instanceof SStructure){
-				
-			}
-			if (otherNode!= null){
-				SaltFactory.eINSTANCE.moveSAnnotations(currNode, otherNode);
-				SaltFactory.eINSTANCE.moveSMetaAnnotations(currNode, otherNode);
-			}
-		}
 	
-		@Override
-		public void nodeLeft(GRAPH_TRAVERSE_TYPE traversalType, String traversalId,
-				SNode currNode, SRelation edge, SNode fromNode, long order) {
-		}
-	
-		@Override
-		public boolean checkConstraint(GRAPH_TRAVERSE_TYPE traversalType,
-				String traversalId, SRelation edge, SNode currNode, long order) {
-			if (edge!= null){
-				if (traversedRelations.contains(edge)){
-					return(false);
-				}else{
-					traversedRelations.add(edge);
-				}
-			}
-			return true;
-		}
-	}
+
 }
