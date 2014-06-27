@@ -1,13 +1,14 @@
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
 
+import de.hu_berlin.german.korpling.saltnpepper.pepper.exceptions.PepperException;
+import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.exceptions.PepperModuleException;
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.GRAPH_TRAVERSE_TYPE;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDocumentGraph;
@@ -100,6 +101,10 @@ class MergeHandler implements SGraphTraverseHandler {
 		} else if (currNode instanceof SStructure) {
 			otherNode = mergeNode(currNode, STYPE_NAME.SDOMINANCE_RELATION,
 					STYPE_NAME.SSTRUCTURE);
+		} else if (currNode instanceof STextualDS) {
+			// base text should be merged already
+		}else {
+			throw new PepperModuleException("Merging not implementet for this node type: " + currNode);
 		}
 
 		if (otherNode != null) {

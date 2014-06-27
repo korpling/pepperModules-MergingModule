@@ -1115,7 +1115,7 @@ public class MergerMapperTest extends MergerMapper{
 		
 		MappingSubject result= this.chooseBaseDocument();
 		
-		assertEquals(subj_3, result);
+		assertEquals(subj_3.getSElementId(), result.getSElementId());
 		assertEquals(d1_3,this.container.getBaseDocument());
 	}
 }

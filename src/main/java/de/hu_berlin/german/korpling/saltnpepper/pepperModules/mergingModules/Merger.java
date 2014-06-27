@@ -322,18 +322,18 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 				documentController.sendToSleep_FORCE();
 				//this is a bit hacky, but necessary
 				if (documentController.isAsleep()){
-					getModuleController().getJob().releaseDocument();
+					getModuleController().getJob().releaseDocument(documentController);
 				}
 				logger.debug("Sent document controller '"+documentController.getGlobalId()+"' to sleep, until matching partner(s) was processed. ");
 			}else if (givenSlot.size()== mappableSlot.size()){
 				try{
 					for (SElementId sDocumentId: givenSlot){
 						DocumentController docController= getDocumentId2DC().get(SaltFactory.eINSTANCE.getGlobalId(sDocumentId));
-						if (docController== null){
+						if (docController == null){
 							throw new PepperModuleException(this, "Cannot find a document controller for document '"+SaltFactory.eINSTANCE.getGlobalId(sDocumentId)+"' in list: "+getDocumentId2DC()+". ");
 						}
 						//ask for loading a document into main memory and wait if necessary
-						getModuleController().getJob().getPermissionForProcessDoument();
+						getModuleController().getJob().getPermissionForProcessDoument(docController);
 						docController.awake();
 					}
 					
