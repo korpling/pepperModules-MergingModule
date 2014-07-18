@@ -202,6 +202,9 @@ class MergeHandler implements SGraphTraverseHandler {
 				if (SaltFactory.eINSTANCE.convertClazzToSTypeName(
 						relation.getClass()).contains(sTypeRelation)) {
 					SNode fromBase = relation.getSTarget();
+					if (fromBase== null){
+						throw new PepperModuleException("Cannot merge data, because fromBase was null for relation '"+relation+"'. ");
+					}
 					SNode toBase = node2NodeMap.get(fromBase);
 					base.add(toBase);
 				}

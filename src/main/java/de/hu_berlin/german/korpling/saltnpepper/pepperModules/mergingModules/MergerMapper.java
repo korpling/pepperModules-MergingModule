@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.common.DOCUMENT_STATUS;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.MappingSubject;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperMapper;
+import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.exceptions.PepperModuleDataException;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.exceptions.PepperModuleException;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.impl.PepperMapperImpl;
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
@@ -541,6 +542,13 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 			SDocument sDoc= (SDocument) subj.getSElementId().getSIdentifiableElement();
 			if (sDoc!= container.getBaseDocument())
 			{// ignore the base document and align all other
+				if (sDoc.getSDocumentGraph()== null){
+					//try to wake up document-structure
+//					sDoc.loadSDocumentGraph();
+					if (sDoc.getSDocumentGraph()== null){
+						throw new PepperModuleDataException(this, "Cannot map document '"+SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId())+"', since it does not contain a document-structure.");
+					}
+				}
 				if (sDoc.getSDocumentGraph().getSTextualDSs() != null)
 				{ // there are possibly texts
 					subj.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);

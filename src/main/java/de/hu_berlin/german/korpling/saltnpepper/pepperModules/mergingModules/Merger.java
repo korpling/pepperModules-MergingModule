@@ -280,6 +280,26 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 		logger.debug("table of documents to be mapped: "+ mappingTable.toString());
 		enhanceBaseCorpusStructure();
 		
+		StringBuilder mergerMapping= new StringBuilder();
+		mergerMapping.append("computed mapping for merging:\n");
+		for (String key: mappingTable.keySet()){
+			List<SNode> partners= mappingTable.get(key);
+			mergerMapping.append("\t");
+			boolean isFirst= true;
+			mergerMapping.append("(");
+			for (SNode partner: partners){
+				if (!isFirst){
+					mergerMapping.append(", ");
+				}else{
+					isFirst= false;
+				}
+				mergerMapping.append(SaltFactory.eINSTANCE.getGlobalId(partner.getSElementId()));
+			}
+			mergerMapping.append(")");
+			mergerMapping.append("\n");
+		}
+		logger.info(mergerMapping.toString());
+		
 		//creating new thread group for mapper threads
 		setMapperThreadGroup(new ThreadGroup(Thread.currentThread().getThreadGroup(), this.getName()+"_mapperGroup"));
 		givenSlots= new Hashtable<String, List<SElementId>>();
