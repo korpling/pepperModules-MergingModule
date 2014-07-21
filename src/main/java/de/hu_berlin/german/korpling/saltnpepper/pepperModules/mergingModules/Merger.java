@@ -277,7 +277,6 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 		if (getSaltProject()== null){
 			throw new PepperFWException("No salt project was set in module '"+getName()+", "+getVersion()+"'.");
 		}
-		logger.debug("table of documents to be mapped: "+ mappingTable.toString());
 		enhanceBaseCorpusStructure();
 		
 		StringBuilder mergerMapping= new StringBuilder();
@@ -298,7 +297,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 			mergerMapping.append(")");
 			mergerMapping.append("\n");
 		}
-		logger.info(mergerMapping.toString());
+		logger.info("[Merger] "+mergerMapping.toString());
 		
 		//creating new thread group for mapper threads
 		setMapperThreadGroup(new ThreadGroup(Thread.currentThread().getThreadGroup(), this.getName()+"_mapperGroup"));
@@ -319,7 +318,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 //						}
 //					}
 //				}
-				logger.debug("module '{}' is waiting for further documents, {} documents are in queue. ", this.getName(), givenSlots.values().size());
+				logger.debug("[Merger] "+"module '{}' is waiting for further documents, {} documents are in queue. ", this.getName(), givenSlots.values().size());
 			}
 			
 			documentController= this.getModuleController().next();
@@ -344,7 +343,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator
 				if (documentController.isAsleep()){
 					getModuleController().getJob().releaseDocument(documentController);
 				}
-				logger.debug("Sent document controller '"+documentController.getGlobalId()+"' to sleep, until matching partner(s) was processed. ");
+				logger.debug("[Merger] "+"Sent document controller '"+documentController.getGlobalId()+"' to sleep, until matching partner(s) was processed. ");
 			}else if (givenSlot.size()== mappableSlot.size()){
 				try{
 					for (SElementId sDocumentId: givenSlot){

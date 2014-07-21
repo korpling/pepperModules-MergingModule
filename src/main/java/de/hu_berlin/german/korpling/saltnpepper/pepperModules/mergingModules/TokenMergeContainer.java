@@ -350,7 +350,10 @@ public class TokenMergeContainer {
 		 */
 		public void addTokenMapping(SToken baseTextToken, SToken otherTextToken, STextualDS otherSText){
 			if (otherTextToken.equals(baseTextToken)){
-				logger.warn("Sorry, you tried to add a token as it's own mapping");
+				//TODO this condition is a workaround, until corpusgraph id is included in sid 
+				if (SaltFactory.eINSTANCE.getGlobalId(otherTextToken.getSElementId()).equals(SaltFactory.eINSTANCE.getGlobalId(baseTextToken.getSElementId()))){
+					logger.warn("[Merger] "+"Sorry, you tried to add a token '"+SaltFactory.eINSTANCE.getGlobalId(baseTextToken.getSElementId())+"' as it's own mapping");
+				}
 				return;
 			}
 		/*
@@ -416,7 +419,7 @@ public class TokenMergeContainer {
 		 * @param sDocument The {@SDocument}
 		 */
 		public void finishDocument(SDocument sDocument){
-			logger.debug("Finishing document: {}.", SaltFactory.eINSTANCE.getGlobalId(sDocument.getSElementId()));
+			logger.debug("[Merger] "+"Finishing document: {}.", SaltFactory.eINSTANCE.getGlobalId(sDocument.getSElementId()));
 			if (this.alignedTextsMap.containsKey(sDocument)){
 				this.alignedTextsMap.remove(sDocument);
 			}
