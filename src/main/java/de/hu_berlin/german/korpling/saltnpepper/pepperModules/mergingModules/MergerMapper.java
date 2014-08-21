@@ -322,18 +322,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		}else{
 			logger.warn("[Merger] No documents to merge. ");
 		}
-		
-		// print the count of STextualDS for which there is an equivalent token 
-		/*
-		System.out.println("Base document has "+ this.container.getBaseDocument().getSDocumentGraph().getSTokens().size()+" tokens");
-		System.out.println("There are equivalence entries for "+this.container.getEquivalenceMap().size()+" tokens of the base document");
-		System.out.println("The base text has "+this.container.getAlignedTokens(this.container.getBaseText()).getTokens().size());
-		for (SToken tok : this.container.getBaseDocument().getSDocumentGraph().getSTokens()){
-			System.out.println("Base token "+tok.getSName()+ " has an equivalent in "+this.container.getEquivalenceMap().get(tok).size() +" texts");
-			for (STextualDS text : this.container.getEquivalenceMap().get(tok).keySet()){
-				System.out.println("Token "+this.container.getEquivalenceMap().get(tok).get(text).getSId()+ " is the equivalent in text " +text.getSElementId());
-			}
-		}*/
 	}
 	
 	/** the {@link TokenMergeContainer} instance **/
@@ -897,15 +885,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper{
 		 *                 5->6
 		 *                 6->7
 		 */
-		/*
-		for (String key : ((MergerProperties)getProperties()).getEscapeMapping().keySet()){
-			System.out.println("Key: \""+ key + "\" , Value: \""+ ((MergerProperties)getProperties()).getEscapeMapping().get(key)+"\"");
-		}*/
 		
 		List<Integer> normalizedToOriginalMapping = new Vector<Integer>();
 		int start = 0;
-		//System.out.println("Normalizing \""+sTextualDS.getSText()+"\"");
-		//System.out.print("Normalized: ");
 		for (char c : sTextualDS.getSText().toCharArray()){
 			String originalString = new String();
 			originalString += c;

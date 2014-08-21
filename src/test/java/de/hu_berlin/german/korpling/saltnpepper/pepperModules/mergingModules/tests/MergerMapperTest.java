@@ -1118,4 +1118,52 @@ public class MergerMapperTest extends MergerMapper{
 		assertEquals(subj_3.getSElementId(), result.getSElementId());
 		assertEquals(d1_3,this.container.getBaseDocument());
 	}
+	
+	/**
+	 * 
+	 */
+	@Test
+	public void testCopySLayers(){
+		SCorpusGraph g1= SaltFactory.eINSTANCE.createSCorpusGraph();
+		SDocument d1_1= g1.createSDocument(URI.createURI("/c1/d1"));
+		d1_1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		d1_1.getSDocumentGraph().createSTextualDS("a sample text");
+		d1_1.getSDocumentGraph().tokenize();
+		d1_1.getSDocumentGraph().createSSpan(d1_1.getSDocumentGraph().getSTokens());
+		SLayer sLayer= SaltFactory.eINSTANCE.createSLayer();
+		sLayer.setSName("myLayer");
+		d1_1.getSDocumentGraph().addSLayer(sLayer);
+		for (SToken sTok: d1_1.getSDocumentGraph().getSTokens()){
+			sLayer.getSNodes().add(sTok);
+		}
+		sLayer.getSNodes().add(d1_1.getSDocumentGraph().getSSpans().get(0));
+		for (SSpanningRelation rel: d1_1.getSDocumentGraph().getSSpanningRelations()){
+			sLayer.getSRelations().add(rel);
+		}
+		
+		SCorpusGraph g2= SaltFactory.eINSTANCE.createSCorpusGraph();
+		SDocument d1_2= g2.createSDocument(URI.createURI("/c1/d1"));
+		d1_2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		d1_2.getSDocumentGraph().createSTextualDS("a sample text.");
+		d1_2.getSDocumentGraph().tokenize();
+		
+		MappingSubject subj_1= new MappingSubject();
+		subj_1.setSElementId(d1_1.getSElementId());
+		getFixture().getMappingSubjects().add(subj_1);
+		MappingSubject subj_2= new MappingSubject();
+		subj_2.setSElementId(d1_2.getSElementId());
+		getFixture().getMappingSubjects().add(subj_2);
+		
+		getFixture().setBaseCorpusStructure(g2);
+		getFixture().mapSDocument();
+		
+		assertNotNull(d1_2.getSDocumentGraph().getSLayerByName("myLayer").size());
+		assertEquals(1, d1_2.getSDocumentGraph().getSLayerByName("myLayer").size());
+		
+		SLayer fixSLayer= d1_2.getSDocumentGraph().getSLayerByName("myLayer").get(0);
+		assertNotNull(fixSLayer.getSNodes());
+		assertEquals(4, fixSLayer.getSNodes().size());
+		assertNotNull(fixSLayer.getSRelations());
+		assertEquals(3, fixSLayer.getSRelations().size());
+	}
 }

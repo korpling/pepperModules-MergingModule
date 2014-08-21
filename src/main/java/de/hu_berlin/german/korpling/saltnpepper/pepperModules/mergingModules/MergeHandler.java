@@ -1,6 +1,7 @@
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +23,8 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SGraphTraverseHandler;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SIdentifiableElement;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SLayer;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SMetaAnnotation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SRelation;
@@ -103,35 +106,35 @@ class MergeHandler implements SGraphTraverseHandler {
 	}
 
 	/**
+	 * Called by Pepper as callback, when fromGraph is traversed. Currently only
+	 * returns <code>true</code> to traverse the entire graph.
+	 */
+	@Override
+	public boolean checkConstraint(GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SRelation edge, SNode currNode, long order) {
+		return true;
+	}
+	/**
 	 * Called by Pepper as callback, when fromGraph is traversed. Currently is
 	 * empty.
 	 */
 	@Override
 	public void nodeReached(GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SNode currNode, SRelation sRelation, SNode fromNode, long order) {
 	}
-
 	/**
 	 * Called by Pepper as callback, when fromGraph is traversed.
 	 */
 	@Override
 	public void nodeLeft(GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SNode currNode, SRelation edge, SNode fromNode, long order) {
-		SNode otherNode = null;
-
 		if (currNode instanceof SToken) {
-			otherNode = mergeNode(currNode, null, STYPE_NAME.STOKEN);
+			mergeNode(currNode, null, STYPE_NAME.STOKEN);
 		} else if (currNode instanceof SSpan) {
-			otherNode = mergeNode(currNode, STYPE_NAME.SSPANNING_RELATION, STYPE_NAME.SSPAN);
+			mergeNode(currNode, STYPE_NAME.SSPANNING_RELATION, STYPE_NAME.SSPAN);
 		} else if (currNode instanceof SStructure) {
-			otherNode = mergeNode(currNode, STYPE_NAME.SDOMINANCE_RELATION, STYPE_NAME.SSTRUCTURE);
+			mergeNode(currNode, STYPE_NAME.SDOMINANCE_RELATION, STYPE_NAME.SSTRUCTURE);
 		} else if (currNode instanceof STextualDS) {
 			// base text should be merged already
 		} else {
 			throw new PepperModuleException("Merging not implementet for this node type: " + currNode);
-		}
-
-		if (otherNode != null) {
-			SaltFactory.eINSTANCE.moveSAnnotations(currNode, otherNode);
-			SaltFactory.eINSTANCE.moveSMetaAnnotations(currNode, otherNode);
 		}
 	}
 
@@ -142,7 +145,7 @@ class MergeHandler implements SGraphTraverseHandler {
 	 * @param sTypeNode
 	 * @return
 	 */
-	private SNode mergeNode(SNode currNode, STYPE_NAME sTypeRelations, STYPE_NAME sTypeNode) {
+	private void mergeNode(SNode currNode, STYPE_NAME sTypeRelations, STYPE_NAME sTypeNode) {
 		SNode toNode = null;
 		List<SNode> childrens = getChildren(currNode, sTypeRelations);
 
@@ -154,103 +157,130 @@ class MergeHandler implements SGraphTraverseHandler {
 			// TODO: match found, check for annotations?
 			toNode = sharedParents.get(0);
 		} else {
-			toNode = buildNode(currNode, sTypeNode, childrens);
+			switch (sTypeNode) {
+			case STOKEN: {
+				toNode = node2NodeMap.get(currNode);
+				if (toNode != null) {
+					// Match found
+				} else {
+					// Find the alignment of the current token to create a new one
+					int sStart = container.getAlignedTokenStart(baseText, (SToken) currNode);
+					int sLength = container.getAlignedTokenLength(baseText, (SToken) currNode);
+					toNode = toGraph.createSToken(baseText, sStart, sStart + sLength);
+				}
+				break;
+			}case SSPAN: {
+				// TODO: better way to cast
+				EList<SToken> toSTokens = new BasicEList<SToken>();
+				for (SNode sNode : childrens) {
+					toSTokens.add((SToken) sNode);
+				}
+				toNode = toGraph.createSSpan(toSTokens);
+				break;
+			}case SSTRUCTURE: {
+				// TODO: better way to cast
+				EList<SStructuredNode> baseStructureNodes = new BasicEList<SStructuredNode>();
+				for (SNode sNode : childrens) {
+					baseStructureNodes.add((SStructuredNode) sNode);
+				}
+				toNode = toGraph.createSStructure(baseStructureNodes);
+				break;
+			}default:
+				break;
+			}
+			
 			moveAnnosForRelations(currNode, toNode);
 		}
-		node2NodeMap.put(currNode, toNode);
-
 		if (toNode == null){
 			throw new PepperModuleException("Cannot go on merging, because the toNode was null. ");
 		}
-		return toNode;
+		
+		node2NodeMap.put(currNode, toNode);
+		//copies all layers and add node toNode to them
+		copySLayers(currNode, toNode);
+		//moves annotations from currNode to toNode
+		SaltFactory.eINSTANCE.moveSAnnotations(currNode, toNode);
+		SaltFactory.eINSTANCE.moveSMetaAnnotations(currNode, toNode);
+	}
+	
+	/**
+	 * Copies the {@link SNode} or {@link SRelation} objects passed as <code>from</code> to all layers, 
+	 * the object passed as <code>to</code> is connected with. If no such layer exists in target graph, it will
+	 * be created and all its annotations will be moved.  
+	 * @param from
+	 * @param to
+	 */
+	private void copySLayers(SIdentifiableElement from, SIdentifiableElement to){
+		if (	(from instanceof SRelation)&&
+				(to instanceof SRelation)){
+			SRelation fromRel= (SRelation) from;
+			SRelation toRel= (SRelation) to;
+			if (	(fromRel.getSLayers()!= null)&&
+					(fromRel.getSLayers().size()!= 0)){
+				SDocumentGraph toGraph= ((SDocumentGraph)toRel.getSGraph());
+				for (SLayer fromLayer: fromRel.getSLayers()){
+					List<SLayer> layers= toGraph.getSLayerByName(fromLayer.getSName());
+					SLayer toLayer=null;
+					if (	(layers!= null)&&
+							(!layers.isEmpty())){
+						toLayer= layers.get(0);
+					}
+					if (toLayer== null){
+						toLayer= SaltFactory.eINSTANCE.createSLayer();
+						toLayer.setSName(fromLayer.getSName());
+						SaltFactory.eINSTANCE.moveSAnnotations(fromLayer, toLayer);
+						SaltFactory.eINSTANCE.moveSMetaAnnotations(fromLayer, toLayer);
+						toGraph.addSLayer(toLayer);
+					}
+					toLayer.getSRelations().add(toRel);
+				}
+			}		
+		}else if (	(from instanceof SNode)&&
+					(to instanceof SNode)){
+			SNode fromNode= (SNode) from;
+			SNode toNode= (SNode) to;
+			if (	(fromNode.getSLayers()!= null)&&
+					(fromNode.getSLayers().size()!= 0)){
+				SDocumentGraph toGraph= ((SDocumentGraph)toNode.getSGraph());
+				
+				for (SLayer fromLayer: fromNode.getSLayers()){
+					List<SLayer> layers= toGraph.getSLayerByName(fromLayer.getSName());
+					SLayer toLayer=null;
+					if (	(layers!= null)&&
+							(!layers.isEmpty())){
+						toLayer= layers.get(0);
+					}
+					if (toLayer== null){
+						toLayer= SaltFactory.eINSTANCE.createSLayer();
+						toLayer.setSName(fromLayer.getSName());
+						SaltFactory.eINSTANCE.moveSAnnotations(fromLayer, toLayer);
+						SaltFactory.eINSTANCE.moveSMetaAnnotations(fromLayer, toLayer);
+						toGraph.addSLayer(toLayer);
+					}
+					toLayer.getSNodes().add(toNode);
+				}
+			}
+		}
 	}
 
 	/**
 	 * Retrieves the {@link SRelation}s between given nodes and moves their {@link SAnnotation} and {@link SMetaAnnotation} objects.
+	 * Copies the SLayers.
 	 * @param fromNode
 	 * @param toNode
 	 */
 	private void moveAnnosForRelations(SNode fromNode, SNode toNode){
-		for (SRelation fromSRel: fromNode.getOutgoingSRelations()){
-			SNode toChildNode= node2NodeMap.get(fromSRel.getSTarget());
-			for (SRelation toSRel: toNode.getOutgoingSRelations()){
-				if (toSRel.getSTarget().equals(toChildNode)){
-					SaltFactory.eINSTANCE.moveSAnnotations(fromSRel, toSRel);
-					SaltFactory.eINSTANCE.moveSMetaAnnotations(fromSRel, toSRel);
+		for (SRelation fromRel: fromNode.getOutgoingSRelations()){
+			SNode toChildNode= node2NodeMap.get(fromRel.getSTarget());
+			for (SRelation toRel: toNode.getOutgoingSRelations()){
+				if (toRel.getSTarget().equals(toChildNode)){
+					SaltFactory.eINSTANCE.moveSAnnotations(fromRel, toRel);
+					SaltFactory.eINSTANCE.moveSMetaAnnotations(fromRel, toRel);
+					copySLayers(fromRel, toRel);
 					break;
 				}
 			}
-			
-			
-			
-//			System.out.println();
-//			List<Edge> edges= toChildNode.getGraph().getEdges(toNode.getSId(), toChildNode.getSId());
-//			if (	(edges== null){
-//				logger.warn("Cannot find a sRelation matching to SRelation '"+fromSRel.getSId()+"' in toGraph.");
-//			}else{
-//				SRelation toSRel= (SRelation)edge;
-//				SaltFactory.eINSTANCE.moveSAnnotations(fromSRel, toSRel);
-//				SaltFactory.eINSTANCE.moveSMetaAnnotations(fromSRel, toSRel);
-//			}
 		}
-	}
-	
-	/**
-	 * Creates a new node in the target graph, which is a copy of the passed <code>currNode</code>.
-	 * @param currNode
-	 * @param sTypeNode
-	 * @param base
-	 * @param toNode
-	 * @return
-	 */
-	private SNode buildNode(SNode currNode, STYPE_NAME sTypeNode, List<SNode> base) {
-		SNode toNode= null;
-		switch (sTypeNode) {
-		case STOKEN: {
-			toNode = node2NodeMap.get(currNode);
-			if (toNode != null) {
-				// Match found
-			} else {
-				// Find the alignment of the current token to create
-				// a new one
-				int sStart = container.getAlignedTokenStart(baseText, (SToken) currNode);
-				int sLength = container.getAlignedTokenLength(baseText, (SToken) currNode);
-				toNode = toGraph.createSToken(baseText, sStart, sStart + sLength);
-			}
-		}
-			break;
-		case SSPAN: {
-			// TODO: better way to cast
-			EList<SToken> baseSSpanNodes = new BasicEList<SToken>();
-			for (SNode sNode : base) {
-				baseSSpanNodes.add((SToken) sNode);
-			}
-			toNode = toGraph.createSSpan(baseSSpanNodes);
-		}
-			break;
-		case SSTRUCTURE: {
-			// TODO: better way to cast
-			EList<SStructuredNode> baseStructureNodes = new BasicEList<SStructuredNode>();
-			for (SNode sNode : base) {
-				baseStructureNodes.add((SStructuredNode) sNode);
-			}
-			toNode = toGraph.createSStructure(baseStructureNodes);
-		}
-			break;
-
-		default:
-			break;
-		}
-		return toNode;
-	}
-
-	/**
-	 * Called by Pepper as callback, when fromGraph is traversed. Currently only
-	 * returns <code>true</code> to traverse the entire graph.
-	 */
-	@Override
-	public boolean checkConstraint(GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SRelation edge, SNode currNode, long order) {
-		return true;
 	}
 	
 	/**
