@@ -1,7 +1,6 @@
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -12,9 +11,9 @@ import org.slf4j.LoggerFactory;
 
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.exceptions.PepperModuleException;
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
-import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Edge;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.GRAPH_TRAVERSE_TYPE;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDocumentGraph;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SPointingRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SSpan;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SStructure;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SStructuredNode;
@@ -47,7 +46,8 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SRelation;
  * With normal bottom-up it would be traversed twice, therefore we need to store
  * already traversed relations to avoid this.
  * 
- * @author florian
+ * @author Florian Zipser
+ * @author Jakob Schmolling
  * 
  */
 class MergeHandler implements SGraphTraverseHandler {
@@ -106,6 +106,36 @@ class MergeHandler implements SGraphTraverseHandler {
 	}
 
 	/**
+	 * Copies all {@link SPointingRelation}s from <code>fromGraph</code> to <code>toGraph</code> and even copies their
+	 * annotations and layers. 
+	 * @param fromGraph graph containing the {@link SPointingRelation}s to be copied
+	 * @param toGraph target graph
+	 */
+	public void mergeSPointingRelations(SDocumentGraph fromGraph, SDocumentGraph toGraph){
+		for (SPointingRelation fromRel: fromGraph.getSPointingRelations()){
+			SNode toSourceNode= node2NodeMap.get(fromRel.getSSource());
+			SNode toTargetNode= node2NodeMap.get(fromRel.getSTarget());
+			
+			if (toSourceNode== null){
+				logger.warn("[Merger] Cannot merge SPointingRelation '"+fromRel.getSId()+"', because no matching node was found in target graph for source node '"+fromRel.getSSource()+"'. ");
+			}else if (toTargetNode== null){
+				logger.warn("[Merger] Cannot merge SPointingRelation '"+fromRel.getSId()+"', because no matching node was found in source graph for source node '"+fromRel.getSTarget()+"'. ");
+			}else{
+				SPointingRelation toRel= SaltFactory.eINSTANCE.createSPointingRelation();
+				toRel.setSSource(toSourceNode);
+				toRel.setSTarget(toTargetNode);
+				for (String type: fromRel.getSTypes()){
+					toRel.addSType(type);
+				}
+				SaltFactory.eINSTANCE.moveSAnnotations(fromRel, toRel);
+				SaltFactory.eINSTANCE.moveSMetaAnnotations(fromRel, toRel);
+				toGraph.addSRelation(toRel);
+				copySLayers(fromRel, toRel);
+			}
+		}
+	}
+	
+	/**
 	 * Called by Pepper as callback, when fromGraph is traversed. Currently only
 	 * returns <code>true</code> to traverse the entire graph.
 	 */
@@ -134,7 +164,7 @@ class MergeHandler implements SGraphTraverseHandler {
 		} else if (currNode instanceof STextualDS) {
 			// base text should be merged already
 		} else {
-			throw new PepperModuleException("Merging not implementet for this node type: " + currNode);
+			throw new PepperModuleException("Merging not implemented for this node type: " + currNode);
 		}
 	}
 
@@ -210,7 +240,7 @@ class MergeHandler implements SGraphTraverseHandler {
 	 * @param from
 	 * @param to
 	 */
-	private void copySLayers(SIdentifiableElement from, SIdentifiableElement to){
+	private static void copySLayers(SIdentifiableElement from, SIdentifiableElement to){
 		if (	(from instanceof SRelation)&&
 				(to instanceof SRelation)){
 			SRelation fromRel= (SRelation) from;
