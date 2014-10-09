@@ -42,7 +42,6 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpusGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDocumentGraph;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SPointingRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
@@ -113,9 +112,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	@Override
 	public DOCUMENT_STATUS mapSDocument() {
 		this.initialize();
-		for (MappingSubject subj : getMappingSubjects()) {
-			System.out.println("START Pointing relations of " + SaltFactory.eINSTANCE.getGlobalId(subj.getSElementId()) + " : " + ((SDocument) subj.getSElementId().getSIdentifiableElement()).getSDocumentGraph().getSPointingRelations().size());
-		}
 		if (this.getMappingSubjects().size() != 0) {
 
 			if (logger.isDebugEnabled()) {
@@ -186,9 +182,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			}
 
 			logger.debug("[Merger] " + "merged documents {}. ", getMappingSubjects());
-		}
-		for (MappingSubject subj : getMappingSubjects()) {
-			System.out.println("END Pointing relations of " + SaltFactory.eINSTANCE.getGlobalId(subj.getSElementId()) + " : " + ((SDocument) subj.getSElementId().getSIdentifiableElement()).getSDocumentGraph().getSPointingRelations().size());
 		}
 		return (DOCUMENT_STATUS.COMPLETED);
 	}
@@ -636,11 +629,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 														// document and align
 														// all other
 				if (sDoc.getSDocumentGraph() == null) {
-					// try to wake up document-structure
-					// sDoc.loadSDocumentGraph();
-					if (sDoc.getSDocumentGraph() == null) {
-						throw new PepperModuleDataException(this, "Cannot map document '" + SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()) + "', since it does not contain a document-structure.");
-					}
+					throw new PepperModuleDataException(this, "Cannot map document '" + SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()) + "', since it does not contain a document-structure.");
 				}
 				if (sDoc.getSDocumentGraph().getSTextualDSs() != null) { // there
 																			// are

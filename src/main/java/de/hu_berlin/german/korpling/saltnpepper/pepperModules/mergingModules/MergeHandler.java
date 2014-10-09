@@ -294,8 +294,9 @@ class MergeHandler implements SGraphTraverseHandler {
 	}
 
 	/**
-	 * Retrieves the {@link SRelation}s between given nodes and moves their {@link SAnnotation} and {@link SMetaAnnotation} objects.
-	 * Copies the SLayers.
+	 * Retrieves the {@link SRelation}s between given nodes and moves their {@link SAnnotation} and 
+	 * {@link SMetaAnnotation} objects.
+	 * Further {@link SLayer}s will be copied and the stype (see {@link SRelation#getSTypes()}).
 	 * @param fromNode
 	 * @param toNode
 	 */
@@ -306,6 +307,12 @@ class MergeHandler implements SGraphTraverseHandler {
 				if (toRel.getSTarget().equals(toChildNode)){
 					SaltFactory.eINSTANCE.moveSAnnotations(fromRel, toRel);
 					SaltFactory.eINSTANCE.moveSMetaAnnotations(fromRel, toRel);
+					List<String> sTypes= fromRel.getSTypes();
+					if (sTypes!= null){
+						for (String type: sTypes){
+							toRel.addSType(type);
+						}
+					}
 					copySLayers(fromRel, toRel);
 					break;
 				}
