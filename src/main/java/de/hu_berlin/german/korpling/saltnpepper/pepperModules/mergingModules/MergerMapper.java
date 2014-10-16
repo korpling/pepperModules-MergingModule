@@ -67,7 +67,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		if (this.getMappingSubjects().size() != 0) {
 			if (logger.isDebugEnabled()) {
 				StringBuilder str = new StringBuilder();
-				str.append("start merging corpora: ");
+				str.append("Start merging corpora: ");
 				for (MappingSubject subj : getMappingSubjects()) {
 					str.append("'");
 					str.append(SaltFactory.eINSTANCE.getGlobalId(subj.getSElementId()));
@@ -116,7 +116,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			if (logger.isDebugEnabled()) {
 				StringBuilder str = new StringBuilder();
-				str.append("start merging documents: ");
+				str.append("Start merging documents: ");
 				for (MappingSubject subj : getMappingSubjects()) {
 					str.append("'");
 					str.append(SaltFactory.eINSTANCE.getGlobalId(subj.getSElementId()));
@@ -261,7 +261,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 				// clear the table of non-equivalent tokens
 				nonEquivalentTokenSets.clear();
-
 				// merge!
 				for (MappingSubject subj : this.getMappingSubjects()) { // for
 																		// all
@@ -282,7 +281,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 																					// should
 																					// be
 																					// texts
-							logger.debug("[Merger] " + "Aligning the texts of {} to the base text. ", SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()));
+							logger.trace("[Merger] " + "Aligning the texts of {} to the base text. ", SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()));
 
 							Set<SToken> nonEquivalentTokensOfOtherText = new HashSet<SToken>();
 							nonEquivalentTokensOfOtherText.addAll(sDoc.getSDocumentGraph().getSTokens());
@@ -310,7 +309,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 							// memory
 
 							if (!this.isTestMode) {
-								logger.debug("[Merger] " + "Finishing document: {}", SaltFactory.eINSTANCE.getGlobalId(baseDocument.getSElementId()));
 								this.container.finishDocument(sDoc);
 								subj.setMappingResult(DOCUMENT_STATUS.DELETED);
 							}
@@ -321,7 +319,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			if (baseDocument != null) {
 				if (!this.isTestMode) {
-					logger.debug("[Merger] " + "Finishing document: {}", SaltFactory.eINSTANCE.getGlobalId(baseDocument.getSElementId()));
 					this.container.finishDocument((SDocument) baseDocument.getSElementId().getSIdentifiableElement());
 					baseDocument.setMappingResult(DOCUMENT_STATUS.COMPLETED);
 				}
@@ -372,7 +369,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					}
 				} else {
 					if (sDoc == container.getBaseDocument()) {
-						logger.debug("[Merger] " + "Chose base document. It is document with id '{}'. ", container.getBaseDocument().getSId());
+						logger.trace("[Merger] " + "Chose base document. It is document with id '{}'. ", container.getBaseDocument().getSId());
 
 						baseDocument = subj;
 						baseDocument.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
@@ -401,71 +398,30 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	protected STextualDS chooseBaseText(SDocument baseDoc, Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> nonEquivalentTokenSets) {
 		STextualDS baseText = null;
 		int minimalNonEquivalentTokens = -1;
-		for (STextualDS text : baseDoc.getSDocumentGraph().getSTextualDSs()) { // for
-																				// all
-																				// texts
-																				// of
-																				// the
-																				// base
-																				// document
+		for (STextualDS text : baseDoc.getSDocumentGraph().getSTextualDSs()) { 
+			// for all texts of the base document
 			Hashtable<SDocument, HashSet<SToken>> nonEQTokensInOtherDoc = nonEquivalentTokenSets.get(text);
 			if (nonEQTokensInOtherDoc != null) { // there is a set of
 													// non-equivalent token for
 													// the current base text
 				int countOfNonEquivalentTokens = 0;
-				for (SDocument otherDoc : nonEQTokensInOtherDoc.keySet()) { // count
-																			// the
-																			// number
-																			// of
-																			// tokens
-																			// of
-																			// all
-																			// documents
-																			// which
-																			// do
-																			// not
-																			// have
-																			// an
-																			// equivalent
-																			// in
-																			// the
-																			// current
-																			// base
-																			// text
+				for (SDocument otherDoc : nonEQTokensInOtherDoc.keySet()) { 
+					// count the number of tokens of all documents which do not have
+					// an equivalent in the current base text
 					countOfNonEquivalentTokens += nonEQTokensInOtherDoc.get(otherDoc).size();
 				} // count the number of tokens of all documents which do not
 					// have an equivalent in the current base text
-				if (minimalNonEquivalentTokens == -1) { // if the
-														// minimalNonEquivalentTokens
-														// value is -1, we did
-														// not process a
-														// document, yet.
-														// initialize
+				if (minimalNonEquivalentTokens == -1) { 
+					// if the minimalNonEquivalentTokens value is -1, we did not process a
+					// document, yet. initialize
 					minimalNonEquivalentTokens = countOfNonEquivalentTokens;
 					baseText = text;
 				} // if the minimalNonEquivalentTokens value is -1, we did not
 					// process a document, yet. initialize
 				else { // there is some base text
-					if (minimalNonEquivalentTokens > countOfNonEquivalentTokens) { // if
-																					// there
-																					// are
-																					// less
-																					// non-equivalent
-																					// tokens
-																					// for
-																					// this
-																					// base
-																					// text
-																					// than
-																					// for
-																					// some
-																					// other,
-																					// set
-																					// this
-																					// text
-																					// as
-																					// base
-																					// text
+					if (minimalNonEquivalentTokens > countOfNonEquivalentTokens) { 
+						// if there are less non-equivalent tokens for this base text than for
+						// some other, set this text as base text
 						minimalNonEquivalentTokens = countOfNonEquivalentTokens;
 						baseText = text;
 					} // if there are less non-equivalent tokens for this base
@@ -476,7 +432,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 		}
 		if (baseText != null) {
-			logger.debug("[Merger] " + "Chose base text. It is text with id '{}'.", baseText.getSId());
+			logger.trace("[Merger] " + "Chose base text. It is text with id '{}'.", baseText.getSId());
 		}
 		return baseText;
 	}
@@ -887,23 +843,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		return returnVal;
 	}
 
-	/*
-	 * private void copySAnnotations(SAnnotatableElement from,
-	 * SAnnotatableElement to){ for (SAnnotation sAnnotation :
-	 * from.getSAnnotations()){ // if to contains an SAnnotation with the same
-	 * namespace and name String newSName = sAnnotation.getSName(); if
-	 * (to.getSAnnotation(sAnnotation.getQName()) != null){ int i = 1; while
-	 * (to.getSAnnotation(sAnnotation.getQName()+"_"+i) != null) { // while
-	 * there is an anno "annoQName_i" , increment i i++; } // while there is an
-	 * anno "annoQName_i" , increment i newSName = sAnnotation.getSName() + "_"
-	 * + i; } SAnnotation newSAnnotation = to. } }
-	 * 
-	 * private void copySMetaAnnotations(SMetaAnnotatableElement from,
-	 * SMetaAnnotatableElement to){
-	 * 
-	 * }
-	 */
-
 	/* *******************************************************************
 	 * Alignment and Normalization Helper Methods
 	 * ******************************************************************
@@ -923,7 +862,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * @return the index on success and -1 on failure
 	 */
 	protected int indexOfOmitChars(String stringToSearchIn, String stringToSearchFor, boolean useIndexOf, Set<Character> omitChars) {
-
 		/* remove all omit chars from the stringToSearchFor */
 		StringBuilder builder = new StringBuilder();
 		for (char sourceChar : stringToSearchFor.toCharArray()) {
@@ -1318,11 +1256,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			throw new PepperModuleException(this, "Cannot start the traversing for merging document-structure, since no tokens exist for document '" + SaltFactory.eINSTANCE.getGlobalId(fromGraph.getSDocument().getSElementId()) + "'.");
 		}
 
-		logger.debug("[Merger] " + "merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(other.getSElementId()));
+		logger.trace("[Merger] Merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(other.getSElementId()));
 		fromGraph.traverse(tokens, GRAPH_TRAVERSE_TYPE.TOP_DOWN_DEPTH_FIRST, "merger_" + SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), handler, false);
 		//finally merge pointing relations
 		handler.mergeSPointingRelations(fromGraph, toGraph);
-		logger.debug("[Merger] " + "done with merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(other.getSElementId()));
+		logger.trace("[Merger] Done with merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(other.getSElementId()));
 	}
 
 	class NodeParameters {

@@ -1,8 +1,10 @@
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
@@ -135,12 +137,19 @@ class MergeHandler implements SGraphTraverseHandler {
 		}
 	}
 	
+	/** set of already visited {@link SRelation}s while traversing, this is necessary to avoid cycles**/
+	private Set<SRelation> visitedRelations= new HashSet<SRelation>();
 	/**
 	 * Called by Pepper as callback, when fromGraph is traversed. Currently only
 	 * returns <code>true</code> to traverse the entire graph.
 	 */
 	@Override
-	public boolean checkConstraint(GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SRelation edge, SNode currNode, long order) {
+	public boolean checkConstraint(GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SRelation sRelation, SNode currNode, long order) {
+		if(visitedRelations.contains(sRelation)){
+			return(false);
+		}else{
+			visitedRelations.add(sRelation);
+		}
 		return true;
 	}
 	/**
