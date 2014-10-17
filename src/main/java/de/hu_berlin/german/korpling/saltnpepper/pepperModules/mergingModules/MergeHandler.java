@@ -145,11 +145,11 @@ class MergeHandler implements SGraphTraverseHandler {
 	 */
 	@Override
 	public boolean checkConstraint(GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SRelation sRelation, SNode currNode, long order) {
-		if(visitedRelations.contains(sRelation)){
-			return(false);
-		}else{
-			visitedRelations.add(sRelation);
-		}
+//		if(visitedRelations.contains(sRelation)){
+//			return(false);
+//		}else{
+//			visitedRelations.add(sRelation);
+//		}
 		return true;
 	}
 	/**
