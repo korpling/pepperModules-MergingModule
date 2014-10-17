@@ -277,10 +277,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 						}
 						node2NodeMap = new Hashtable<SNode, SNode>(initialSize);
 
-						if (sDoc.getSDocumentGraph().getSTextualDSs() != null) { // there
-																					// should
-																					// be
-																					// texts
+						if (sDoc.getSDocumentGraph().getSTextualDSs() != null) {
+							// there should be texts
 							logger.trace("[Merger] " + "Aligning the texts of {} to the base text. ", SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()));
 
 							Set<SToken> nonEquivalentTokensOfOtherText = new HashSet<SToken>();
@@ -398,29 +396,32 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	protected STextualDS chooseBaseText(SDocument baseDoc, Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> nonEquivalentTokenSets) {
 		STextualDS baseText = null;
 		int minimalNonEquivalentTokens = -1;
-		for (STextualDS text : baseDoc.getSDocumentGraph().getSTextualDSs()) { 
+		for (STextualDS text : baseDoc.getSDocumentGraph().getSTextualDSs()) {
 			// for all texts of the base document
 			Hashtable<SDocument, HashSet<SToken>> nonEQTokensInOtherDoc = nonEquivalentTokenSets.get(text);
 			if (nonEQTokensInOtherDoc != null) { // there is a set of
 													// non-equivalent token for
 													// the current base text
 				int countOfNonEquivalentTokens = 0;
-				for (SDocument otherDoc : nonEQTokensInOtherDoc.keySet()) { 
-					// count the number of tokens of all documents which do not have
+				for (SDocument otherDoc : nonEQTokensInOtherDoc.keySet()) {
+					// count the number of tokens of all documents which do not
+					// have
 					// an equivalent in the current base text
 					countOfNonEquivalentTokens += nonEQTokensInOtherDoc.get(otherDoc).size();
 				} // count the number of tokens of all documents which do not
 					// have an equivalent in the current base text
-				if (minimalNonEquivalentTokens == -1) { 
-					// if the minimalNonEquivalentTokens value is -1, we did not process a
+				if (minimalNonEquivalentTokens == -1) {
+					// if the minimalNonEquivalentTokens value is -1, we did not
+					// process a
 					// document, yet. initialize
 					minimalNonEquivalentTokens = countOfNonEquivalentTokens;
 					baseText = text;
 				} // if the minimalNonEquivalentTokens value is -1, we did not
 					// process a document, yet. initialize
 				else { // there is some base text
-					if (minimalNonEquivalentTokens > countOfNonEquivalentTokens) { 
-						// if there are less non-equivalent tokens for this base text than for
+					if (minimalNonEquivalentTokens > countOfNonEquivalentTokens) {
+						// if there are less non-equivalent tokens for this base
+						// text than for
 						// some other, set this text as base text
 						minimalNonEquivalentTokens = countOfNonEquivalentTokens;
 						baseText = text;
@@ -473,9 +474,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	protected String createOriginalToNormalizedMapping(STextualDS sTextualDS, List<Integer> originalToNormalizedMapping) {
 		StringBuilder normalizedTextBuilder = new StringBuilder();
 		int start = 0;
-		boolean lastCharWasEscaped = false;
 		for (char c : sTextualDS.getSText().toCharArray()) {
-			lastCharWasEscaped = false;
 			String originalString = new String();
 			originalString += c;
 			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(originalString);
@@ -484,19 +483,24 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				normalizedTextBuilder.append(c);
 				start += 1;
 			} else {
-				lastCharWasEscaped = true;
 				if (stringToEscape.length() > 0) {
 					originalToNormalizedMapping.add(start);
-					for (char x : stringToEscape.toCharArray()) {// one char is
-																	// mapped to
-																	// many. all
-																	// chars
-																	// have the
-																	// same
-																	// index in
-																	// the
-																	// original
-																	// text
+					for (int i = 0; i < stringToEscape.length(); i++) {// one
+																		// char
+																		// is
+																		// mapped
+																		// to
+																		// many.
+																		// all
+																		// chars
+																		// have
+																		// the
+																		// same
+																		// index
+																		// in
+																		// the
+																		// original
+																		// text
 						start += 1;
 					}
 					normalizedTextBuilder.append(stringToEscape);
@@ -762,57 +766,24 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				int smallerTextTokenStart = this.container.getAlignedTokenStart(smallerText, smallerTextToken);
 				int smallerTextTokenLength = this.container.getAlignedTokenLength(smallerText, smallerTextToken);
 
-				if (smallerTextTokenStart != -1 && smallerTextTokenLength != -1) { // the
-																					// token
-																					// of
-																					// the
-																					// smaller
-																					// text
-																					// has
-																					// a
-																					// start
-																					// and
-																					// end
-																					// in
-																					// the
-																					// smaller
-																					// text:
-																					// get
-																					// the
-																					// aligned
-																					// token
-																					// from
-																					// the
-																					// base
-																					// document
-																					// which
-																					// has
-																					// the
-																					// start
-																					// of
-																					// offset+startOfOtherToken
+				if (smallerTextTokenStart != -1 && smallerTextTokenLength != -1) {
+					// the token of the smaller text has a start and end in the
+					// smaller text: get the aligned token from the base
+					// document which has the start of offset+startOfOtherToken
 					SToken biggerTextToken = this.container.getAlignedTokenByStart(biggerText, (smallerTextTokenStart + offset));
-					if (biggerTextToken != null) {// there is some token in the
-													// bigger text which has the
-													// same start
-						if (this.container.getAlignedTokenLength(biggerText, biggerTextToken) == smallerTextTokenLength) { // start
-																															// and
-																															// lengths
-																															// are
-																															// identical.
-																															// We
-																															// found
-																															// an
-																															// equivalence
-																															// class
-
+					if (biggerTextToken != null) {
+						// there is some token in the bigger text which has the
+						// same start
+						if (this.container.getAlignedTokenLength(biggerText, biggerTextToken) == smallerTextTokenLength) {
+							// start and lengths are identical. We found an
+							// equivalence class
 							// we want to have equivalences: otherTextToken -->
 							// baseTextToken
-							if (biggerText.equals(baseText)) { // if the base
-																// text is the
-																// bigger text
+							if (biggerText.equals(baseText)) {
+								// if the base text is the bigger text
 								this.container.addTokenMapping(biggerTextToken, smallerTextToken, smallerText);
 								equivalenceMap.put(smallerTextToken, biggerTextToken);
+
 								nonEquivalentTokenInOtherTexts.remove(smallerTextToken);
 							} // if the base text is the bigger text
 							else { // if the base text is the smaller text
@@ -834,7 +805,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 				} else { // the other token has either no start or no length ->
 							// ERROR
-					logger.error("The SToken " + smallerText.getSId() + " of the STextualDS " + smallerText.getSId() + " has no proper start or length. It was probably not aligned correctly.");
+					throw new PepperModuleException(this, "The SToken " + smallerText.getSId() + " of the STextualDS " + smallerText.getSId() + " has no proper start or length. It was probably not aligned correctly.");
 				} // the other token has either no start or no length -> ERROR
 			}
 
@@ -1008,7 +979,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		 * 1->2,... Example2: dipl: " thäs is" 01234567 norm: "thaesis" 0123456
 		 * 0->1 1->2 2->3 3->3 4->4 5->6 6->7
 		 */
-
 		List<Integer> normalizedToOriginalMapping = new Vector<Integer>();
 		int start = 0;
 		for (char c : sTextualDS.getSText().toCharArray()) {
@@ -1019,16 +989,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				normalizedToOriginalMapping.add(start);
 			} else {
 				if (stringToEscape.length() > 0) {
-					for (char x : stringToEscape.toCharArray()) {// one char is
-																	// mapped to
-																	// many. all
-																	// chars
-																	// have the
-																	// same
-																	// index in
-																	// the
-																	// original
-																	// text
+					for (int i = 0; i < stringToEscape.toCharArray().length; i++) {
+						// one char is mapped to many. all chars have the same
+						// index in the original text
 						normalizedToOriginalMapping.add(start);
 					}
 				} else { // one char is mapped to the empty string.
@@ -1120,17 +1083,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		// set the bigger and smaller text
 		STextualDS biggerText = baseText;
 
-		if (normalizedBaseText.length() >= normalizedOtherText.length()) { // if
-																			// the
-																			// other
-																			// text
-																			// fits
-																			// into
-																			// the
-																			// base
-																			// text
-																			// by
-																			// size
+		if (normalizedBaseText.length() >= normalizedOtherText.length()) {
+			// if the other text fits into the base text by size
 			offset = indexOfOmitChars(normalizedBaseText.toLowerCase(), normalizedOtherText.toLowerCase(), true, ((MergerProperties) getProperties()).getPunctuations());
 		} // if the other text fits into the base text by size
 		else { // if the base text fits into the other text by size
@@ -1138,52 +1092,50 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			biggerText = otherText;
 		} // if the base text fits into the other text by size
 
-		if (offset != -1) { // one of the texts is alignible to the other
+		if (offset != -1) { // one of the texts is alignable to the other
 							// next step: get all tokens of the other text
 			List<SToken> textTokens = new Vector<SToken>();
-			for (Edge e : otherText.getSDocumentGraph().getInEdges(otherText.getSId())) { // get
-																							// all
-																							// tokens
-																							// of
-																							// the
-																							// other
-																							// text
+			for (Edge e : otherText.getSDocumentGraph().getInEdges(otherText.getSId())) {
+				// get all tokens of the other text
 				if (e instanceof STextualRelation) {
 					textTokens.add(((STextualRelation) e).getSToken());
 				}
 			} // get all tokens of the other text
-			for (SToken otherTextToken : textTokens) { // for every token in the
-														// other text
-														// First, search in the
-														// equivalence map for
-														// the token
+			for (SToken otherTextToken : textTokens) {
+				// for every token in the other text First, search in the
+				// equivalence map for the token
 				SToken baseTextToken = (SToken) equivalenceMap.get(otherTextToken);
-				if (baseTextToken == null) { // The other text token does not
-												// have an equivalent token in
-												// the base text. Try to create
-												// it.
-												// get the start and end value
-												// of the token in the other
-												// text
-
+				// TODO ---> here is the difference for pcc5 3 documents
+				// (working, have a non empty list) the two others (not working)
+				// have an empty list
+				// System.out.println("BASETEXTOKEN: "+ baseTextToken);
+				if (baseTextToken == null) {
+					System.out.println("searched for " + otherTextToken.getSId() + " in: " + equivalenceMap);
+					// The other text token does not have an equivalent token in
+					// the base text. Try to create it. get the start and end
+					// value of the token in the other text
 					int otherTextTokenStart = this.container.getAlignedTokenStart(otherText, otherTextToken);
 					int otherTextTokenLength = this.container.getAlignedTokenLength(otherText, otherTextToken);
-					if (otherTextTokenStart != -1 && otherTextTokenLength != -1) { // the
-																					// token
-																					// has
-																					// start
-																					// and
-																					// end
+					if (otherTextTokenStart != -1 && otherTextTokenLength != -1) {
+						// the token has start and end
 						int newStart = 0;
 						int newEnd = 0;
-						if (biggerText.equals(baseText)) { // the base text is
-															// the bigger text
+						if (biggerText.equals(baseText)) {
+							// the base text is the bigger text
 							newStart = offset + otherTextTokenStart;
 							newEnd = newStart + otherTextTokenLength;
 							// set the de-normalized start and end value in the
 							// base text for the new token
+							// System.out.println("1: start: " + newStart +
+							// ", end: " + newEnd);
 							newStart = this.container.getBaseTextPositionByNormalizedTextPosition(baseText, newStart);
 							newEnd = this.container.getBaseTextPositionByNormalizedTextPosition(baseText, newEnd);
+							if (newStart < 0) {
+								throw new PepperModuleException(this, "Cannot create a token, since the SStart value is '-1' for merging '" + SaltFactory.eINSTANCE.getGlobalId(otherTextToken.getSElementId()) + "' into '" + SaltFactory.eINSTANCE.getGlobalId(baseText.getSDocumentGraph().getSElementId()) + "'.");
+							}
+							if (newEnd < 0) {
+								throw new PepperModuleException(this, "Cannot create a token, since the SEnd value is '-1' for merging '" + SaltFactory.eINSTANCE.getGlobalId(otherTextToken.getSElementId()) + "' ('" + otherTextToken.getSDocumentGraph().getSText(otherTextToken) + "') into '" + SaltFactory.eINSTANCE.getGlobalId(baseText.getSDocumentGraph().getSElementId()) + "'.");
+							}
 							// create the new token in the base text with the
 							// new start and end value
 							baseTextToken = baseText.getSDocumentGraph().createSToken(baseText, newStart, newEnd);
@@ -1193,20 +1145,17 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 							newStart = otherTextTokenStart - offset;
 							newEnd = newStart + otherTextTokenLength;
 
-							if (newStart >= 0 && newEnd <= normalizedBaseText.length()) { // the
-																							// new
-																							// token
-																							// would
-																							// be
-																							// in
-																							// the
-																							// interval
-																							// of
-																							// the
-																							// base
-																							// text.
+							if (newStart >= 0 && newEnd <= normalizedBaseText.length()) {
+								// the new token would be in the interval of the
+								// base text.
 								newStart = this.container.getBaseTextPositionByNormalizedTextPosition(baseText, newStart);
 								newEnd = this.container.getBaseTextPositionByNormalizedTextPosition(baseText, newEnd);
+								if (newStart < 0) {
+									throw new PepperModuleException(this, "Cannot create a token, since the SStart value is '-1' for merging '" + SaltFactory.eINSTANCE.getGlobalId(otherTextToken.getSElementId()) + "' into '" + SaltFactory.eINSTANCE.getGlobalId(baseText.getSDocumentGraph().getSElementId()) + "'.");
+								}
+								if (newEnd < 0) {
+									throw new PepperModuleException(this, "Cannot create a token, since the SEnd value is '-1' for merging '" + SaltFactory.eINSTANCE.getGlobalId(otherTextToken.getSElementId()) + "' ('" + otherTextToken.getSDocumentGraph().getSText(otherTextToken) + "') into '" + SaltFactory.eINSTANCE.getGlobalId(baseText.getSDocumentGraph().getSElementId()) + "'.");
+								}
 								baseTextToken = baseText.getSDocumentGraph().createSToken(baseText, newStart, newEnd);
 								// mark the new token as equivalent
 								equivalenceMap.put(otherTextToken, baseTextToken);
@@ -1217,15 +1166,14 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					} // the token has start and end
 				} // The other text token does not have an equivalent token in
 					// the base text. Try to create it.
-				if (baseTextToken != null) { // there already is an equivalent
-												// token or a token was created
-												// move the annos to the new
-												// token
+				if (baseTextToken != null) {
+					// there already is an equivalent token or a token was
+					// created move the annos to the new token
 					SaltFactory.eINSTANCE.moveSAnnotations(otherTextToken, baseTextToken);
 					SaltFactory.eINSTANCE.moveSMetaAnnotations(otherTextToken, baseTextToken);
 				} // there already is an equivalent token or a token was created
 			} // for every token in the other text
-		}// one of the texts is alignible to the other
+		}// one of the texts is alignable to the other
 			// move the annotations from the other text to the base text
 		SaltFactory.eINSTANCE.moveSAnnotations(otherText, baseText);
 		SaltFactory.eINSTANCE.moveSMetaAnnotations(otherText, baseText);
@@ -1242,7 +1190,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * @param other
 	 * @param nonEquivalentTokenInOtherTexts
 	 * @param equivalenceMap
-	 *            Map with tokens of the other dokument as key and their
+	 *            Map with tokens of the other document as key and their
 	 *            equivalent tokens in the base
 	 * @return
 	 */
@@ -1258,7 +1206,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 		logger.trace("[Merger] Merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(other.getSElementId()));
 		fromGraph.traverse(tokens, GRAPH_TRAVERSE_TYPE.TOP_DOWN_DEPTH_FIRST, "merger_" + SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), handler, false);
-		//finally merge pointing relations
+		// finally merge pointing relations
 		handler.mergeSPointingRelations(fromGraph, toGraph);
 		logger.trace("[Merger] Done with merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(other.getSElementId()));
 	}
