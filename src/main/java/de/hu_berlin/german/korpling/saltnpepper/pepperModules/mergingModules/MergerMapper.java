@@ -290,7 +290,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 								this.mergeTokens(this.container.getBaseText(), sTextualDS, node2NodeMap);
 							}
 							// merge the document content
-							mergeDocumentContent((SDocument) baseDocument.getSElementId().getSIdentifiableElement(), sDoc);
+							mergeDocumentStructure((SDocument) baseDocument.getSElementId().getSIdentifiableElement(), sDoc);
 							// we are finished with the document. Free the
 							// memory
 							if (!this.isTestMode) {
@@ -302,7 +302,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 							// the base document graph
 							logger.warn("There is no text in document {} to be merged. Will not copy the tokens!", SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()));
 							// merge the document content
-							mergeDocumentContent((SDocument) baseDocument.getSElementId().getSIdentifiableElement(), sDoc);
+							mergeDocumentStructure((SDocument) baseDocument.getSElementId().getSIdentifiableElement(), sDoc);
 							// we are finished with the document. Free the
 							// memory
 
@@ -1105,12 +1105,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				// for every token in the other text First, search in the
 				// equivalence map for the token
 				SToken baseTextToken = (SToken) equivalenceMap.get(otherTextToken);
-				// TODO ---> here is the difference for pcc5 3 documents
-				// (working, have a non empty list) the two others (not working)
-				// have an empty list
-				// System.out.println("BASETEXTOKEN: "+ baseTextToken);
 				if (baseTextToken == null) {
-					System.out.println("searched for " + otherTextToken.getSId() + " in: " + equivalenceMap);
 					// The other text token does not have an equivalent token in
 					// the base text. Try to create it. get the start and end
 					// value of the token in the other text
@@ -1126,8 +1121,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 							newEnd = newStart + otherTextTokenLength;
 							// set the de-normalized start and end value in the
 							// base text for the new token
-							// System.out.println("1: start: " + newStart +
-							// ", end: " + newEnd);
 							newStart = this.container.getBaseTextPositionByNormalizedTextPosition(baseText, newStart);
 							newEnd = this.container.getBaseTextPositionByNormalizedTextPosition(baseText, newEnd);
 							if (newStart < 0) {
@@ -1194,7 +1187,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 *            equivalent tokens in the base
 	 * @return
 	 */
-	protected void mergeDocumentContent(SDocument base, SDocument other) {
+	protected void mergeDocumentStructure(SDocument base, SDocument other) {
 		SDocumentGraph fromGraph = other.getSDocumentGraph();
 		SDocumentGraph toGraph = base.getSDocumentGraph();
 		MergeHandler handler = new MergeHandler(node2NodeMap, fromGraph, toGraph, this.container.baseText, container);

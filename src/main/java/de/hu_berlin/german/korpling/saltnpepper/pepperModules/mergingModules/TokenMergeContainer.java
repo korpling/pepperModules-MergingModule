@@ -106,10 +106,10 @@ public class TokenMergeContainer {
 		public int getLength(SToken tok) {
 			if (this.tokenLeftMap.containsKey(tok) && this.tokenRightMap.containsKey(tok)) {
 				return this.tokenRightMap.get(tok) - this.tokenLeftMap.get(tok);
-			} else if (!this.tokenLeftMap.containsKey(tok)) {
-				throw new PepperModuleException("Cannot find token '" + tok.getSId() + "' in token left map");
-			} else if (!this.tokenRightMap.containsKey(tok)) {
-				throw new PepperModuleException("Cannot find token '" + tok.getSId() + "' in token right map");
+//			} else if (!this.tokenLeftMap.containsKey(tok)) {
+//				throw new PepperModuleException("Cannot find token '" + tok.getSId() + "' in token left map");
+//			} else if (!this.tokenRightMap.containsKey(tok)) {
+//				throw new PepperModuleException("Cannot find token '" + tok.getSId() + "' in token right map");
 			} else {
 				return -1;
 			}
@@ -127,7 +127,8 @@ public class TokenMergeContainer {
 			if (this.tokenLeftMap.containsKey(tok)) {
 				return this.tokenLeftMap.get(tok);
 			} else {
-				throw new PepperModuleException("Cannot find token '" + tok.getSId() + "' in token left map");
+				return(-1);
+//				throw new PepperModuleException("Cannot find token '" + tok.getSId() + "' in token left map");
 			}
 
 		}

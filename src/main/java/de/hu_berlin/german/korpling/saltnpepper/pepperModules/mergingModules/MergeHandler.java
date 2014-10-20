@@ -145,11 +145,25 @@ class MergeHandler implements SGraphTraverseHandler {
 	 */
 	@Override
 	public boolean checkConstraint(GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SRelation sRelation, SNode currNode, long order) {
-//		if(visitedRelations.contains(sRelation)){
-//			return(false);
-//		}else{
-//			visitedRelations.add(sRelation);
-//		}
+		if (sRelation!= null){
+//			System.out.println("=====> "+ SaltFactory.eINSTANCE.getGlobalId(sRelation.getSSource().getSElementId())+" -"+sRelation.getClass().getSimpleName()+"-> "+ SaltFactory.eINSTANCE.getGlobalId(sRelation.getSTarget().getSElementId()));
+//			for (SRelation sRel: visitedRelations){
+//				System.out.println(SaltFactory.eINSTANCE.getGlobalId(sRel.getSSource().getSElementId())+" -"+sRel.getClass().getSimpleName()+"-> "+ SaltFactory.eINSTANCE.getGlobalId(sRel.getSTarget().getSElementId()));
+//			}
+//			System.out.println("<=====");
+
+			if(visitedRelations.contains(sRelation)){
+				System.out.println("----> Cycle found: "+ SaltFactory.eINSTANCE.getGlobalId(sRelation.getSSource().getSElementId())+" -"+sRelation.getClass().getSimpleName()+"-> "+ SaltFactory.eINSTANCE.getGlobalId(sRelation.getSTarget().getSElementId()));
+				for (SRelation sRel: visitedRelations){
+					System.out.println(SaltFactory.eINSTANCE.getGlobalId(sRel.getSSource().getSElementId())+" -"+sRel.getClass().getSimpleName()+"-> "+ SaltFactory.eINSTANCE.getGlobalId(sRel.getSTarget().getSElementId()));
+				}
+//				visitedRelations= new HashSet<SRelation>();
+				return(false);
+			}else{
+				visitedRelations.add(sRelation);
+			}
+		}
+		
 		return true;
 	}
 	/**
@@ -203,9 +217,14 @@ class MergeHandler implements SGraphTraverseHandler {
 					// Match found
 				} else {
 					// Find the alignment of the current token to create a new one
-					int sStart = container.getAlignedTokenStart(baseText, (SToken) currNode);
-					int sLength = container.getAlignedTokenLength(baseText, (SToken) currNode);
-					toNode = toGraph.createSToken(baseText, sStart, sStart + sLength);
+					Integer sStart = container.getAlignedTokenStart(baseText, (SToken) currNode);
+					Integer sLength = container.getAlignedTokenLength(baseText, (SToken) currNode);
+					if (	(sStart!= -1)&&
+							(sLength!= -1)){
+						toNode = toGraph.createSToken(baseText, sStart, sStart + sLength);
+					}else{
+						logger.warn("Could not create token in target graph matching to node '"+SaltFactory.eINSTANCE.getGlobalId(currNode.getSElementId())+"', because sStart-value ("+sStart+") or sLength-value ("+sLength+") was empty. ");
+					}
 				}
 				break;
 			}case SSPAN: {
@@ -230,16 +249,14 @@ class MergeHandler implements SGraphTraverseHandler {
 			
 			moveAnnosForRelations(currNode, toNode);
 		}
-		if (toNode == null){
-			throw new PepperModuleException("Cannot go on merging, because the toNode was null. ");
+		if (toNode != null){
+			node2NodeMap.put(currNode, toNode);
+			//copies all layers and add node toNode to them
+			copySLayers(currNode, toNode);
+			//moves annotations from currNode to toNode
+			SaltFactory.eINSTANCE.moveSAnnotations(currNode, toNode);
+			SaltFactory.eINSTANCE.moveSMetaAnnotations(currNode, toNode);
 		}
-		
-		node2NodeMap.put(currNode, toNode);
-		//copies all layers and add node toNode to them
-		copySLayers(currNode, toNode);
-		//moves annotations from currNode to toNode
-		SaltFactory.eINSTANCE.moveSAnnotations(currNode, toNode);
-		SaltFactory.eINSTANCE.moveSMetaAnnotations(currNode, toNode);
 	}
 	
 	/**
@@ -310,20 +327,24 @@ class MergeHandler implements SGraphTraverseHandler {
 	 * @param toNode
 	 */
 	private void moveAnnosForRelations(SNode fromNode, SNode toNode){
-		for (SRelation fromRel: fromNode.getOutgoingSRelations()){
-			SNode toChildNode= node2NodeMap.get(fromRel.getSTarget());
-			for (SRelation toRel: toNode.getOutgoingSRelations()){
-				if (toRel.getSTarget().equals(toChildNode)){
-					SaltFactory.eINSTANCE.moveSAnnotations(fromRel, toRel);
-					SaltFactory.eINSTANCE.moveSMetaAnnotations(fromRel, toRel);
-					List<String> sTypes= fromRel.getSTypes();
-					if (sTypes!= null){
-						for (String type: sTypes){
-							toRel.addSType(type);
+		if (	(fromNode!= null)&&
+				(toNode!= null))
+		{
+			for (SRelation fromRel: fromNode.getOutgoingSRelations()){
+				SNode toChildNode= node2NodeMap.get(fromRel.getSTarget());
+				for (SRelation toRel: toNode.getOutgoingSRelations()){
+					if (toRel.getSTarget().equals(toChildNode)){
+						SaltFactory.eINSTANCE.moveSAnnotations(fromRel, toRel);
+						SaltFactory.eINSTANCE.moveSMetaAnnotations(fromRel, toRel);
+						List<String> sTypes= fromRel.getSTypes();
+						if (sTypes!= null){
+							for (String type: sTypes){
+								toRel.addSType(type);
+							}
 						}
+						copySLayers(fromRel, toRel);
+						break;
 					}
-					copySLayers(fromRel, toRel);
-					break;
 				}
 			}
 		}
@@ -363,20 +384,25 @@ class MergeHandler implements SGraphTraverseHandler {
 	 */
 	private List<SNode> getSharedParent(List<SNode> children, STYPE_NAME sTypeNode) {
 		ArrayList<SNode> sharedParents = new ArrayList<SNode>();
-		if (children.size() > 0){
-			// A merge candidate has to be connected to every base node
-			for (SRelation baseRelation : children.get(0).getIncomingSRelations()) {
-				sharedParents.add(baseRelation.getSSource());
-			}
-			for (SNode baseNode : children) {
-				ArrayList<SNode> parents = new ArrayList<SNode>();
-				for (SRelation sRelation : baseNode.getIncomingSRelations()) {
-					SNode parent = sRelation.getSSource();
-					if (SaltFactory.eINSTANCE.convertClazzToSTypeName(parent.getClass()).contains(sTypeNode)) {
-						parents.add(parent);
-					}
+		if (	(children.size() > 0)&&
+				(children.get(0)!= null)){
+			List<SRelation> rels= children.get(0).getIncomingSRelations();
+			if (	(rels!= null)&&
+					(rels.size()>0)){
+				// A merge candidate has to be connected to every base node
+				for (SRelation baseRelation : rels) {
+					sharedParents.add(baseRelation.getSSource());
 				}
-				sharedParents.retainAll(parents);
+				for (SNode baseNode : children) {
+					ArrayList<SNode> parents = new ArrayList<SNode>();
+					for (SRelation sRelation : baseNode.getIncomingSRelations()) {
+						SNode parent = sRelation.getSSource();
+						if (SaltFactory.eINSTANCE.convertClazzToSTypeName(parent.getClass()).contains(sTypeNode)) {
+							parents.add(parent);
+						}
+					}
+					sharedParents.retainAll(parents);
+				}
 			}
 		}
 		return sharedParents;
