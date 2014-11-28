@@ -7,6 +7,7 @@ import java.util.Set;
 
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperModuleProperties;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperModuleProperty;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpusGraph;
 
 public class MergerProperties extends PepperModuleProperties {
 
@@ -121,8 +122,8 @@ public class MergerProperties extends PepperModuleProperties {
 	}
 	/**
 	 * If this property is set to 'true', the base document is always the one, which belongs to the 
-	 * first SCorpusGraph (the first importer in Pepper workflow description). 
-	 * The value either could be 'true' or false.
+	 * first {@link SCorpusGraph} (the first importer in Pepper workflow description). 
+	 * The value either could be 'true' or 'false'.
 	 * @return
 	 */
 	public Boolean isFirstAsBase(){
