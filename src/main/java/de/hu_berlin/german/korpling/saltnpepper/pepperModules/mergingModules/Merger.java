@@ -166,7 +166,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 	 */
 	protected synchronized void createMapping() {
 		if (mappingTable == null) {
-			baseCorpusStructure = getSaltProject().getSCorpusGraphs().get(0);
+			setBaseCorpusStructure(getSaltProject().getSCorpusGraphs().get(0));
 
 			// initialize importOrder
 			importOrder = new HashMap<SCorpusGraph, List<SElementId>>();

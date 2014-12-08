@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.awt.image.SampleModel;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
@@ -44,7 +45,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SLayer;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltSample.SaltSample;
+import de.hu_berlin.german.korpling.saltnpepper.salt.samples.SampleGenerator;
 
 public class MergerMapperTest_graph extends MergerMapper {
 
@@ -85,9 +86,9 @@ public class MergerMapperTest_graph extends MergerMapper {
 		MappingSubject sub1 = new MappingSubject();
 		sub1.setSElementId(sDoc1.getSElementId());
 		getFixture().getMappingSubjects().add(sub1);
-		SaltSample.createPrimaryData(sDoc1);
-		SaltSample.createTokens(sDoc1);
-		SaltSample.createAnaphoricAnnotations(sDoc1);
+		SampleGenerator.createPrimaryData(sDoc1);
+		SampleGenerator.createTokens(sDoc1);
+		SampleGenerator.createAnaphoricAnnotations(sDoc1);
 
 		// doc 2
 		SDocument sDoc2 = SaltFactory.eINSTANCE.createSDocument();
@@ -96,10 +97,10 @@ public class MergerMapperTest_graph extends MergerMapper {
 		MappingSubject sub2 = new MappingSubject();
 		sub2.setSElementId(sDoc2.getSElementId());
 		getFixture().getMappingSubjects().add(sub2);
-		SaltSample.createPrimaryData(sDoc2);
-		SaltSample.createTokens(sDoc2);
-		SaltSample.createSyntaxStructure(sDoc2);
-		SaltSample.createSyntaxAnnotations(sDoc2);
+		SampleGenerator.createPrimaryData(sDoc2);
+		SampleGenerator.createTokens(sDoc2);
+		SampleGenerator.createSyntaxStructure(sDoc2);
+		SampleGenerator.createSyntaxAnnotations(sDoc2);
 
 		// doc 3
 		SDocument sDoc3 = SaltFactory.eINSTANCE.createSDocument();
@@ -108,20 +109,20 @@ public class MergerMapperTest_graph extends MergerMapper {
 		MappingSubject sub3 = new MappingSubject();
 		sub3.setSElementId(sDoc3.getSElementId());
 		getFixture().getMappingSubjects().add(sub3);
-		SaltSample.createPrimaryData(sDoc3);
-		SaltSample.createTokens(sDoc3);
-		SaltSample.createMorphologyAnnotations(sDoc3);
+		SampleGenerator.createPrimaryData(sDoc3);
+		SampleGenerator.createTokens(sDoc3);
+		SampleGenerator.createMorphologyAnnotations(sDoc3);
 
 		// template document contains all annotations
 		SDocument template = SaltFactory.eINSTANCE.createSDocument();
 		template.setSId("template");
 		template.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		SaltSample.createPrimaryData(template);
-		SaltSample.createTokens(template);
-		SaltSample.createSyntaxStructure(template);
-		SaltSample.createAnaphoricAnnotations(template);
-		SaltSample.createSyntaxAnnotations(template);
-		SaltSample.createMorphologyAnnotations(template);
+		SampleGenerator.createPrimaryData(template);
+		SampleGenerator.createTokens(template);
+		SampleGenerator.createSyntaxStructure(template);
+		SampleGenerator.createAnaphoricAnnotations(template);
+		SampleGenerator.createSyntaxAnnotations(template);
+		SampleGenerator.createMorphologyAnnotations(template);
 
 		this.isTestMode = true;
 
@@ -162,8 +163,8 @@ public class MergerMapperTest_graph extends MergerMapper {
 		MappingSubject sub1 = new MappingSubject();
 		sub1.setSElementId(sDoc1.getSElementId());
 		getFixture().getMappingSubjects().add(sub1);
-		SaltSample.createPrimaryData(sDoc1);
-		SaltSample.createTokens(sDoc1);
+		SampleGenerator.createPrimaryData(sDoc1);
+		SampleGenerator.createTokens(sDoc1);
 
 		SDocument sDoc2 = SaltFactory.eINSTANCE.createSDocument();
 		sDoc2.setSId("sdoc2");
@@ -171,19 +172,19 @@ public class MergerMapperTest_graph extends MergerMapper {
 		MappingSubject sub2 = new MappingSubject();
 		sub2.setSElementId(sDoc2.getSElementId());
 		getFixture().getMappingSubjects().add(sub2);
-		SaltSample.createPrimaryData(sDoc2);
-		SaltSample.createTokens(sDoc2);
-		SaltSample.createInformationStructureSpan(sDoc2);
-		SaltSample.createInformationStructureAnnotations(sDoc2);
+		SampleGenerator.createPrimaryData(sDoc2);
+		SampleGenerator.createTokens(sDoc2);
+		SampleGenerator.createInformationStructureSpan(sDoc2);
+		SampleGenerator.createInformationStructureAnnotations(sDoc2);
 
 		// template document contains all annotations
 		SDocument template = SaltFactory.eINSTANCE.createSDocument();
 		template.setSId("template");
 		template.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		SaltSample.createPrimaryData(template);
-		SaltSample.createTokens(template);
-		SaltSample.createInformationStructureSpan(template);
-		SaltSample.createInformationStructureAnnotations(template);
+		SampleGenerator.createPrimaryData(template);
+		SampleGenerator.createTokens(template);
+		SampleGenerator.createInformationStructureSpan(template);
+		SampleGenerator.createInformationStructureAnnotations(template);
 
 		assertEquals(0, sDoc1.getSDocumentGraph().getSSpans().size());
 		assertEquals(0, sDoc1.getSDocumentGraph().getSSpanningRelations().size());
@@ -214,9 +215,9 @@ public class MergerMapperTest_graph extends MergerMapper {
 		MappingSubject sub1 = new MappingSubject();
 		sub1.setSElementId(sDoc1.getSElementId());
 		getFixture().getMappingSubjects().add(sub1);
-		SaltSample.createPrimaryData(sDoc1);
-		SaltSample.createTokens(sDoc1);
-		SaltSample.createInformationStructureSpan(sDoc1);
+		SampleGenerator.createPrimaryData(sDoc1);
+		SampleGenerator.createTokens(sDoc1);
+		SampleGenerator.createInformationStructureSpan(sDoc1);
 
 		SDocument sDoc2 = SaltFactory.eINSTANCE.createSDocument();
 		sDoc2.setSId("sdoc2");
@@ -224,19 +225,19 @@ public class MergerMapperTest_graph extends MergerMapper {
 		MappingSubject sub2 = new MappingSubject();
 		sub2.setSElementId(sDoc2.getSElementId());
 		getFixture().getMappingSubjects().add(sub2);
-		SaltSample.createPrimaryData(sDoc2);
-		SaltSample.createTokens(sDoc2);
-		SaltSample.createInformationStructureSpan(sDoc2);
-		SaltSample.createInformationStructureAnnotations(sDoc2);
+		SampleGenerator.createPrimaryData(sDoc2);
+		SampleGenerator.createTokens(sDoc2);
+		SampleGenerator.createInformationStructureSpan(sDoc2);
+		SampleGenerator.createInformationStructureAnnotations(sDoc2);
 
 		// template document contains all annotations
 		SDocument template = SaltFactory.eINSTANCE.createSDocument();
 		template.setSId("template");
 		template.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		SaltSample.createPrimaryData(template);
-		SaltSample.createTokens(template);
-		SaltSample.createInformationStructureSpan(template);
-		SaltSample.createInformationStructureAnnotations(template);
+		SampleGenerator.createPrimaryData(template);
+		SampleGenerator.createTokens(template);
+		SampleGenerator.createInformationStructureSpan(template);
+		SampleGenerator.createInformationStructureAnnotations(template);
 
 		this.isTestMode = true;
 		this.mergeSDocumentGraph();
@@ -295,31 +296,31 @@ public class MergerMapperTest_graph extends MergerMapper {
 
 		// document data
 		// doc 1
-		SaltSample.createPrimaryData(sDoc1);
-		SaltSample.createTokens(sDoc1);
-		SaltSample.createAnaphoricAnnotations(sDoc1);
+		SampleGenerator.createPrimaryData(sDoc1);
+		SampleGenerator.createTokens(sDoc1);
+		SampleGenerator.createAnaphoricAnnotations(sDoc1);
 
 		// doc 2
-		SaltSample.createPrimaryData(sDoc2);
-		SaltSample.createTokens(sDoc2);
-		SaltSample.createSyntaxStructure(sDoc2);
-		SaltSample.createSyntaxAnnotations(sDoc2);
+		SampleGenerator.createPrimaryData(sDoc2);
+		SampleGenerator.createTokens(sDoc2);
+		SampleGenerator.createSyntaxStructure(sDoc2);
+		SampleGenerator.createSyntaxAnnotations(sDoc2);
 
 		// doc 3
-		SaltSample.createPrimaryData(sDoc3);
-		SaltSample.createTokens(sDoc3);
-		SaltSample.createMorphologyAnnotations(sDoc3);
+		SampleGenerator.createPrimaryData(sDoc3);
+		SampleGenerator.createTokens(sDoc3);
+		SampleGenerator.createMorphologyAnnotations(sDoc3);
 
 		// template document contains all annotations
 		SDocument template = SaltFactory.eINSTANCE.createSDocument();
 		template.setSId("template");
 		template.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		SaltSample.createPrimaryData(template);
-		SaltSample.createTokens(template);
-		SaltSample.createSyntaxStructure(template);
-		SaltSample.createAnaphoricAnnotations(template);
-		SaltSample.createSyntaxAnnotations(template);
-		SaltSample.createMorphologyAnnotations(template);
+		SampleGenerator.createPrimaryData(template);
+		SampleGenerator.createTokens(template);
+		SampleGenerator.createSyntaxStructure(template);
+		SampleGenerator.createAnaphoricAnnotations(template);
+		SampleGenerator.createSyntaxAnnotations(template);
+		SampleGenerator.createMorphologyAnnotations(template);
 
 		this.isTestMode = false;
 		this.mergeSDocumentGraph();
@@ -337,8 +338,8 @@ public class MergerMapperTest_graph extends MergerMapper {
 	 * The test case uses two texts:
 	 * 
 	 * <ol>
-	 * <li>{@value SaltSample#PRIMARY_TEXT_EN}</li>
-	 * <li>Well. {@value SaltSample#PRIMARY_TEXT_EN} I am not sure!</li>
+	 * <li>{@value SampleGenerator#PRIMARY_TEXT_EN}</li>
+	 * <li>Well. {@value SampleGenerator#PRIMARY_TEXT_EN} I am not sure!</li>
 	 * </ol>
 	 */
 	@Test
@@ -346,29 +347,29 @@ public class MergerMapperTest_graph extends MergerMapper {
 		SDocument sDoc1 = SaltFactory.eINSTANCE.createSDocument();
 		sDoc1.setSId("doc1");
 		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		SaltSample.createPrimaryData(sDoc1);
+		SampleGenerator.createPrimaryData(sDoc1);
 
 		SLayer morphLayer = SaltFactory.eINSTANCE.createSLayer();
 		morphLayer.setSName("morphology");
 		sDoc1.getSDocumentGraph().addSLayer(morphLayer);
-		SaltSample.createToken(0, 2, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // Is
-		SaltSample.createToken(3, 7, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // this
-		SaltSample.createToken(8, 15, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // example
-		SaltSample.createToken(16, 20, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // more
-		SaltSample.createToken(21, 32, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // complicated
-		SaltSample.createToken(33, 37, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // than
-		SaltSample.createToken(38, 40, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // it
-		SaltSample.createToken(41, 48, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // supposed
-		SaltSample.createToken(49, 51, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // to
-		// SaltSample.createToken(52,55,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);
+		SampleGenerator.createToken(0, 2, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // Is
+		SampleGenerator.createToken(3, 7, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // this
+		SampleGenerator.createToken(8, 15, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // example
+		SampleGenerator.createToken(16, 20, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // more
+		SampleGenerator.createToken(21, 32, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // complicated
+		SampleGenerator.createToken(33, 37, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // than
+		SampleGenerator.createToken(38, 40, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // it
+		SampleGenerator.createToken(41, 48, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // supposed
+		SampleGenerator.createToken(49, 51, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // to
+		// SampleGenerator.createToken(52,55,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);
 		// //be?
-		SaltSample.createToken(52, 54, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // be
-		SaltSample.createToken(54, 55, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // ?
+		SampleGenerator.createToken(52, 54, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // be
+		SampleGenerator.createToken(54, 55, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // ?
 
 		SDocument sDoc2 = SaltFactory.eINSTANCE.createSDocument();
 		sDoc2.setSId("doc2");
 		sDoc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		sDoc2.getSDocumentGraph().createSTextualDS("Well. " + SaltSample.PRIMARY_TEXT_EN + " I am not sure!");
+		sDoc2.getSDocumentGraph().createSTextualDS("Well. " + SampleGenerator.PRIMARY_TEXT_EN + " I am not sure!");
 		sDoc2.getSDocumentGraph().tokenize();
 
 		EList<SToken> baseTextToken = sDoc2.getSDocumentGraph().getSortedSTokenByText();
@@ -420,8 +421,8 @@ public class MergerMapperTest_graph extends MergerMapper {
 	 * The test case uses two texts:
 	 * 
 	 * <ol>
-	 * <li>{@value SaltSample#PRIMARY_TEXT_EN}</li>
-	 * <li>Well. {@value SaltSample#PRIMARY_TEXT_EN} I am not sure!</li>
+	 * <li>{@value SampleGenerator#PRIMARY_TEXT_EN}</li>
+	 * <li>Well. {@value SampleGenerator#PRIMARY_TEXT_EN} I am not sure!</li>
 	 * </ol>
 	 * 
 	 * In this test, the first text is used as base text and one token of the
@@ -432,30 +433,30 @@ public class MergerMapperTest_graph extends MergerMapper {
 		SDocument sDoc1 = SaltFactory.eINSTANCE.createSDocument();
 		sDoc1.setSId("doc1");
 		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		SaltSample.createPrimaryData(sDoc1);
+		SampleGenerator.createPrimaryData(sDoc1);
 
 		SLayer morphLayer = SaltFactory.eINSTANCE.createSLayer();
 		morphLayer.setSName("morphology");
 		sDoc1.getSDocumentGraph().addSLayer(morphLayer);
-		SaltSample.createToken(0, 2, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // Is
-		SaltSample.createToken(3, 7, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // this
-		SaltSample.createToken(8, 15, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // example
-		SaltSample.createToken(16, 20, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // more
-		// SaltSample.createToken(21,32,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);
+		SampleGenerator.createToken(0, 2, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // Is
+		SampleGenerator.createToken(3, 7, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // this
+		SampleGenerator.createToken(8, 15, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // example
+		SampleGenerator.createToken(16, 20, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // more
+		// SampleGenerator.createToken(21,32,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);
 		// //complicated
-		SaltSample.createToken(33, 37, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // than
-		SaltSample.createToken(38, 40, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // it
-		SaltSample.createToken(41, 48, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // supposed
-		SaltSample.createToken(49, 51, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // to
-		// SaltSample.createToken(52,55,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);
+		SampleGenerator.createToken(33, 37, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // than
+		SampleGenerator.createToken(38, 40, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // it
+		SampleGenerator.createToken(41, 48, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // supposed
+		SampleGenerator.createToken(49, 51, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // to
+		// SampleGenerator.createToken(52,55,sDoc1.getSDocumentGraph().getSTextualDSs().get(0),sDoc1,morphLayer);
 		// //be?
-		SaltSample.createToken(52, 54, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // be
-		SaltSample.createToken(54, 55, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // ?
+		SampleGenerator.createToken(52, 54, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // be
+		SampleGenerator.createToken(54, 55, sDoc1.getSDocumentGraph().getSTextualDSs().get(0), sDoc1, morphLayer); // ?
 
 		SDocument sDoc2 = SaltFactory.eINSTANCE.createSDocument();
 		sDoc2.setSId("doc2");
 		sDoc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		sDoc2.getSDocumentGraph().createSTextualDS("Well. " + SaltSample.PRIMARY_TEXT_EN + " I am not sure!");
+		sDoc2.getSDocumentGraph().createSTextualDS("Well. " + SampleGenerator.PRIMARY_TEXT_EN + " I am not sure!");
 		sDoc2.getSDocumentGraph().tokenize();
 
 		List<SToken> baseTextToken = sDoc1.getSDocumentGraph().getSortedSTokenByText();

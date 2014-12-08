@@ -152,6 +152,26 @@ public class TokenMergeContainer {
 
 	/** The base {@link SDocument} object **/
 	private SDocument baseDocument = null;
+	/**
+	 * This method sets the base {@link SDocument}.
+	 * 
+	 * @param sDocument
+	 *            The {@link SDocument} to set as base.
+	 */
+	public void setBaseDocument(SDocument sDocument) {
+		this.baseDocument = sDocument;
+		System.out.println("----> base document now is: "+ SaltFactory.eINSTANCE.getGlobalId(getBaseDocument().getSElementId()));
+	}
+
+	/**
+	 * This method returns the base {@link SDocument} object.
+	 * 
+	 * @return The base {@link SDocument} or null, if there is no base
+	 *         {@link SDocument}
+	 */
+	public SDocument getBaseDocument() {
+		return(baseDocument);
+	}
 
 	/** The base {@link STextualDS} object **/
 	public STextualDS baseText = null;
@@ -237,26 +257,6 @@ public class TokenMergeContainer {
 	}
 
 	/**
-	 * This method sets the base {@link SDocument}.
-	 * 
-	 * @param sDocument
-	 *            The {@link SDocument} to set as base.
-	 */
-	public void setBaseDocument(SDocument sDocument) {
-		this.baseDocument = sDocument;
-	}
-
-	/**
-	 * This method returns the base {@link SDocument} object.
-	 * 
-	 * @return The base {@link SDocument} or null, if there is no base
-	 *         {@link SDocument}
-	 */
-	public SDocument getBaseDocument() {
-		return this.baseDocument;
-	}
-
-	/**
 	 * This method adds the normalized text, specified by the parameter, for the
 	 * specified {@link STextualDS} of the specified {@link SDocument} object.
 	 * 
@@ -272,13 +272,13 @@ public class TokenMergeContainer {
 		if (maximumNormalizedTextLength == -1) {
 			this.maximumNormalizedTextLength = normalizedText.length();
 			this.baseText = sTextualDS;
-			this.baseDocument = doc;
+//			setBaseDocument(doc);
 		} else {
 			if (normalizedText.length() > this.maximumNormalizedTextLength) {
 				// We found a new minimum
 				this.maximumNormalizedTextLength = normalizedText.length();
 				this.baseText = sTextualDS;
-				this.baseDocument = doc;
+//				setBaseDocument(doc);
 			}
 		}
 		this.normalizedTextMap.put(sTextualDS, normalizedText);
@@ -509,7 +509,7 @@ public class TokenMergeContainer {
 		if (this.normalizedTextMap.containsKey(sDocument)) {
 			this.normalizedTextMap.remove(sDocument);
 		}
-		if (sDocument == this.baseDocument) {
+		if (sDocument == getBaseDocument()) {
 			this.normalizedBaseTextToOriginalBaseText.clear();
 		}
 		for (SToken tok : this.equivalentToken.keySet()) {

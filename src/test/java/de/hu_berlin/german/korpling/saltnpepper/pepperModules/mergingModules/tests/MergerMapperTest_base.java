@@ -40,7 +40,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltSample.SaltSample;
+import de.hu_berlin.german.korpling.saltnpepper.salt.samples.SampleGenerator;
 
 public class MergerMapperTest_base extends MergerMapper {
 
@@ -166,8 +166,8 @@ public class MergerMapperTest_base extends MergerMapper {
 	 * The test case uses two texts:
 	 * 
 	 * <ol>
-	 * <li>{@value SaltSample#PRIMARY_TEXT_EN}</li>
-	 * <li>Well. {@value SaltSample#PRIMARY_TEXT_EN} I am not sure!</li>
+	 * <li>{@value SampleGenerator#PRIMARY_TEXT_EN}</li>
+	 * <li>Well. {@value SampleGenerator#PRIMARY_TEXT_EN} I am not sure!</li>
 	 * </ol>
 	 */
 	@Test
@@ -175,13 +175,13 @@ public class MergerMapperTest_base extends MergerMapper {
 		SDocument sDoc1 = SaltFactory.eINSTANCE.createSDocument();
 		sDoc1.setSId("doc1");
 		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		SaltSample.createPrimaryData(sDoc1);
-		SaltSample.createTokens(sDoc1);
+		SampleGenerator.createPrimaryData(sDoc1);
+		SampleGenerator.createTokens(sDoc1);
 
 		SDocument sDoc2 = SaltFactory.eINSTANCE.createSDocument();
 		sDoc2.setSId("doc2");
 		sDoc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		sDoc2.getSDocumentGraph().createSTextualDS("Well. " + SaltSample.PRIMARY_TEXT_EN + " I am not sure!");
+		sDoc2.getSDocumentGraph().createSTextualDS("Well. " + SampleGenerator.PRIMARY_TEXT_EN + " I am not sure!");
 		sDoc2.getSDocumentGraph().tokenize();
 
 		EList<SToken> baseTextToken = sDoc2.getSDocumentGraph().getSortedSTokenByText();
