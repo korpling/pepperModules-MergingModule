@@ -311,7 +311,7 @@ class MergeHandler implements SGraphTraverseHandler {
 						SaltFactory.eINSTANCE.moveSMetaAnnotations(fromLayer, toLayer);
 						toGraph.addSLayer(toLayer);
 					}
-					toLayer.getSNodes().add(toNode);
+					toNode.getSLayers().add(toLayer);
 				}
 			}
 		}
