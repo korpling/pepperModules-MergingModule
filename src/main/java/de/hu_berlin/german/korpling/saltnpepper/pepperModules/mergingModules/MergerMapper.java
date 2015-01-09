@@ -18,6 +18,7 @@
 
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
@@ -47,6 +48,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SElementId;
 
 /**
  * This class does the real merging, the main task is to merge a set of document
@@ -183,18 +185,18 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			logger.debug("[Merger] " + "merged documents {}. ", getMappingSubjects());
 		}
-		
-		for (MappingSubject subj: getMappingSubjects()){
-			SDocument sDoc= (SDocument)subj.getSElementId().getSIdentifiableElement();
-			Set<STextualDS> texts= new HashSet<STextualDS>();
-			for (STextualRelation rel: sDoc.getSDocumentGraph().getSTextualRelations()){
-				texts.add(rel.getSTextualDS());
-			}
-			System.out.println("----->ALL TEXTS OF TOKENS: "+texts);
-			System.out.println("----->ALL TEXTS:"+((SDocument)subj.getSElementId().getSIdentifiableElement()).getSDocumentGraph().getSTextualDSs().size());
-			
-		}
-		
+
+//		for (MappingSubject subj : getMappingSubjects()) {
+//			SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
+//			Set<STextualDS> texts = new HashSet<STextualDS>();
+//			for (STextualRelation rel : sDoc.getSDocumentGraph().getSTextualRelations()) {
+//				texts.add(rel.getSTextualDS());
+//			}
+//			System.out.println("----->ALL TEXTS OF TOKENS: " + texts);
+//			System.out.println("----->ALL TEXTS:" + ((SDocument) subj.getSElementId().getSIdentifiableElement()).getSDocumentGraph().getSTextualDSs().size());
+//
+//		}
+
 		return (DOCUMENT_STATUS.COMPLETED);
 	}
 
@@ -359,31 +361,62 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 */
 
 	/**
-	 * Chooses the base {@link SDocument} in which all nodes, relations etc. have to be merged in in further 
-	 * processing.
+	 * Chooses the base {@link SDocument} in which all nodes, relations etc.
+	 * have to be merged in in further processing.
 	 * 
 	 * @return The base {@link SDocument}
 	 */
 	protected MappingSubject chooseBaseDocument() {
 		MappingSubject baseSubj = null;
+		List<String> docs = new ArrayList<String>();
 		for (MappingSubject subj : getMappingSubjects()) {
+			docs.add(SaltFactory.eINSTANCE.getGlobalId(subj.getSElementId()));
 			if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
 				SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
-
+				// sets baseSubj
 				if (((MergerProperties) getProperties()).isFirstAsBase()) {
+					//choose first document in list, if property is set
+					
 					if (sDoc.getSCorpusGraph().equals(getBaseCorpusStructure())) {
 						baseSubj = subj;
 						baseSubj.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
 						break;
 					}
 				} else {
+					// search for document with minimum of nodes and edges
+					SDocumentGraph baseDocGr= ((SDocument)baseSubj.getSElementId().getSIdentifiableElement()).getSDocumentGraph();
+					SDocumentGraph otherDocGr= ((SDocument)subj.getSElementId().getSIdentifiableElement()).getSDocumentGraph();
+					if (baseSubj== null){
+						// first run
+						
+						baseSubj= subj;
+					}else{
+						// following runs
+						
+						if (baseDocGr== null){
+							
+						}
+						System.out.println("baseDocGr.getSNodes(): "+ baseDocGr.getSNodes());
+						System.out.println("baseDocGr.getSRelations(): "+ baseDocGr.getSRelations());
+						System.out.println("otherDocGr.getSNodes(): "+ otherDocGr.getSNodes());
+						System.out.println("otherDocGr.getSRelations(): "+ otherDocGr.getSRelations());
+						if (baseDocGr.getSNodes().size()+baseDocGr.getSRelations().size() < otherDocGr.getSNodes().size()+otherDocGr.getSRelations().size()){
+							baseSubj= subj;
+						}
+					}
+					
+					System.out.println("BASE DOC: "+getContainer().getBaseDocument());
 					if (sDoc.equals(getContainer().getBaseDocument())) {
+						System.out.println("HERE 2");
 						baseSubj = subj;
 						baseSubj.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
 						break;
 					}
 				}
 			}
+		}
+		if (baseSubj == null) {
+			throw new PepperModuleException(this, "Cannot find a base document for documents: '" + docs + "'.");
 		}
 		getContainer().setBaseDocument((SDocument) baseSubj.getSElementId().getSIdentifiableElement());
 		logger.trace("[Merger] " + "Chose base document. It is document with id '{}'. ", SaltFactory.eINSTANCE.getGlobalId(getContainer().getBaseDocument().getSElementId()));
@@ -591,8 +624,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			boolean hasTexts = true;
 			SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
 			if (sDoc != getContainer().getBaseDocument()) {// ignore the base
-														// document and align
-														// all other
+															// document and
+															// align
+															// all other
 				if (sDoc.getSDocumentGraph() == null) {
 					throw new PepperModuleDataException(this, "Cannot map document '" + SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()) + "', since it does not contain a document-structure.");
 				}
@@ -603,12 +637,12 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 						// The other document has at least one text
 						HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 						for (STextualDS baseText : getContainer().getBaseDocument().getSDocumentGraph().getSTextualDSs()) { // for
-																														// all
-																														// texts
-																														// of
-																														// the
-																														// base
-																														// document
+							// all
+							// texts
+							// of
+							// the
+							// base
+							// document
 							nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 							// initialize the set of nonEquivalent token.
 							// Initially, all token do not have an equivalent.

@@ -37,7 +37,7 @@ public class MergerProperties extends PepperModuleProperties {
 	public static final String PROP_PUNCTUATIONS= PREFIX+"punctuations";
 	public static final String PROP_ESCAPE_MAPPING= PREFIX+"escapeMapping";
 	/** If this property is set to 'true', the base document is always the one, which belongs to the first SCorpusGraph (the first importer in Pepper workflow description). The value either could be 'true' or false. **/
-	public static final String PROP_FIRST_AS_BASE= PREFIX+"firstAsBase";
+	public static final String PROP_FIRST_AS_BASE = PREFIX + "firstAsBase";
 
 	/** Default punctuation characters **/
 	public static final String  PUNCTUATION_DEFAULT = "'.',',',':',';','!','?','(',')','{','}','<','>'";
