@@ -70,7 +70,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SRelation;
  * 
  */
 class MergeHandler implements SGraphTraverseHandler {
-	public static final Logger logger = LoggerFactory.getLogger(MergeHandler.class);
+	public static final Logger logger= LoggerFactory.getLogger(MergeHandler.class);
 	/** graph whose nodes and relations are to copy **/
 	private SDocumentGraph fromGraph = null;
 
@@ -122,33 +122,28 @@ class MergeHandler implements SGraphTraverseHandler {
 		setFromGraph(fromGraph);
 		setToGraph(toGraph);
 		this.container = container;
-		
-		System.out.println("MERGING FORM "+ SaltFactory.eINSTANCE.getGlobalId(fromGraph.getSDocument().getSElementId())+"  TO "+SaltFactory.eINSTANCE.getGlobalId(toGraph.getSDocument().getSElementId()));
 	}
 
 	/**
-	 * Copies all {@link SPointingRelation}s from <code>fromGraph</code> to
-	 * <code>toGraph</code> and even copies their annotations and layers.
-	 * 
-	 * @param fromGraph
-	 *            graph containing the {@link SPointingRelation}s to be copied
-	 * @param toGraph
-	 *            target graph
+	 * Copies all {@link SPointingRelation}s from <code>fromGraph</code> to <code>toGraph</code> and even copies their
+	 * annotations and layers. 
+	 * @param fromGraph graph containing the {@link SPointingRelation}s to be copied
+	 * @param toGraph target graph
 	 */
-	public void mergeSPointingRelations(SDocumentGraph fromGraph, SDocumentGraph toGraph) {
-		for (SPointingRelation fromRel : fromGraph.getSPointingRelations()) {
-			SNode toSourceNode = node2NodeMap.get(fromRel.getSSource());
-			SNode toTargetNode = node2NodeMap.get(fromRel.getSTarget());
-
-			if (toSourceNode == null) {
-				logger.warn("[Merger] Cannot merge SPointingRelation '" + fromRel.getSId() + "', because no matching node was found in target graph for source node '" + fromRel.getSSource() + "'. ");
-			} else if (toTargetNode == null) {
-				logger.warn("[Merger] Cannot merge SPointingRelation '" + fromRel.getSId() + "', because no matching node was found in source graph for source node '" + fromRel.getSTarget() + "'. ");
-			} else {
-				SPointingRelation toRel = SaltFactory.eINSTANCE.createSPointingRelation();
+	public void mergeSPointingRelations(SDocumentGraph fromGraph, SDocumentGraph toGraph){
+		for (SPointingRelation fromRel: fromGraph.getSPointingRelations()){
+			SNode toSourceNode= node2NodeMap.get(fromRel.getSSource());
+			SNode toTargetNode= node2NodeMap.get(fromRel.getSTarget());
+			
+			if (toSourceNode== null){
+				logger.warn("[Merger] Cannot merge SPointingRelation '"+fromRel.getSId()+"', because no matching node was found in target graph for source node '"+fromRel.getSSource()+"'. ");
+			}else if (toTargetNode== null){
+				logger.warn("[Merger] Cannot merge SPointingRelation '"+fromRel.getSId()+"', because no matching node was found in source graph for source node '"+fromRel.getSTarget()+"'. ");
+			}else{
+				SPointingRelation toRel= SaltFactory.eINSTANCE.createSPointingRelation();
 				toRel.setSSource(toSourceNode);
 				toRel.setSTarget(toTargetNode);
-				for (String type : fromRel.getSTypes()) {
+				for (String type: fromRel.getSTypes()){
 					toRel.addSType(type);
 				}
 				SaltFactory.eINSTANCE.moveSAnnotations(fromRel, toRel);
@@ -158,29 +153,25 @@ class MergeHandler implements SGraphTraverseHandler {
 			}
 		}
 	}
-
-	/**
-	 * set of already visited {@link SRelation}s while traversing, this is
-	 * necessary to avoid cycles
-	 **/
-	private Set<SRelation> visitedRelations = new HashSet<SRelation>();
-
+	
+	/** set of already visited {@link SRelation}s while traversing, this is necessary to avoid cycles**/
+	private Set<SRelation> visitedRelations= new HashSet<SRelation>();
 	/**
 	 * Called by Pepper as callback, when fromGraph is traversed. Currently only
 	 * returns <code>true</code> to traverse the entire graph.
 	 */
 	@Override
 	public boolean checkConstraint(GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SRelation sRelation, SNode currNode, long order) {
-		if (sRelation != null) {
-			if (visitedRelations.contains(sRelation)) {
-				return (false);
-			} else {
+		if (sRelation!= null){
+			if(visitedRelations.contains(sRelation)){
+				return(false);
+			}else{
 				visitedRelations.add(sRelation);
 			}
 		}
+		
 		return true;
 	}
-
 	/**
 	 * Called by Pepper as callback, when fromGraph is traversed. Currently is
 	 * empty.
@@ -188,7 +179,6 @@ class MergeHandler implements SGraphTraverseHandler {
 	@Override
 	public void nodeReached(GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SNode currNode, SRelation sRelation, SNode fromNode, long order) {
 	}
-
 	/**
 	 * Called by Pepper as callback, when fromGraph is traversed.
 	 */
@@ -232,19 +222,18 @@ class MergeHandler implements SGraphTraverseHandler {
 				if (toNode != null) {
 					// Match found
 				} else {
-					// Find the alignment of the current token to create a new
-					// one
+					// Find the alignment of the current token to create a new one
 					Integer sStart = container.getAlignedTokenStart(baseText, (SToken) currNode);
 					Integer sLength = container.getAlignedTokenLength(baseText, (SToken) currNode);
-					if ((sStart != -1) && (sLength != -1)) {
+					if (	(sStart!= -1)&&
+							(sLength!= -1)){
 						toNode = toGraph.createSToken(baseText, sStart, sStart + sLength);
-					} else {
-						logger.warn("Could not create token in target graph matching to node '" + SaltFactory.eINSTANCE.getGlobalId(currNode.getSElementId()) + "', because sStart-value (" + sStart + ") or sLength-value (" + sLength + ") was empty. ");
+					}else{
+						logger.warn("Could not create token in target graph matching to node '"+SaltFactory.eINSTANCE.getGlobalId(currNode.getSElementId())+"', because sStart-value ("+sStart+") or sLength-value ("+sLength+") was empty. ");
 					}
 				}
 				break;
-			}
-			case SSPAN: {
+			}case SSPAN: {
 				// TODO: better way to cast
 				EList<SToken> toSTokens = new BasicEList<SToken>();
 				for (SNode sNode : childrens) {
@@ -252,8 +241,7 @@ class MergeHandler implements SGraphTraverseHandler {
 				}
 				toNode = toGraph.createSSpan(toSTokens);
 				break;
-			}
-			case SSTRUCTURE: {
+			}case SSTRUCTURE: {
 				// TODO: better way to cast
 				EList<SStructuredNode> baseStructureNodes = new BasicEList<SStructuredNode>();
 				for (SNode sNode : childrens) {
@@ -261,46 +249,46 @@ class MergeHandler implements SGraphTraverseHandler {
 				}
 				toNode = toGraph.createSStructure(baseStructureNodes);
 				break;
-			}
-			default:
+			}default:
 				break;
 			}
-
+			
 			moveAnnosForRelations(currNode, toNode);
 		}
-		if (toNode != null) {
+		if (toNode != null){
 			node2NodeMap.put(currNode, toNode);
-			// copies all layers and add node toNode to them
+			//copies all layers and add node toNode to them
 			copySLayers(currNode, toNode);
-			// moves annotations from currNode to toNode
+			//moves annotations from currNode to toNode
 			SaltFactory.eINSTANCE.moveSAnnotations(currNode, toNode);
 			SaltFactory.eINSTANCE.moveSMetaAnnotations(currNode, toNode);
 		}
 	}
-
+	
 	/**
-	 * Copies the {@link SNode} or {@link SRelation} objects passed as
-	 * <code>from</code> to all layers, the object passed as <code>to</code> is
-	 * connected with. If no such layer exists in target graph, it will be
-	 * created and all its annotations will be moved.
-	 * 
+	 * Copies the {@link SNode} or {@link SRelation} objects passed as <code>from</code> to all layers, 
+	 * the object passed as <code>to</code> is connected with. If no such layer exists in target graph, it will
+	 * be created and all its annotations will be moved.  
 	 * @param from
 	 * @param to
 	 */
-	private static void copySLayers(SIdentifiableElement from, SIdentifiableElement to) {
-		if ((from instanceof SRelation) && (to instanceof SRelation)) {
-			SRelation fromRel = (SRelation) from;
-			SRelation toRel = (SRelation) to;
-			if ((fromRel.getSLayers() != null) && (fromRel.getSLayers().size() != 0)) {
-				SDocumentGraph toGraph = ((SDocumentGraph) toRel.getSGraph());
-				for (SLayer fromLayer : fromRel.getSLayers()) {
-					List<SLayer> layers = toGraph.getSLayerByName(fromLayer.getSName());
-					SLayer toLayer = null;
-					if ((layers != null) && (!layers.isEmpty())) {
-						toLayer = layers.get(0);
+	private static void copySLayers(SIdentifiableElement from, SIdentifiableElement to){
+		if (	(from instanceof SRelation)&&
+				(to instanceof SRelation)){
+			SRelation fromRel= (SRelation) from;
+			SRelation toRel= (SRelation) to;
+			if (	(fromRel.getSLayers()!= null)&&
+					(fromRel.getSLayers().size()!= 0)){
+				SDocumentGraph toGraph= ((SDocumentGraph)toRel.getSGraph());
+				for (SLayer fromLayer: fromRel.getSLayers()){
+					List<SLayer> layers= toGraph.getSLayerByName(fromLayer.getSName());
+					SLayer toLayer=null;
+					if (	(layers!= null)&&
+							(!layers.isEmpty())){
+						toLayer= layers.get(0);
 					}
-					if (toLayer == null) {
-						toLayer = SaltFactory.eINSTANCE.createSLayer();
+					if (toLayer== null){
+						toLayer= SaltFactory.eINSTANCE.createSLayer();
 						toLayer.setSName(fromLayer.getSName());
 						SaltFactory.eINSTANCE.moveSAnnotations(fromLayer, toLayer);
 						SaltFactory.eINSTANCE.moveSMetaAnnotations(fromLayer, toLayer);
@@ -308,21 +296,24 @@ class MergeHandler implements SGraphTraverseHandler {
 					}
 					toRel.getSLayers().add(toLayer);
 				}
-			}
-		} else if ((from instanceof SNode) && (to instanceof SNode)) {
-			SNode fromNode = (SNode) from;
-			SNode toNode = (SNode) to;
-			if ((fromNode.getSLayers() != null) && (fromNode.getSLayers().size() != 0)) {
-				SDocumentGraph toGraph = ((SDocumentGraph) toNode.getSGraph());
-
-				for (SLayer fromLayer : fromNode.getSLayers()) {
-					List<SLayer> layers = toGraph.getSLayerByName(fromLayer.getSName());
-					SLayer toLayer = null;
-					if ((layers != null) && (!layers.isEmpty())) {
-						toLayer = layers.get(0);
+			}		
+		}else if (	(from instanceof SNode)&&
+					(to instanceof SNode)){
+			SNode fromNode= (SNode) from;
+			SNode toNode= (SNode) to;
+			if (	(fromNode.getSLayers()!= null)&&
+					(fromNode.getSLayers().size()!= 0)){
+				SDocumentGraph toGraph= ((SDocumentGraph)toNode.getSGraph());
+				
+				for (SLayer fromLayer: fromNode.getSLayers()){
+					List<SLayer> layers= toGraph.getSLayerByName(fromLayer.getSName());
+					SLayer toLayer=null;
+					if (	(layers!= null)&&
+							(!layers.isEmpty())){
+						toLayer= layers.get(0);
 					}
-					if (toLayer == null) {
-						toLayer = SaltFactory.eINSTANCE.createSLayer();
+					if (toLayer== null){
+						toLayer= SaltFactory.eINSTANCE.createSLayer();
 						toLayer.setSName(fromLayer.getSName());
 						SaltFactory.eINSTANCE.moveSAnnotations(fromLayer, toLayer);
 						SaltFactory.eINSTANCE.moveSMetaAnnotations(fromLayer, toLayer);
@@ -335,25 +326,25 @@ class MergeHandler implements SGraphTraverseHandler {
 	}
 
 	/**
-	 * Retrieves the {@link SRelation}s between given nodes and moves their
-	 * {@link SAnnotation} and {@link SMetaAnnotation} objects. Further
-	 * {@link SLayer}s will be copied and the stype (see
-	 * {@link SRelation#getSTypes()}).
-	 * 
+	 * Retrieves the {@link SRelation}s between given nodes and moves their {@link SAnnotation} and 
+	 * {@link SMetaAnnotation} objects.
+	 * Further {@link SLayer}s will be copied and the stype (see {@link SRelation#getSTypes()}).
 	 * @param fromNode
 	 * @param toNode
 	 */
-	private void moveAnnosForRelations(SNode fromNode, SNode toNode) {
-		if ((fromNode != null) && (toNode != null)) {
-			for (SRelation fromRel : fromNode.getOutgoingSRelations()) {
-				SNode toChildNode = node2NodeMap.get(fromRel.getSTarget());
-				for (SRelation toRel : toNode.getOutgoingSRelations()) {
-					if (toRel.getSTarget().equals(toChildNode)) {
+	private void moveAnnosForRelations(SNode fromNode, SNode toNode){
+		if (	(fromNode!= null)&&
+				(toNode!= null))
+		{
+			for (SRelation fromRel: fromNode.getOutgoingSRelations()){
+				SNode toChildNode= node2NodeMap.get(fromRel.getSTarget());
+				for (SRelation toRel: toNode.getOutgoingSRelations()){
+					if (toRel.getSTarget().equals(toChildNode)){
 						SaltFactory.eINSTANCE.moveSAnnotations(fromRel, toRel);
 						SaltFactory.eINSTANCE.moveSMetaAnnotations(fromRel, toRel);
-						List<String> sTypes = fromRel.getSTypes();
-						if (sTypes != null) {
-							for (String type : sTypes) {
+						List<String> sTypes= fromRel.getSTypes();
+						if (sTypes!= null){
+							for (String type: sTypes){
 								toRel.addSType(type);
 							}
 						}
@@ -364,16 +355,12 @@ class MergeHandler implements SGraphTraverseHandler {
 			}
 		}
 	}
-
+	
 	/**
-	 * Returns a list of all direct children of the passed {@link SNode}. The
-	 * children are retrieved via traversing of relations of the passed
-	 * {@link STYPE_NAME}.
-	 * 
-	 * @param parent
-	 *            node to who the children are retrieved
-	 * @param sTypeRelation
-	 *            type of relations to be traversed
+	 * Returns a list of all direct children of the passed {@link SNode}. The children are retrieved via traversing
+	 * of relations of the passed {@link STYPE_NAME}.
+	 * @param parent node to who the children are retrieved
+	 * @param sTypeRelation type of relations to be traversed
 	 * @return a list of children nodes
 	 */
 	private List<SNode> getChildren(SNode parent, STYPE_NAME sTypeRelation) {
@@ -395,21 +382,19 @@ class MergeHandler implements SGraphTraverseHandler {
 	}
 
 	/**
-	 * Returns a list of nodes that are the parents of every node in the given
-	 * base list. Only relations with the given {@link STYPE_NAME} will be
-	 * considered.
-	 * 
-	 * @param children
-	 *            list of nodes whose parents are looked for
-	 * @param sTypeNode
-	 *            regarded types of relations
+	 * Returns a list of nodes that are the parents of every node in the given base
+	 * list. Only relations with the given {@link STYPE_NAME} will be considered.
+	 * @param children list of nodes whose parents are looked for
+	 * @param sTypeNode regarded types of relations
 	 * @return a list of parents
 	 */
 	private List<SNode> getSharedParent(List<SNode> children, STYPE_NAME sTypeNode) {
 		ArrayList<SNode> sharedParents = new ArrayList<SNode>();
-		if ((children.size() > 0) && (children.get(0) != null)) {
-			List<SRelation> rels = children.get(0).getIncomingSRelations();
-			if ((rels != null) && (rels.size() > 0)) {
+		if (	(children.size() > 0)&&
+				(children.get(0)!= null)){
+			List<SRelation> rels= children.get(0).getIncomingSRelations();
+			if (	(rels!= null)&&
+					(rels.size()>0)){
 				// A merge candidate has to be connected to every base node
 				for (SRelation baseRelation : rels) {
 					sharedParents.add(baseRelation.getSSource());

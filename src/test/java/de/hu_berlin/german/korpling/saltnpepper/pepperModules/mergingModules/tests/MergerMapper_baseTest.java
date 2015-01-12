@@ -42,7 +42,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 import de.hu_berlin.german.korpling.saltnpepper.salt.samples.SampleGenerator;
 
-public class MergerMapperTest_base extends MergerMapper {
+public class MergerMapper_baseTest extends MergerMapper {
 
 	private MergerMapper fixture = null;
 

@@ -185,18 +185,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			logger.debug("[Merger] " + "merged documents {}. ", getMappingSubjects());
 		}
-
-//		for (MappingSubject subj : getMappingSubjects()) {
-//			SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
-//			Set<STextualDS> texts = new HashSet<STextualDS>();
-//			for (STextualRelation rel : sDoc.getSDocumentGraph().getSTextualRelations()) {
-//				texts.add(rel.getSTextualDS());
-//			}
-//			System.out.println("----->ALL TEXTS OF TOKENS: " + texts);
-//			System.out.println("----->ALL TEXTS:" + ((SDocument) subj.getSElementId().getSIdentifiableElement()).getSDocumentGraph().getSTextualDSs().size());
-//
-//		}
-
 		return (DOCUMENT_STATUS.COMPLETED);
 	}
 
@@ -366,61 +354,32 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * 
 	 * @return The base {@link SDocument}
 	 */
+	/**
+	 * This method chooses the base {@link SDocument}.
+	 *
+	 * @return The base {@link SDocument}
+	 */
 	protected MappingSubject chooseBaseDocument() {
-		MappingSubject baseSubj = null;
-		List<String> docs = new ArrayList<String>();
+		MappingSubject baseDocument = null;
 		for (MappingSubject subj : getMappingSubjects()) {
-			docs.add(SaltFactory.eINSTANCE.getGlobalId(subj.getSElementId()));
 			if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
 				SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
-				// sets baseSubj
 				if (((MergerProperties) getProperties()).isFirstAsBase()) {
-					//choose first document in list, if property is set
-					
 					if (sDoc.getSCorpusGraph().equals(getBaseCorpusStructure())) {
-						baseSubj = subj;
-						baseSubj.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
+						baseDocument = subj;
 						break;
 					}
 				} else {
-					// search for document with minimum of nodes and edges
-					SDocumentGraph baseDocGr= ((SDocument)baseSubj.getSElementId().getSIdentifiableElement()).getSDocumentGraph();
-					SDocumentGraph otherDocGr= ((SDocument)subj.getSElementId().getSIdentifiableElement()).getSDocumentGraph();
-					if (baseSubj== null){
-						// first run
-						
-						baseSubj= subj;
-					}else{
-						// following runs
-						
-						if (baseDocGr== null){
-							
-						}
-						System.out.println("baseDocGr.getSNodes(): "+ baseDocGr.getSNodes());
-						System.out.println("baseDocGr.getSRelations(): "+ baseDocGr.getSRelations());
-						System.out.println("otherDocGr.getSNodes(): "+ otherDocGr.getSNodes());
-						System.out.println("otherDocGr.getSRelations(): "+ otherDocGr.getSRelations());
-						if (baseDocGr.getSNodes().size()+baseDocGr.getSRelations().size() < otherDocGr.getSNodes().size()+otherDocGr.getSRelations().size()){
-							baseSubj= subj;
-						}
-					}
-					
-					System.out.println("BASE DOC: "+getContainer().getBaseDocument());
-					if (sDoc.equals(getContainer().getBaseDocument())) {
-						System.out.println("HERE 2");
-						baseSubj = subj;
-						baseSubj.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
-						break;
+					if (sDoc == container.getBaseDocument()) {
+						logger.trace("[Merger] " + "Chose base document. It is document with id '{}'. ", container.getBaseDocument().getSId());
+						baseDocument = subj;
+						baseDocument.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
 					}
 				}
 			}
 		}
-		if (baseSubj == null) {
-			throw new PepperModuleException(this, "Cannot find a base document for documents: '" + docs + "'.");
-		}
-		getContainer().setBaseDocument((SDocument) baseSubj.getSElementId().getSIdentifiableElement());
-		logger.trace("[Merger] " + "Chose base document. It is document with id '{}'. ", SaltFactory.eINSTANCE.getGlobalId(getContainer().getBaseDocument().getSElementId()));
-		return baseSubj;
+		this.container.setBaseDocument((SDocument) baseDocument.getSElementId().getSIdentifiableElement());
+		return baseDocument;
 	}
 
 	/**
@@ -439,49 +398,39 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 */
 	protected STextualDS chooseBaseText(SDocument baseDoc, Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> nonEquivalentTokenSets) {
 		STextualDS baseText = null;
-
-		if (((MergerProperties) getProperties()).isFirstAsBase()) {
-			baseText = baseDoc.getSDocumentGraph().getSTextualDSs().get(0);
-		} else {
-			int minimalNonEquivalentTokens = -1;
-			for (STextualDS text : baseDoc.getSDocumentGraph().getSTextualDSs()) {
-				// for all texts of the base document
-				Hashtable<SDocument, HashSet<SToken>> nonEQTokensInOtherDoc = nonEquivalentTokenSets.get(text);
-				if (nonEQTokensInOtherDoc != null) {
-					// there is a set of non-equivalent token for the current
-					// base text
-					int countOfNonEquivalentTokens = 0;
-					for (SDocument otherDoc : nonEQTokensInOtherDoc.keySet()) {
-						// count the number of tokens of all documents which do
-						// not have an equivalent in the current base text
-						countOfNonEquivalentTokens += nonEQTokensInOtherDoc.get(otherDoc).size();
-					} // count the number of tokens of all documents which do
-						// not
-						// have an equivalent in the current base text
-					if (minimalNonEquivalentTokens == -1) {
-						// if the minimalNonEquivalentTokens value is -1, we did
-						// not process a document, yet. initialize
+		int minimalNonEquivalentTokens = -1;
+		for (STextualDS text : baseDoc.getSDocumentGraph().getSTextualDSs()) {
+			// for all texts of the base document
+			Hashtable<SDocument, HashSet<SToken>> nonEQTokensInOtherDoc = nonEquivalentTokenSets.get(text);
+			if (nonEQTokensInOtherDoc != null) {
+				// there is a set of non-equivalent token for the current
+				// base text
+				int countOfNonEquivalentTokens = 0;
+				for (SDocument otherDoc : nonEQTokensInOtherDoc.keySet()) {
+					// count the number of tokens of all documents which do
+					// not have an equivalent in the current base text
+					countOfNonEquivalentTokens += nonEQTokensInOtherDoc.get(otherDoc).size();
+				} // count the number of tokens of all documents which do
+					// have an equivalent in the current base text
+				if (minimalNonEquivalentTokens == -1) {
+					// if the minimalNonEquivalentTokens value is -1, we did
+					// not process a document, yet. initialize
+					minimalNonEquivalentTokens = countOfNonEquivalentTokens;
+					baseText = text;
+				} // if the minimalNonEquivalentTokens value is -1, we did
+					// process a document, yet. initialize
+				else { // there is some base text
+					if (minimalNonEquivalentTokens > countOfNonEquivalentTokens) {
+						// if there are less non-equivalent tokens for this
+						// text than for
+						// some other, set this text as base text
 						minimalNonEquivalentTokens = countOfNonEquivalentTokens;
 						baseText = text;
-					} // if the minimalNonEquivalentTokens value is -1, we did
-						// not
-						// process a document, yet. initialize
-					else { // there is some base text
-						if (minimalNonEquivalentTokens > countOfNonEquivalentTokens) {
-							// if there are less non-equivalent tokens for this
-							// base
-							// text than for
-							// some other, set this text as base text
-							minimalNonEquivalentTokens = countOfNonEquivalentTokens;
-							baseText = text;
-						} // if there are less non-equivalent tokens for this
-							// base
-							// text than for some other, set this text as base
-							// text
-					}
-				} // there is a set of non-equivalent token for the current base
-					// text
-			}
+					} // if there are less non-equivalent tokens for this
+						// text than for some other, set this text as base
+				}
+			} // there is a set of non-equivalent token for the current base
+				// text
 		}
 		if (baseText != null) {
 			logger.trace("[Merger] " + "Chose base text. It is text with id '{}'.", SaltFactory.eINSTANCE.getGlobalId(baseText.getSElementId()));
