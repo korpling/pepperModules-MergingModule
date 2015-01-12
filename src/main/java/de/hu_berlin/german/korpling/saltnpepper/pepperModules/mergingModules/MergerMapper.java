@@ -129,19 +129,31 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			boolean isEmpty = true;
 
-			SDocument baseDocument = null;
-			// emit corpus in base corpus-structure
-			for (MappingSubject subj : getMappingSubjects()) {
-				if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
-					SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
-					if (sDoc.getSCorpusGraph().equals(getBaseCorpusStructure())) {
-						baseDocument = sDoc;
-						break;
-					}
-				}
+			// SDocument baseDocument = null;
+			// // emit corpus in base corpus-structure
+			// for (MappingSubject subj : getMappingSubjects()) {
+			// if (subj.getSElementId().getSIdentifiableElement() instanceof
+			// SDocument) {
+			// SDocument sDoc = (SDocument)
+			// subj.getSElementId().getSIdentifiableElement();
+			// if (sDoc.getSCorpusGraph().equals(getBaseCorpusStructure())) {
+			// baseDocument = sDoc;
+			// break;
+			// }
+			// }
+			// }
+			// if (baseDocument == null){
+			// throw new PepperModuleException(this,
+			// "This might be a bug, no base document was found.");
+			// }
+			// base subject containing the base document
+			MappingSubject baseSubject = chooseBaseDocument();
+			if (baseSubject == null) {
+				throw new PepperModuleException(this, "This might be a bug, no base document could have been computed.");
 			}
-			if (baseDocument == null)
-				throw new PepperModuleException(this, "This might be a bug, no base document was found.");
+			// base document
+			SDocument baseDocument = (SDocument) baseSubject.getSElementId().getSIdentifiableElement();
+
 			// copy all annotations of corpus
 			for (MappingSubject subj : getMappingSubjects()) {
 				if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
@@ -263,7 +275,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 				// clear the table of non-equivalent tokens
 				nonEquivalentTokenSets.clear();
-				// merge!
+
+				// merge two document-structures pairwise
 				for (MappingSubject subj : this.getMappingSubjects()) {
 					// for all documents
 					SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
@@ -360,26 +373,52 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * @return The base {@link SDocument}
 	 */
 	protected MappingSubject chooseBaseDocument() {
-		MappingSubject baseDocument = null;
+		MappingSubject baseSubject = null;
 		for (MappingSubject subj : getMappingSubjects()) {
 			if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
 				SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
-				if (((MergerProperties) getProperties()).isFirstAsBase()) {
+
+				// check if document and document structure is given
+				if (sDoc == null) {
+					throw new PepperModuleException(this, "A Mappingsubject does not contain a document object. This seems to be a bug. ");
+				} else if (sDoc.getSDocumentGraph() == null) {
+					logger.warn("The doucment '" + SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()) + "' does not contain a document structure. Therefore it was ignored. ");
+					continue;
+				}
+				
+				
+				if (getBaseCorpusStructure() == null) {
+					//take first document as base
+					
+					baseSubject = subj;
+					break;
+
+				} else {
+					// take document which is contained in base corpus structure
+					
 					if (sDoc.getSCorpusGraph().equals(getBaseCorpusStructure())) {
-						baseDocument = subj;
+						baseSubject = subj;
 						break;
 					}
-				} else {
-					if (sDoc == container.getBaseDocument()) {
-						logger.trace("[Merger] " + "Chose base document. It is document with id '{}'. ", container.getBaseDocument().getSId());
-						baseDocument = subj;
-						baseDocument.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
-					}
 				}
+
+				// if (((MergerProperties) getProperties()).isFirstAsBase()) {
+				// if (sDoc.getSCorpusGraph().equals(getBaseCorpusStructure()))
+				// {
+				// baseSubject = subj;
+				// break;
+				// }
+				// } else {
+				// if (sDoc.getSCorpusGraph().equals(getBaseCorpusStructure()))
+				// {
+				// baseSubject = subj;
+				// break;
+				// }
+				// }
 			}
 		}
-		this.container.setBaseDocument((SDocument) baseDocument.getSElementId().getSIdentifiableElement());
-		return baseDocument;
+		getContainer().setBaseDocument((SDocument) baseSubject.getSElementId().getSIdentifiableElement());
+		return baseSubject;
 	}
 
 	/**
