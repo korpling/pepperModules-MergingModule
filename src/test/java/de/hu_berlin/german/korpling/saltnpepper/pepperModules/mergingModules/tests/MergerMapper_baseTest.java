@@ -60,7 +60,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 		this.setProperties(new MergerProperties());
 		this.initialize();
 	}
-	
+
 	/**
 	 * Tests the normalization function with different texts.
 	 * <ol>
@@ -211,7 +211,6 @@ public class MergerMapper_baseTest extends MergerMapper {
 		}
 	}
 
-	
 	/**
 	 * Tests the method
 	 * {@link #alignTexts(de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS, de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS)}
