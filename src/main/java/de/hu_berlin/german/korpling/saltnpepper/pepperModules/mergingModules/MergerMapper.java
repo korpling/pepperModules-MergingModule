@@ -202,16 +202,20 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			// corpus-structure, if not, copy it
 			for (MappingSubject subj : getMappingSubjects()) {
 				SDocument sDoc = ((SDocument) subj.getSElementId().getSIdentifiableElement());
-				if (DOCUMENT_STATUS.COMPLETED.equals(subj.getMappingResult())) {
 					if (!sDoc.equals(baseDocument)) {
 						SDocumentGraph oldGraph = sDoc.getSDocumentGraph();
 						sDoc.setSDocumentGraph(baseDocument.getSDocumentGraph());
 						baseDocument.setSDocumentGraph(oldGraph);
 						subj.setMappingResult(DOCUMENT_STATUS.DELETED);
+						if (! isTestMode){
+							getContainer().finishDocument((SDocument) baseSubject.getSElementId().getSIdentifiableElement());
+						}
 					} else if (sDoc.equals(baseDocument)) {
 						subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
+						if (!isTestMode){
+							getContainer().finishDocument(sDoc);
+						}
 					}
-				}
 			}
 
 			logger.debug("[Merger] " + "merged documents {}. ", getMappingSubjects());
@@ -262,24 +266,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			// for all documents
 			SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
 			if (sDoc != getContainer().getBaseDocument()) {
-
 				// merge the document content
 				mergeDocumentStructures((SDocument) baseSubject.getSElementId().getSIdentifiableElement(), sDoc);
-				// we are finished with the document. Free the
-				// memory
-				if (!this.isTestMode) {
-					getContainer().finishDocument(sDoc);
-					subj.setMappingResult(DOCUMENT_STATUS.DELETED);
-				}
 			}
 		}
-
-		if (baseSubject != null) {
-			if (!this.isTestMode) {
-				getContainer().finishDocument((SDocument) baseSubject.getSElementId().getSIdentifiableElement());
-				baseSubject.setMappingResult(DOCUMENT_STATUS.COMPLETED);
-			}
-		} 
 	}
 
 	/**

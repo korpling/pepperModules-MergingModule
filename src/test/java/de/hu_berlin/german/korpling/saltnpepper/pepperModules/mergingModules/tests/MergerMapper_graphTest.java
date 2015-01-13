@@ -322,7 +322,7 @@ public class MergerMapper_graphTest extends MergerMapper {
 		SampleGenerator.createMorphologyAnnotations(template);
 
 		this.isTestMode = false;
-		this.mergeDocumentStructures(chooseBaseDocument());
+		mapSDocument();
 
 		assertEquals(DOCUMENT_STATUS.COMPLETED, sub2.getMappingResult());
 		assertEquals(DOCUMENT_STATUS.DELETED, sub1.getMappingResult());
