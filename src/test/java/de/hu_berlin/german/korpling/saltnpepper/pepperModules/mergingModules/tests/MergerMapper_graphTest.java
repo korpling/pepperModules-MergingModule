@@ -125,7 +125,7 @@ public class MergerMapper_graphTest extends MergerMapper {
 
 		this.isTestMode = true;
 		
-		this.mergeSDocumentGraph();
+		mergeSDocumentGraph();
 
 		// second document must be the base document
 		assertEquals(sDoc2, container.getBaseDocument());

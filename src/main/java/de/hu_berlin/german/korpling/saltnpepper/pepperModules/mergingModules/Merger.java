@@ -289,7 +289,8 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				if (noBase) {
 					if (isDoc) {
 						getBaseCorpusStructure().createSCorpus(URI.createURI(key).trimSegments(1));
-						getBaseCorpusStructure().createSDocument(URI.createURI(key));
+						SDocument doc= getBaseCorpusStructure().createSDocument(URI.createURI(key));
+						doc.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 					} else {
 						getBaseCorpusStructure().createSCorpus(URI.createURI(key));
 					}

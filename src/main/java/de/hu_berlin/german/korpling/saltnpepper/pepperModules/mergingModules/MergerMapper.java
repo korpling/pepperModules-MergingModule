@@ -39,6 +39,7 @@ import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.impl.PepperMapper
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Edge;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.GRAPH_TRAVERSE_TYPE;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.SaltProject;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpus;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpusGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
@@ -225,10 +226,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 	public void mergeSDocumentGraph() {
 		if (this.getMappingSubjects().size() != 0) {
-			MappingSubject baseDocument = null;
+			MappingSubject baseSubject = null;
 
 			if (this.getMappingSubjects().size() < 2) {
-				baseDocument = getMappingSubjects().get(0);
+				baseSubject = getMappingSubjects().get(0);
 			} else {
 				this.initialize();
 				// normalize all texts
@@ -238,8 +239,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 						this.normalizeTextualLayer(sDoc);
 					}
 				}
-				baseDocument = chooseBaseDocument();
-				if (baseDocument == null) {
+				baseSubject = chooseBaseDocument();
+				if (baseSubject == null) {
 					throw new PepperModuleException(this, "Could not choose a base SDocument");
 				}
 
@@ -285,7 +286,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 								this.mergeTokens(getContainer().getBaseText(), sTextualDS, node2NodeMap);
 							}
 							// merge the document content
-							mergeDocumentStructure((SDocument) baseDocument.getSElementId().getSIdentifiableElement(), sDoc);
+							mergeDocumentStructure((SDocument) baseSubject.getSElementId().getSIdentifiableElement(), sDoc);
 							// we are finished with the document. Free the
 							// memory
 							if (!this.isTestMode) {
@@ -297,7 +298,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 							// the base document graph
 							logger.warn("There is no text in document {} to be merged. Will not copy the tokens!", SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()));
 							// merge the document content
-							mergeDocumentStructure((SDocument) baseDocument.getSElementId().getSIdentifiableElement(), sDoc);
+							mergeDocumentStructure((SDocument) baseSubject.getSElementId().getSIdentifiableElement(), sDoc);
 							// we are finished with the document. Free the
 							// memory
 
@@ -310,10 +311,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				}
 			}
 
-			if (baseDocument != null) {
+			if (baseSubject != null) {
 				if (!this.isTestMode) {
-					getContainer().finishDocument((SDocument) baseDocument.getSElementId().getSIdentifiableElement());
-					baseDocument.setMappingResult(DOCUMENT_STATUS.COMPLETED);
+					getContainer().finishDocument((SDocument) baseSubject.getSElementId().getSIdentifiableElement());
+					baseSubject.setMappingResult(DOCUMENT_STATUS.COMPLETED);
 				}
 			} else {
 				// nothing to be merged
@@ -362,12 +363,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
 				// check if document and document structure is given
 				if (sDoc == null) {
-					throw new PepperModuleException(this, "A Mappingsubject does not contain a document object. This seems to be a bug. ");
+					throw new PepperModuleException(this, "A MappingSubject does not contain a document object. This seems to be a bug. ");
 				} else if (sDoc.getSDocumentGraph() == null) {
 					logger.warn("The document '" + SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()) + "' does not contain a document structure. Therefore it was ignored. ");
 					continue;
 				}
-				
 				if (getBaseCorpusStructure() == null) {
 					//current number of SNodes and SRelations contained in document structure
 					int currNumOfElements= (sDoc.getSDocumentGraph().getSNodes().size() + sDoc.getSDocumentGraph().getSRelations().size());
@@ -379,7 +379,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					}
 				} else {
 					// take document which is contained in base corpus structure
-	
 					if (sDoc.getSCorpusGraph().equals(getBaseCorpusStructure())) {
 						baseSubject = subj;
 						break;
@@ -387,7 +386,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				}
 			}
 		}
-		getContainer().setBaseDocument((SDocument) baseSubject.getSElementId().getSIdentifiableElement());
+		if (baseSubject!= null){
+			getContainer().setBaseDocument((SDocument) baseSubject.getSElementId().getSIdentifiableElement());
+		}
 		return baseSubject;
 	}
 

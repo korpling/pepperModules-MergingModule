@@ -85,6 +85,7 @@ public class MergerTest extends PepperManipulatorTest {
 		{
 			SCorpus c2 = SaltFactory.eINSTANCE.createSCorpus();
 			SDocument d1 = SaltFactory.eINSTANCE.createSDocument();
+			d1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 
 			c1_test.setSName("c1");
 			c2.setSName("c2");
@@ -98,8 +99,11 @@ public class MergerTest extends PepperManipulatorTest {
 		SCorpusGraph graph2 = SaltFactory.eINSTANCE.createSCorpusGraph();
 		{
 			SDocument d1 = SaltFactory.eINSTANCE.createSDocument();
+			d1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 			SDocument d2 = SaltFactory.eINSTANCE.createSDocument();
+			d2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 			SDocument d3 = SaltFactory.eINSTANCE.createSDocument();
+			d3.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 			SCorpus c1 = SaltFactory.eINSTANCE.createSCorpus();
 			SCorpus c2 = SaltFactory.eINSTANCE.createSCorpus();
 			SCorpus c3 = SaltFactory.eINSTANCE.createSCorpus();
@@ -122,8 +126,11 @@ public class MergerTest extends PepperManipulatorTest {
 		SCorpusGraph graph3 = SaltFactory.eINSTANCE.createSCorpusGraph();
 		{
 			SDocument d1 = SaltFactory.eINSTANCE.createSDocument();
+			d1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 			SDocument d2 = SaltFactory.eINSTANCE.createSDocument();
+			d2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 			SDocument d3 = SaltFactory.eINSTANCE.createSDocument();
+			d3.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 			SCorpus c1 = SaltFactory.eINSTANCE.createSCorpus();
 			SCorpus c2 = SaltFactory.eINSTANCE.createSCorpus();
 			SCorpus c3 = SaltFactory.eINSTANCE.createSCorpus();
@@ -148,11 +155,15 @@ public class MergerTest extends PepperManipulatorTest {
 		this.getFixture().getSaltProject().getSCorpusGraphs().add(graph3);
 
 		this.start();
-
 		/**
-		 * c1 / \ c2 c3 / \ | d1 d2 d3
+		 * <pre>
+		 *     c1 
+		 *    / \ 
+		 *  c2   c3 
+		 *  / \   | 
+		 * d1 d2 d3
+		 * </pre>
 		 */
-		// TODO: Why is there a Corpus named "pepperModuleTest" in here?
 		assertEquals(4, graph1.getSCorpora().size());
 		assertEquals(3, graph1.getSDocuments().size());
 		assertEquals(2, graph1.getSCorpusRelations().size());
