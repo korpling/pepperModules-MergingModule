@@ -124,27 +124,27 @@ public class MergerMapper_graphTest extends MergerMapper {
 		SampleGenerator.createMorphologyAnnotations(template);
 
 		this.isTestMode = true;
-
+		
 		this.mergeSDocumentGraph();
 
-		// first document must be the base document
-		assertEquals(sDoc1, container.getBaseDocument());
+		// second document must be the base document
+		assertEquals(sDoc2, container.getBaseDocument());
 		// the text of the first document must be the base text
-		assertEquals(sDoc1.getSDocumentGraph().getSTextualDSs().get(0), container.getBaseDocument().getSDocumentGraph().getSTextualDSs().get(0));
+		assertEquals(sDoc2.getSDocumentGraph().getSTextualDSs().get(0), container.getBaseDocument().getSDocumentGraph().getSTextualDSs().get(0));
 
 		// the count of tokens in sDoc1 must be the same as before!
-		assertEquals(template.getSDocumentGraph().getSTokens().size(), sDoc1.getSDocumentGraph().getSTokens().size());
-		assertEquals(template.getSDocumentGraph().getSSpans().size(), sDoc1.getSDocumentGraph().getSSpans().size());
-		assertEquals(template.getSDocumentGraph().getSSpanningRelations().size(), sDoc1.getSDocumentGraph().getSSpanningRelations().size());
-		assertEquals(template.getSDocumentGraph().getSStructures().size(), sDoc1.getSDocumentGraph().getSStructures().size());
-		assertEquals(template.getSDocumentGraph().getSDominanceRelations().size(), sDoc1.getSDocumentGraph().getSDominanceRelations().size());
+		assertEquals(template.getSDocumentGraph().getSTokens().size(), sDoc2.getSDocumentGraph().getSTokens().size());
+		assertEquals(template.getSDocumentGraph().getSSpans().size(), sDoc2.getSDocumentGraph().getSSpans().size());
+		assertEquals(template.getSDocumentGraph().getSSpanningRelations().size(), sDoc2.getSDocumentGraph().getSSpanningRelations().size());
+		assertEquals(template.getSDocumentGraph().getSStructures().size(), sDoc2.getSDocumentGraph().getSStructures().size());
+		assertEquals(template.getSDocumentGraph().getSDominanceRelations().size(), sDoc2.getSDocumentGraph().getSDominanceRelations().size());
 
-		assertEquals(template.getSDocumentGraph().getSNodes().size(), sDoc1.getSDocumentGraph().getSNodes().size());
-		assertEquals(template.getSDocumentGraph().getSRelations().size(), sDoc1.getSDocumentGraph().getSRelations().size());
+		assertEquals(template.getSDocumentGraph().getSNodes().size(), sDoc2.getSDocumentGraph().getSNodes().size());
+		assertEquals(template.getSDocumentGraph().getSRelations().size(), sDoc2.getSDocumentGraph().getSRelations().size());
 
 		assertEquals(template.getSDocumentGraph().getSRoots().size(), sDoc2.getSDocumentGraph().getSRoots().size());
 
-		assertNotNull(sDoc1.getSDocumentGraph());
+		assertNotNull(sDoc2.getSDocumentGraph());
 	}
 
 	/**
@@ -191,13 +191,13 @@ public class MergerMapper_graphTest extends MergerMapper {
 		this.isTestMode = true;
 		this.mergeSDocumentGraph();
 
-		assertNotNull(sDoc1.getSDocumentGraph());
-		assertEquals(template.getSDocumentGraph().getSTokens().size(), sDoc1.getSDocumentGraph().getSTokens().size());
-		assertEquals(template.getSDocumentGraph().getSSpans().size(), sDoc1.getSDocumentGraph().getSSpans().size());
-		assertEquals(template.getSDocumentGraph().getSSpanningRelations().size(), sDoc1.getSDocumentGraph().getSSpanningRelations().size());
+		assertNotNull(sDoc2.getSDocumentGraph());
+		assertEquals(template.getSDocumentGraph().getSTokens().size(), sDoc2.getSDocumentGraph().getSTokens().size());
+		assertEquals(template.getSDocumentGraph().getSSpans().size(), sDoc2.getSDocumentGraph().getSSpans().size());
+		assertEquals(template.getSDocumentGraph().getSSpanningRelations().size(), sDoc2.getSDocumentGraph().getSSpanningRelations().size());
 
-		assertEquals(template.getSDocumentGraph().getSNodes().size(), sDoc1.getSDocumentGraph().getSNodes().size());
-		assertEquals(template.getSDocumentGraph().getSRelations().size(), sDoc1.getSDocumentGraph().getSRelations().size());
+		assertEquals(template.getSDocumentGraph().getSNodes().size(), sDoc2.getSDocumentGraph().getSNodes().size());
+		assertEquals(template.getSDocumentGraph().getSRelations().size(), sDoc2.getSDocumentGraph().getSRelations().size());
 	}
 
 	/**
@@ -324,8 +324,8 @@ public class MergerMapper_graphTest extends MergerMapper {
 		this.isTestMode = false;
 		this.mergeSDocumentGraph();
 
-		assertEquals(DOCUMENT_STATUS.COMPLETED, sub1.getMappingResult());
-		assertEquals(DOCUMENT_STATUS.DELETED, sub2.getMappingResult());
+		assertEquals(DOCUMENT_STATUS.COMPLETED, sub2.getMappingResult());
+		assertEquals(DOCUMENT_STATUS.DELETED, sub1.getMappingResult());
 		assertEquals(DOCUMENT_STATUS.DELETED, sub3.getMappingResult());
 	}
 

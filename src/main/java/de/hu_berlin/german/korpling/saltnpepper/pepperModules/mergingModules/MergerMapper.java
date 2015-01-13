@@ -129,23 +129,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			boolean isEmpty = true;
 
-			// SDocument baseDocument = null;
-			// // emit corpus in base corpus-structure
-			// for (MappingSubject subj : getMappingSubjects()) {
-			// if (subj.getSElementId().getSIdentifiableElement() instanceof
-			// SDocument) {
-			// SDocument sDoc = (SDocument)
-			// subj.getSElementId().getSIdentifiableElement();
-			// if (sDoc.getSCorpusGraph().equals(getBaseCorpusStructure())) {
-			// baseDocument = sDoc;
-			// break;
-			// }
-			// }
-			// }
-			// if (baseDocument == null){
-			// throw new PepperModuleException(this,
-			// "This might be a bug, no base document was found.");
-			// }
 			// base subject containing the base document
 			MappingSubject baseSubject = chooseBaseDocument();
 			if (baseSubject == null) {
@@ -154,7 +137,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			// base document
 			SDocument baseDocument = (SDocument) baseSubject.getSElementId().getSIdentifiableElement();
 
-			// copy all annotations of corpus
+			// copy all annotations of document
 			for (MappingSubject subj : getMappingSubjects()) {
 				if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
 					SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
@@ -364,57 +347,44 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	/**
 	 * Chooses the base {@link SDocument} in which all nodes, relations etc.
 	 * have to be merged in in further processing.
+	 * <br/>
+	 * The base document is the one which is the one contained in the base corpus structure or if
+	 * the corpus structure is not set, the one having the most nodes and relations.
 	 * 
-	 * @return The base {@link SDocument}
-	 */
-	/**
-	 * This method chooses the base {@link SDocument}.
-	 *
-	 * @return The base {@link SDocument}
+	 * @return The base {@link MappingSubject} containing the base document
 	 */
 	protected MappingSubject chooseBaseDocument() {
 		MappingSubject baseSubject = null;
+		//maximum number of SNodes and SRelations contained in document structure
+		int maxNumOfElements= 0;
 		for (MappingSubject subj : getMappingSubjects()) {
 			if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
 				SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
-
 				// check if document and document structure is given
 				if (sDoc == null) {
 					throw new PepperModuleException(this, "A Mappingsubject does not contain a document object. This seems to be a bug. ");
 				} else if (sDoc.getSDocumentGraph() == null) {
-					logger.warn("The doucment '" + SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()) + "' does not contain a document structure. Therefore it was ignored. ");
+					logger.warn("The document '" + SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()) + "' does not contain a document structure. Therefore it was ignored. ");
 					continue;
 				}
 				
-				
 				if (getBaseCorpusStructure() == null) {
-					//take first document as base
-					
-					baseSubject = subj;
-					break;
-
+					//current number of SNodes and SRelations contained in document structure
+					int currNumOfElements= (sDoc.getSDocumentGraph().getSNodes().size() + sDoc.getSDocumentGraph().getSRelations().size());
+					if (maxNumOfElements < currNumOfElements){
+						//numOfElements is less than current sum of nodes and relations, current document structure is the bigger one
+						
+						maxNumOfElements= currNumOfElements; 
+						baseSubject = subj;
+					}
 				} else {
 					// take document which is contained in base corpus structure
-					
+	
 					if (sDoc.getSCorpusGraph().equals(getBaseCorpusStructure())) {
 						baseSubject = subj;
 						break;
 					}
 				}
-
-				// if (((MergerProperties) getProperties()).isFirstAsBase()) {
-				// if (sDoc.getSCorpusGraph().equals(getBaseCorpusStructure()))
-				// {
-				// baseSubject = subj;
-				// break;
-				// }
-				// } else {
-				// if (sDoc.getSCorpusGraph().equals(getBaseCorpusStructure()))
-				// {
-				// baseSubject = subj;
-				// break;
-				// }
-				// }
 			}
 		}
 		getContainer().setBaseDocument((SDocument) baseSubject.getSElementId().getSIdentifiableElement());

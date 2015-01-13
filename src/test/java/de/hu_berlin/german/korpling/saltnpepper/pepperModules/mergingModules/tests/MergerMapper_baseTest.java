@@ -35,6 +35,7 @@ import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperModulePrope
 import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.MergerMapper;
 import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.MergerProperties;
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.SaltProject;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpusGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
@@ -329,33 +330,42 @@ public class MergerMapper_baseTest extends MergerMapper {
 
 	/**
 	 * Checks, that algorithm chooses the expected base document automatically.
+	 * Should be the one having the most nodes and relations (in sum).
 	 */
 	@Test
 	public void testChooseBaseDocument() {
+		SaltProject project= SaltFactory.eINSTANCE.createSaltProject();
+		
 		SCorpusGraph g1 = SaltFactory.eINSTANCE.createSCorpusGraph();
+		project.getSCorpusGraphs().add(g1);
 		SDocument d1_1 = g1.createSDocument(URI.createURI("/c1/d1"));
 		d1_1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		d1_1.getSDocumentGraph().createSTextualDS("a sample text");
+		d1_1.getSDocumentGraph().tokenize();
 		MappingSubject subj_1 = new MappingSubject();
 		subj_1.setSElementId(d1_1.getSElementId());
 		getFixture().getMappingSubjects().add(subj_1);
-
+		
 		SCorpusGraph g2 = SaltFactory.eINSTANCE.createSCorpusGraph();
+		project.getSCorpusGraphs().add(g2);
 		SDocument d1_2 = g2.createSDocument(URI.createURI("/c1/d1"));
 		d1_2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		d1_2.getSDocumentGraph().createSTextualDS("This is a sample text.");
+		d1_2.getSDocumentGraph().tokenize();
 		MappingSubject subj_2 = new MappingSubject();
 		subj_2.setSElementId(d1_2.getSElementId());
 		getFixture().getMappingSubjects().add(subj_2);
-
+	
 		SCorpusGraph g3 = SaltFactory.eINSTANCE.createSCorpusGraph();
+		project.getSCorpusGraphs().add(g3);
 		SDocument d1_3 = g3.createSDocument(URI.createURI("/c1/d1"));
 		d1_3.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		d1_3.getSDocumentGraph().createSTextualDS("a sample");
+		d1_3.getSDocumentGraph().tokenize();
 		MappingSubject subj_3 = new MappingSubject();
 		subj_3.setSElementId(d1_3.getSElementId());
 		getFixture().getMappingSubjects().add(subj_3);
-
+	
 		this.initialize();
 		// normalize all texts
 		for (MappingSubject subj : getFixture().getMappingSubjects()) {
