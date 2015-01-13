@@ -184,19 +184,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				}
 			}
 
-			// emit if document contains content
-			for (MappingSubject subj : getMappingSubjects()) {
-				if ((subj.getSElementId() != null) && (subj.getSElementId().getIdentifiableElement() != null)) {
-					SDocument doc = (SDocument) subj.getSElementId().getIdentifiableElement();
-					if ((doc.getSDocumentGraph() != null) && (doc.getSDocumentGraph().getSNodes().size() != 0)) {
-						isEmpty = false;
-						break;
-					}
-				}
-			}
-			if (!isEmpty) {
-				mergeDocumentStructures(baseSubject);
-			}
+			mergeDocumentStructures(baseSubject);
 
 			// check, that base document emitted by algorithm is in base
 			// corpus-structure, if not, copy it
@@ -252,9 +240,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		// / choose the perfect STextualDS of the base Document
 		SDocument baseDoc = getContainer().getBaseDocument();
 		STextualDS baseText = chooseBaseText(baseDoc, nonEquivalentTokenSets);
-		if (baseText == null) {
-			throw new PepperModuleException(this, "Could not choose a base STextualDS.");
-		}
+		logger.debug("In document {} was no primary text. Not sure if the Merger can deal with this. ");		
+		
 		// set the base text
 		getContainer().setBaseText(baseText);
 
@@ -318,14 +305,14 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 		EList<SNode> tokens = otherGraph.getSRoots();
 		if ((tokens == null) || (tokens.size() == 0)) {
-			throw new PepperModuleException(this, "Cannot start the traversing for merging document-structure, since no tokens exist for document '" + SaltFactory.eINSTANCE.getGlobalId(otherGraph.getSDocument().getSElementId()) + "'.");
+			logger.warn("Cannot start the traversing for merging document-structure, since no tokens exist for document '" + SaltFactory.eINSTANCE.getGlobalId(otherGraph.getSDocument().getSElementId()) + "'.");
+		}else{
+			logger.trace("[Merger] Merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(other.getSElementId()));
+			otherGraph.traverse(tokens, GRAPH_TRAVERSE_TYPE.TOP_DOWN_DEPTH_FIRST, "merger_" + SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), handler, false);
+			// finally merge pointing relations
+			handler.mergeSPointingRelations(otherGraph, baseGraph);
+			logger.trace("[Merger] Done with merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(other.getSElementId()));
 		}
-
-		logger.trace("[Merger] Merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(other.getSElementId()));
-		otherGraph.traverse(tokens, GRAPH_TRAVERSE_TYPE.TOP_DOWN_DEPTH_FIRST, "merger_" + SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), handler, false);
-		// finally merge pointing relations
-		handler.mergeSPointingRelations(otherGraph, baseGraph);
-		logger.trace("[Merger] Done with merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(other.getSElementId()));
 	}
 
 	/** the {@link TokenMergeContainer} instance **/
