@@ -125,7 +125,7 @@ public class MergerMapper_graphTest extends MergerMapper {
 
 		this.isTestMode = true;
 		
-		mergeSDocumentGraph();
+		this.mergeDocumentStructures(chooseBaseDocument());
 
 		// second document must be the base document
 		assertEquals(sDoc2, container.getBaseDocument());
@@ -189,7 +189,7 @@ public class MergerMapper_graphTest extends MergerMapper {
 		assertEquals(0, sDoc1.getSDocumentGraph().getSSpanningRelations().size());
 
 		this.isTestMode = true;
-		this.mergeSDocumentGraph();
+		this.mergeDocumentStructures(chooseBaseDocument());
 
 		assertNotNull(sDoc2.getSDocumentGraph());
 		assertEquals(template.getSDocumentGraph().getSTokens().size(), sDoc2.getSDocumentGraph().getSTokens().size());
@@ -239,7 +239,7 @@ public class MergerMapper_graphTest extends MergerMapper {
 		SampleGenerator.createInformationStructureAnnotations(template);
 
 		this.isTestMode = true;
-		this.mergeSDocumentGraph();
+		this.mergeDocumentStructures(chooseBaseDocument());
 
 		assertNotNull(sDoc1.getSDocumentGraph());
 		assertEquals(template.getSDocumentGraph().getSTokens().size(), sDoc1.getSDocumentGraph().getSTokens().size());
@@ -322,7 +322,7 @@ public class MergerMapper_graphTest extends MergerMapper {
 		SampleGenerator.createMorphologyAnnotations(template);
 
 		this.isTestMode = false;
-		this.mergeSDocumentGraph();
+		this.mergeDocumentStructures(chooseBaseDocument());
 
 		assertEquals(DOCUMENT_STATUS.COMPLETED, sub2.getMappingResult());
 		assertEquals(DOCUMENT_STATUS.DELETED, sub1.getMappingResult());

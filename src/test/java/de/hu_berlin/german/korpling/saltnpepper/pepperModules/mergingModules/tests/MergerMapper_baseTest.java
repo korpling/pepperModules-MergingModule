@@ -321,7 +321,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 		getFixture().getMappingSubjects().add(sub1);
 		getFixture().getMappingSubjects().add(sub2);
 
-		this.mergeSDocumentGraph();
+		this.mergeDocumentStructures(chooseBaseDocument());
 
 		// assert base document = sDoc1 & baseText = norm
 		assertEquals("The base Document should be document 1. but it is not!", sDoc1, this.container.getBaseDocument());
