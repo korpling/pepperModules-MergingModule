@@ -447,9 +447,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		// normalize the text
 		char[] chr = sTextualDS.getSText().toCharArray();
 		for (char c : chr) {
-			String originalString = new String();
-			originalString += c;
-			String stringToEscape = escapeTable.get(originalString);
+			String stringToEscape = escapeTable.get(String.valueOf(c));
 			// fill the StringBuilder
 			if (stringToEscape != null) {
 				normalizedTextBuilder.append(stringToEscape);
@@ -467,9 +465,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		int start = 0;
 		char[] chr = sTextualDS.getSText().toCharArray();
 		for (char c : chr) {
-			String originalString = new String();
-			originalString += c;
-			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(originalString);
+			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(String.valueOf(c));
 			if (stringToEscape == null) {
 				originalToNormalizedMapping.add(start);
 				normalizedTextBuilder.append(c);
@@ -897,9 +893,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		int start = 0;
 		char[] chr = sTextualDS.getSText().toCharArray();
 		for (char c : chr) {
-			String originalString = new String();
-			originalString += c;
-			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(originalString);
+			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(String.valueOf(c));
 			if (stringToEscape == null) {
 				normalizedToOriginalMapping.add(start);
 			} else {
