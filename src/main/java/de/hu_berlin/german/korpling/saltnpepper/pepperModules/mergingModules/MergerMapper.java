@@ -222,7 +222,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		for (MappingSubject subj : this.getMappingSubjects()) {
 			if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
 				SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
-				this.normalizeTextualLayer(sDoc);
+				this.normalizePrimaryTexts(sDoc);
 			}
 		}
 
@@ -491,7 +491,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	}
 
 	/**
-	 * This method normalizes the textual layer for the given {@link SDocument}.
+	 * This method normalizes all primary texts for the given {@link SDocument}.
 	 * Note: only the normalization is done. The equivalent {@link SToken} are
 	 * not determined in any way. For this functionality, you need to use
 	 * {@link alignDocuments}.
@@ -500,7 +500,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 *            the {@link SDocument} for which the textual layer should be
 	 *            normalized.
 	 */
-	protected void normalizeTextualLayer(SDocument sDocument) {
+	protected void normalizePrimaryTexts(SDocument sDocument) {
 		if (sDocument == null)
 			throw new PepperModuleException(this, "Cannot normalize Text of the document since the SDocument reference is NULL");
 		if (sDocument.getSDocumentGraph() != null) {
