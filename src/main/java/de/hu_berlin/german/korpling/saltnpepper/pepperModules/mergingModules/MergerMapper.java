@@ -24,7 +24,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 
 import org.eclipse.emf.common.util.EList;
 import org.slf4j.Logger;
@@ -39,7 +38,6 @@ import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.impl.PepperMapper
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Edge;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.GRAPH_TRAVERSE_TYPE;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.SaltProject;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpus;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpusGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
@@ -49,7 +47,6 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SElementId;
 
 /**
  * This class does the real merging, the main task is to merge a set of document
@@ -523,7 +520,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			// normalize all textual datasources
 			for (STextualDS sTextualDS : sTextualDSs) {
-				List<Integer> originalToNormalizedMapping = new Vector<Integer>();
+				List<Integer> originalToNormalizedMapping = new ArrayList<Integer>();
 				String normalizedText = createOriginalToNormalizedMapping(sTextualDS, originalToNormalizedMapping);
 				for (STextualRelation textRel : sDocument.getSDocumentGraph().getSTextualRelations()) {
 					if (textRel.getSTextualDS().equals(sTextualDS)) {
@@ -688,7 +685,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			returnVal = true;
 			// get the tokens of the other text.
-			List<SToken> textTokens = new Vector<SToken>();
+			List<SToken> textTokens = new ArrayList<SToken>();
 			for (Edge e : smallerText.getSDocumentGraph().getInEdges(smallerText.getSId())) {
 				// get all tokens of the smaller text
 				if (e instanceof STextualRelation) {
@@ -779,7 +776,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 		if (useIndexOf) {
 			builder = new StringBuilder();
-			List<Integer> normalizedToOriginalMapping = new Vector<Integer>();
+			List<Integer> normalizedToOriginalMapping = new ArrayList<Integer>();
 			int start = 0;
 			for (char targetChar : stringToSearchIn.toCharArray()) {
 				if (!omitChars.contains(targetChar)) { // no omit char
@@ -914,7 +911,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		 * 1->2,... Example2: dipl: " thäs is" 01234567 norm: "thaesis" 0123456
 		 * 0->1 1->2 2->3 3->3 4->4 5->6 6->7
 		 */
-		List<Integer> normalizedToOriginalMapping = new Vector<Integer>();
+		List<Integer> normalizedToOriginalMapping = new ArrayList<Integer>();
 		int start = 0;
 		for (char c : sTextualDS.getSText().toCharArray()) {
 			String originalString = new String();
@@ -1029,7 +1026,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 		if (offset != -1) { // one of the texts is alignable to the other
 							// next step: get all tokens of the other text
-			List<SToken> textTokens = new Vector<SToken>();
+			List<SToken> textTokens = new ArrayList<SToken>();
 			for (Edge e : otherText.getSDocumentGraph().getInEdges(otherText.getSId())) {
 				// get all tokens of the other text
 				if (e instanceof STextualRelation) {
