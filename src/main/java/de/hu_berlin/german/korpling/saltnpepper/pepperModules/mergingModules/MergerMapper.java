@@ -24,6 +24,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
 
 import org.eclipse.emf.common.util.EList;
 import org.slf4j.Logger;
@@ -38,6 +39,7 @@ import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.impl.PepperMapper
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Edge;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.GRAPH_TRAVERSE_TYPE;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.SaltProject;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpus;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpusGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
@@ -47,6 +49,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SElementId;
 
 /**
  * This class does the real merging, the main task is to merge a set of document
@@ -187,20 +190,20 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			// corpus-structure, if not, copy it
 			for (MappingSubject subj : getMappingSubjects()) {
 				SDocument sDoc = ((SDocument) subj.getSElementId().getSIdentifiableElement());
-				if (!sDoc.equals(baseDocument)) {
-					SDocumentGraph oldGraph = sDoc.getSDocumentGraph();
-					sDoc.setSDocumentGraph(baseDocument.getSDocumentGraph());
-					baseDocument.setSDocumentGraph(oldGraph);
-					subj.setMappingResult(DOCUMENT_STATUS.DELETED);
-					if (!isTestMode) {
-						getContainer().finishDocument((SDocument) baseSubject.getSElementId().getSIdentifiableElement());
+					if (!sDoc.equals(baseDocument)) {
+						SDocumentGraph oldGraph = sDoc.getSDocumentGraph();
+						sDoc.setSDocumentGraph(baseDocument.getSDocumentGraph());
+						baseDocument.setSDocumentGraph(oldGraph);
+						subj.setMappingResult(DOCUMENT_STATUS.DELETED);
+						if (! isTestMode){
+							getContainer().finishDocument((SDocument) baseSubject.getSElementId().getSIdentifiableElement());
+						}
+					} else if (sDoc.equals(baseDocument)) {
+						subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
+						if (!isTestMode){
+							getContainer().finishDocument(sDoc);
+						}
 					}
-				} else if (sDoc.equals(baseDocument)) {
-					subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
-					if (!isTestMode) {
-						getContainer().finishDocument(sDoc);
-					}
-				}
 			}
 
 			logger.debug("[Merger] " + "merged documents {}. ", getMappingSubjects());
@@ -217,19 +220,19 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * Merges all document-structures pairwise by calling
 	 * {@link #mergeDocumentStructures(SDocument, SDocument)}.
 	 */
-	public void mergeDocumentStructures(MappingSubject baseSubject) {
+	public void mergeDocumentStructures(MappingSubject baseSubject) {		
 		// normalize all texts
 		for (MappingSubject subj : this.getMappingSubjects()) {
 			if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
 				SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
-				this.normalizePrimaryTexts(sDoc);
+				this.normalizeTextualLayer(sDoc);
 			}
 		}
-
+		
 		if (baseSubject != null) {
 			getContainer().setBaseDocument((SDocument) baseSubject.getSElementId().getSIdentifiableElement());
 		}
-
+		
 		// align all texts and create the nonEquivalentTokenSets
 		// / base text -- < Other Document -- nonEquivalentTokens >
 		Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> nonEquivalentTokenSets = this.allignAllTexts();
@@ -237,8 +240,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		// / choose the perfect STextualDS of the base Document
 		SDocument baseDoc = getContainer().getBaseDocument();
 		STextualDS baseText = chooseBaseText(baseDoc, nonEquivalentTokenSets);
-		logger.debug("In document {} was no primary text. Not sure if the Merger can deal with this. ");
-
+		logger.debug("In document {} was no primary text. Not sure if the Merger can deal with this. ");		
+		
 		// set the base text
 		getContainer().setBaseText(baseText);
 
@@ -303,7 +306,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		EList<SNode> tokens = otherGraph.getSRoots();
 		if ((tokens == null) || (tokens.size() == 0)) {
 			logger.warn("Cannot start the traversing for merging document-structure, since no tokens exist for document '" + SaltFactory.eINSTANCE.getGlobalId(otherGraph.getSDocument().getSElementId()) + "'.");
-		} else {
+		}else{
 			logger.trace("[Merger] Merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(other.getSElementId()));
 			otherGraph.traverse(tokens, GRAPH_TRAVERSE_TYPE.TOP_DOWN_DEPTH_FIRST, "merger_" + SaltFactory.eINSTANCE.getGlobalId(base.getSElementId()), handler, false);
 			// finally merge pointing relations
@@ -445,9 +448,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		String normalizedText = null;
 		StringBuilder normalizedTextBuilder = new StringBuilder();
 		// normalize the text
-		char[] chr = sTextualDS.getSText().toCharArray();
-		for (char c : chr) {
-			String stringToEscape = escapeTable.get(c);
+		for (char c : sTextualDS.getSText().toCharArray()) {
+			String originalString = new String();
+			originalString += c;
+			String stringToEscape = escapeTable.get(originalString);
 			// fill the StringBuilder
 			if (stringToEscape != null) {
 				normalizedTextBuilder.append(stringToEscape);
@@ -460,22 +464,13 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		return normalizedText;
 	}
 
-	/**
-	 * Creates a normalized text for the given {@link STextualDS} object and
-	 * returns it. Further the parameter
-	 * <code>originalToNormalizedMapping</code> is filled.
-	 * 
-	 * @param sTextualDS
-	 * @param originalToNormalizedMapping
-	 * @return
-	 */
 	protected String createOriginalToNormalizedMapping(STextualDS sTextualDS, List<Integer> originalToNormalizedMapping) {
 		StringBuilder normalizedTextBuilder = new StringBuilder();
 		int start = 0;
-		char[] chr = sTextualDS.getSText().toCharArray();
-		for (char c : chr) {
-			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(c);
-
+		for (char c : sTextualDS.getSText().toCharArray()) {
+			String originalString = new String();
+			originalString += c;
+			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(originalString);
 			if (stringToEscape == null) {
 				originalToNormalizedMapping.add(start);
 				normalizedTextBuilder.append(c);
@@ -501,7 +496,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	}
 
 	/**
-	 * This method normalizes all primary texts for the given {@link SDocument}.
+	 * This method normalizes the textual layer for the given {@link SDocument}.
 	 * Note: only the normalization is done. The equivalent {@link SToken} are
 	 * not determined in any way. For this functionality, you need to use
 	 * {@link alignDocuments}.
@@ -510,7 +505,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 *            the {@link SDocument} for which the textual layer should be
 	 *            normalized.
 	 */
-	protected void normalizePrimaryTexts(SDocument sDocument) {
+	protected void normalizeTextualLayer(SDocument sDocument) {
 		if (sDocument == null)
 			throw new PepperModuleException(this, "Cannot normalize Text of the document since the SDocument reference is NULL");
 		if (sDocument.getSDocumentGraph() != null) {
@@ -528,16 +523,14 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			// normalize all textual datasources
 			for (STextualDS sTextualDS : sTextualDSs) {
-				List<Integer> originalToNormalizedMapping = new ArrayList<Integer>();
+				List<Integer> originalToNormalizedMapping = new Vector<Integer>();
 				String normalizedText = createOriginalToNormalizedMapping(sTextualDS, originalToNormalizedMapping);
-				System.out.println("normalizedText" + normalizedText);
 				for (STextualRelation textRel : sDocument.getSDocumentGraph().getSTextualRelations()) {
 					if (textRel.getSTextualDS().equals(sTextualDS)) {
 						SToken sToken = textRel.getSToken();
 						int normalizedTokenStart = originalToNormalizedMapping.get(textRel.getSStart());
 						int normalizedTokenEnd = 0;
 						if (textRel.getSEnd() >= (originalToNormalizedMapping.size())) {
-							System.out.println("accessing " + textRel.getSEnd() + " in mapping " + originalToNormalizedMapping);
 							if (textRel.getSEnd() >= (originalToNormalizedMapping.size() + 1)) {
 								throw new PepperModuleException(this, "This might be a bug of MergerMapper: textRel.getSEnd() >= (originalToNormalizedMapping.size()+1).");
 							} else {
@@ -582,7 +575,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					if (sDoc.getSDocumentGraph().getSTextualDSs().size() > 0) {
 						// The other document has at least one text
 						HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-						for (STextualDS baseText : getContainer().getBaseDocument().getSDocumentGraph().getSTextualDSs()) {
+						for (STextualDS baseText : getContainer().getBaseDocument().getSDocumentGraph().getSTextualDSs()) { 
 							// for all texts of the base document
 							nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 							// initialize the set of nonEquivalent token.
@@ -695,7 +688,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			returnVal = true;
 			// get the tokens of the other text.
-			List<SToken> textTokens = new ArrayList<SToken>();
+			List<SToken> textTokens = new Vector<SToken>();
 			for (Edge e : smallerText.getSDocumentGraph().getInEdges(smallerText.getSId())) {
 				// get all tokens of the smaller text
 				if (e instanceof STextualRelation) {
@@ -777,8 +770,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	protected int indexOfOmitChars(String stringToSearchIn, String stringToSearchFor, boolean useIndexOf, Set<Character> omitChars) {
 		/* remove all omit chars from the stringToSearchFor */
 		StringBuilder builder = new StringBuilder();
-		char[] chr = stringToSearchFor.toCharArray();
-		for (char sourceChar : chr) {
+		for (char sourceChar : stringToSearchFor.toCharArray()) {
 			if (!omitChars.contains(sourceChar)) {
 				builder.append(sourceChar);
 			}
@@ -787,12 +779,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 		if (useIndexOf) {
 			builder = new StringBuilder();
-			List<Integer> normalizedToOriginalMapping = new ArrayList<Integer>();
+			List<Integer> normalizedToOriginalMapping = new Vector<Integer>();
 			int start = 0;
-			char[] chr2 = stringToSearchIn.toCharArray();
-			for (char targetChar : chr2) {
-				if (!omitChars.contains(targetChar)) { 
-					// no omit char
+			for (char targetChar : stringToSearchIn.toCharArray()) {
+				if (!omitChars.contains(targetChar)) { // no omit char
 					normalizedToOriginalMapping.add(start);
 					builder.append(targetChar);
 				} else { // omit char
@@ -822,8 +812,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			position = stringToSearchIn.indexOf(c, position);
 			retVal = position; // initialize the return value to the found
 								// position
-			if (position == -1) { 
-				// stop, if the first char could not be found
+			if (position == -1) { // stop, if the first char could not be found
 				break;
 			}
 
@@ -831,23 +820,45 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			found = true;
 			// initialize the count of matched chars
 			int successfulMatchCount = 0;
-			char[] chr2 = sourceString.toCharArray();
-			for (char sourceChar : chr2) {
-				// for all chars of the string to search the char in the target
-				// string and omit all omit chars in the target string
+			for (char sourceChar : sourceString.toCharArray()) { // for all
+																	// chars of
+																	// the
+																	// string to
+																	// search
+																	// / search
+																	// the char
+																	// in the
+																	// target
+																	// string
+																	// and omit
+																	// all omit
+																	// chars in
+																	// the
+																	// target
+																	// string
 				boolean foundChar = false;
-				for (int i = position; i < stringToSearchIn.length(); i++) {
-					// search the current char and ignore all chars to omit in
-					// the target string
+				for (int i = position; i < stringToSearchIn.length(); i++) { // search
+																				// the
+																				// current
+																				// char
+																				// and
+																				// ignore
+																				// all
+																				// chars
+																				// to
+																				// omit
+																				// in
+																				// the
+																				// target
+																				// string
 					char targetChar = charsToSearchIn[i];
-					if (omitChars.contains(targetChar)) {
-						// ignore
+					if (omitChars.contains(targetChar)) { // ignore
 						position++;
 						continue;
 					} // ignore
 					else { // do not ignore
-						if (targetChar == sourceChar) {
-							// we found the matching char
+						if (targetChar == sourceChar) { // we found the matching
+														// char
 							successfulMatchCount++;
 							foundChar = true;
 							position++;
@@ -868,9 +879,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				} // if a char could not be found, stop the search in the
 					// current subString
 			}
-			if (found) {
-				// if the found flag is still set, we are finished, if the
-				// successfulMatchCount is equal to the source string
+			if (found) { // if the found flag is still set, we are finished, if
+							// the successfulMatchCount is equal to the source
+							// string
 				if (successfulMatchCount == sourceString.length()) {
 					break;
 				}
@@ -903,17 +914,17 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		 * 1->2,... Example2: dipl: " thäs is" 01234567 norm: "thaesis" 0123456
 		 * 0->1 1->2 2->3 3->3 4->4 5->6 6->7
 		 */
-		List<Integer> normalizedToOriginalMapping = new ArrayList<Integer>();
+		List<Integer> normalizedToOriginalMapping = new Vector<Integer>();
 		int start = 0;
-		char[] chr = sTextualDS.getSText().toCharArray();
-		for (char c : chr) {
-			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(c);
+		for (char c : sTextualDS.getSText().toCharArray()) {
+			String originalString = new String();
+			originalString += c;
+			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(originalString);
 			if (stringToEscape == null) {
 				normalizedToOriginalMapping.add(start);
 			} else {
 				if (stringToEscape.length() > 0) {
-					char[] chr2 = stringToEscape.toCharArray();
-					for (int i = 0; i < chr2.length; i++) {
+					for (int i = 0; i < stringToEscape.toCharArray().length; i++) {
 						// one char is mapped to many. all chars have the same
 						// index in the original text
 						normalizedToOriginalMapping.add(start);
@@ -949,10 +960,13 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 		List<STextualDS> doc1Texts = doc1.getSDocumentGraph().getSTextualDSs();
 		List<STextualDS> doc2Texts = doc2.getSDocumentGraph().getSTextualDSs();
-		if (doc1Texts != null && doc2Texts != null) {
-			// both documents should have texts
-			if ((!doc1Texts.isEmpty()) && (!doc2Texts.isEmpty())) {
-				// both documents do have at least one text
+		if (doc1Texts != null && doc2Texts != null) { // both documents should
+														// have texts
+			if ((!doc1Texts.isEmpty()) && (!doc2Texts.isEmpty())) { // both
+																	// documents
+																	// do have
+																	// at least
+																	// one text
 				for (STextualDS text1 : doc1Texts) {
 					String normalizedText1 = normalizeText(text1, ((MergerProperties) getProperties()).getEscapeMapping());
 					for (STextualDS text2 : doc2Texts) {
@@ -1015,7 +1029,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 		if (offset != -1) { // one of the texts is alignable to the other
 							// next step: get all tokens of the other text
-			List<SToken> textTokens = new ArrayList<SToken>();
+			List<SToken> textTokens = new Vector<SToken>();
 			for (Edge e : otherText.getSDocumentGraph().getInEdges(otherText.getSId())) {
 				// get all tokens of the other text
 				if (e instanceof STextualRelation) {

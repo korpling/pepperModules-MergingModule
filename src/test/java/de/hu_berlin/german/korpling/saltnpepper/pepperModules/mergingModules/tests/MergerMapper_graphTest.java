@@ -374,8 +374,8 @@ public class MergerMapper_graphTest extends MergerMapper {
 		EList<SToken> baseTextToken = sDoc2.getSDocumentGraph().getSortedSTokenByText();
 		EList<SToken> otherTextToken = sDoc1.getSDocumentGraph().getSortedSTokenByText();
 
-		this.normalizePrimaryTexts(sDoc1);
-		this.normalizePrimaryTexts(sDoc2);
+		this.normalizeTextualLayer(sDoc1);
+		this.normalizeTextualLayer(sDoc2);
 
 		// test 1 : sDoc2 must be the base document
 		assertEquals(sDoc2, this.container.getBaseDocument());
@@ -461,8 +461,8 @@ public class MergerMapper_graphTest extends MergerMapper {
 		List<SToken> baseTextToken = sDoc1.getSDocumentGraph().getSortedSTokenByText();
 		List<SToken> otherTextToken = sDoc2.getSDocumentGraph().getSortedSTokenByText();
 
-		this.normalizePrimaryTexts(sDoc1);
-		this.normalizePrimaryTexts(sDoc2);
+		this.normalizeTextualLayer(sDoc1);
+		this.normalizeTextualLayer(sDoc2);
 
 		// test 1 : sDoc2 must be the base document
 		this.container.setBaseDocument(sDoc1);

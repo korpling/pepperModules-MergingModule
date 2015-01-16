@@ -80,7 +80,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 		doc1.setSId("doc1");
 		doc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		doc1.getSDocumentGraph().createSTextualDS(origText);
-		this.normalizePrimaryTexts(doc1);
+		this.normalizeTextualLayer(doc1);
 
 		assertEquals(normText, this.container.getNormalizedText(doc1.getSDocumentGraph().getSTextualDSs().get(0)));
 		this.container.finishDocument(doc1);
@@ -89,7 +89,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 		origText = "Is this sample more complicated, than it appears to be?";
 		normText = "Isthissamplemorecomplicated,thanitappearstobe?";
 		doc1.getSDocumentGraph().getSTextualDSs().get(0).setSText(origText);
-		this.normalizePrimaryTexts(doc1);
+		this.normalizeTextualLayer(doc1);
 
 		assertEquals(normText, this.container.getNormalizedText(doc1.getSDocumentGraph().getSTextualDSs().get(0)));
 		this.container.finishDocument(doc1);
@@ -99,7 +99,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 		normText = "Daswaereueberausschoen";
 
 		doc1.getSDocumentGraph().getSTextualDSs().get(0).setSText(origText);
-		this.normalizePrimaryTexts(doc1);
+		this.normalizeTextualLayer(doc1);
 
 		assertEquals(normText, this.container.getNormalizedText(doc1.getSDocumentGraph().getSTextualDSs().get(0)));
 		this.container.finishDocument(doc1);
@@ -141,7 +141,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 		doc1.setSId("doc1");
 		doc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 		doc1.getSDocumentGraph().createSTextualDS(origText);
-		this.normalizePrimaryTexts(doc1);
+		this.normalizeTextualLayer(doc1);
 
 		List<Integer> template = new Vector<Integer>();
 
@@ -189,8 +189,8 @@ public class MergerMapper_baseTest extends MergerMapper {
 		EList<SToken> otherTextToken = sDoc1.getSDocumentGraph().getSortedSTokenByText();
 
 		// TODO check alignTests
-		this.normalizePrimaryTexts(sDoc1);
-		this.normalizePrimaryTexts(sDoc2);
+		this.normalizeTextualLayer(sDoc1);
+		this.normalizeTextualLayer(sDoc2);
 
 		// test 1 : sDoc2 must be the base document
 		assertEquals(sDoc2, this.container.getBaseDocument());
@@ -371,7 +371,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 		for (MappingSubject subj : getFixture().getMappingSubjects()) {
 			if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
 				SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
-				this.normalizePrimaryTexts(sDoc);
+				this.normalizeTextualLayer(sDoc);
 			}
 		}
 
@@ -418,7 +418,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 		for (MappingSubject subj : getFixture().getMappingSubjects()) {
 			if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
 				SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
-				this.normalizePrimaryTexts(sDoc);
+				this.normalizeTextualLayer(sDoc);
 			}
 		}
 
