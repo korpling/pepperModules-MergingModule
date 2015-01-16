@@ -24,7 +24,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 
 import org.eclipse.emf.common.util.EList;
 import org.slf4j.Logger;
@@ -39,7 +38,6 @@ import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.impl.PepperMapper
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Edge;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.GRAPH_TRAVERSE_TYPE;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.SaltProject;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpus;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpusGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
@@ -49,7 +47,6 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SElementId;
 
 /**
  * This class does the real merging, the main task is to merge a set of document
@@ -225,7 +222,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		for (MappingSubject subj : this.getMappingSubjects()) {
 			if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
 				SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
-				this.normalizeTextualLayer(sDoc);
+				this.normalizePrimaryTexts(sDoc);
 			}
 		}
 		
@@ -448,10 +445,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		String normalizedText = null;
 		StringBuilder normalizedTextBuilder = new StringBuilder();
 		// normalize the text
-		for (char c : sTextualDS.getSText().toCharArray()) {
-			String originalString = new String();
-			originalString += c;
-			String stringToEscape = escapeTable.get(originalString);
+		char[] chr= sTextualDS.getSText().toCharArray();
+		for (char c : chr) {
+			String stringToEscape = escapeTable.get(c);
 			// fill the StringBuilder
 			if (stringToEscape != null) {
 				normalizedTextBuilder.append(stringToEscape);
@@ -464,13 +460,20 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		return normalizedText;
 	}
 
+	/**
+	 * Creates a normalized text for the given {@link STextualDS} object and returns it. Further the parameter
+	 * <code>originalToNormalizedMapping</code> is filled.
+	 * @param sTextualDS
+	 * @param originalToNormalizedMapping
+	 * @return
+	 */
 	protected String createOriginalToNormalizedMapping(STextualDS sTextualDS, List<Integer> originalToNormalizedMapping) {
 		StringBuilder normalizedTextBuilder = new StringBuilder();
 		int start = 0;
-		for (char c : sTextualDS.getSText().toCharArray()) {
-			String originalString = new String();
-			originalString += c;
-			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(originalString);
+		char[] chr= sTextualDS.getSText().toCharArray();
+		for (char c : chr) {
+			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(c);
+			
 			if (stringToEscape == null) {
 				originalToNormalizedMapping.add(start);
 				normalizedTextBuilder.append(c);
@@ -496,7 +499,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	}
 
 	/**
-	 * This method normalizes the textual layer for the given {@link SDocument}.
+	 * This method normalizes all primary texts for the given {@link SDocument}.
 	 * Note: only the normalization is done. The equivalent {@link SToken} are
 	 * not determined in any way. For this functionality, you need to use
 	 * {@link alignDocuments}.
@@ -505,7 +508,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 *            the {@link SDocument} for which the textual layer should be
 	 *            normalized.
 	 */
-	protected void normalizeTextualLayer(SDocument sDocument) {
+	protected void normalizePrimaryTexts(SDocument sDocument) {
 		if (sDocument == null)
 			throw new PepperModuleException(this, "Cannot normalize Text of the document since the SDocument reference is NULL");
 		if (sDocument.getSDocumentGraph() != null) {
@@ -523,14 +526,16 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			// normalize all textual datasources
 			for (STextualDS sTextualDS : sTextualDSs) {
-				List<Integer> originalToNormalizedMapping = new Vector<Integer>();
+				List<Integer> originalToNormalizedMapping = new ArrayList<Integer>();
 				String normalizedText = createOriginalToNormalizedMapping(sTextualDS, originalToNormalizedMapping);
+				System.out.println("normalizedText"+ normalizedText);
 				for (STextualRelation textRel : sDocument.getSDocumentGraph().getSTextualRelations()) {
 					if (textRel.getSTextualDS().equals(sTextualDS)) {
 						SToken sToken = textRel.getSToken();
 						int normalizedTokenStart = originalToNormalizedMapping.get(textRel.getSStart());
 						int normalizedTokenEnd = 0;
 						if (textRel.getSEnd() >= (originalToNormalizedMapping.size())) {
+							System.out.println("accessing "+ textRel.getSEnd() + " in mapping "+ originalToNormalizedMapping);
 							if (textRel.getSEnd() >= (originalToNormalizedMapping.size() + 1)) {
 								throw new PepperModuleException(this, "This might be a bug of MergerMapper: textRel.getSEnd() >= (originalToNormalizedMapping.size()+1).");
 							} else {
@@ -688,7 +693,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			returnVal = true;
 			// get the tokens of the other text.
-			List<SToken> textTokens = new Vector<SToken>();
+			List<SToken> textTokens = new ArrayList<SToken>();
 			for (Edge e : smallerText.getSDocumentGraph().getInEdges(smallerText.getSId())) {
 				// get all tokens of the smaller text
 				if (e instanceof STextualRelation) {
@@ -770,7 +775,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	protected int indexOfOmitChars(String stringToSearchIn, String stringToSearchFor, boolean useIndexOf, Set<Character> omitChars) {
 		/* remove all omit chars from the stringToSearchFor */
 		StringBuilder builder = new StringBuilder();
-		for (char sourceChar : stringToSearchFor.toCharArray()) {
+		char[] chr= stringToSearchFor.toCharArray();
+		for (char sourceChar : chr) {
 			if (!omitChars.contains(sourceChar)) {
 				builder.append(sourceChar);
 			}
@@ -779,9 +785,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 		if (useIndexOf) {
 			builder = new StringBuilder();
-			List<Integer> normalizedToOriginalMapping = new Vector<Integer>();
+			List<Integer> normalizedToOriginalMapping = new ArrayList<Integer>();
 			int start = 0;
-			for (char targetChar : stringToSearchIn.toCharArray()) {
+			char[] chr2= stringToSearchIn.toCharArray();
+			for (char targetChar : chr2) {
 				if (!omitChars.contains(targetChar)) { // no omit char
 					normalizedToOriginalMapping.add(start);
 					builder.append(targetChar);
@@ -820,7 +827,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			found = true;
 			// initialize the count of matched chars
 			int successfulMatchCount = 0;
-			for (char sourceChar : sourceString.toCharArray()) { // for all
+			char[] chr2= sourceString.toCharArray();
+			for (char sourceChar : chr2) { // for all
 																	// chars of
 																	// the
 																	// string to
@@ -914,17 +922,17 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		 * 1->2,... Example2: dipl: " thäs is" 01234567 norm: "thaesis" 0123456
 		 * 0->1 1->2 2->3 3->3 4->4 5->6 6->7
 		 */
-		List<Integer> normalizedToOriginalMapping = new Vector<Integer>();
+		List<Integer> normalizedToOriginalMapping = new ArrayList<Integer>();
 		int start = 0;
-		for (char c : sTextualDS.getSText().toCharArray()) {
-			String originalString = new String();
-			originalString += c;
-			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(originalString);
+		char[] chr= sTextualDS.getSText().toCharArray();
+		for (char c : chr) {
+			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(c);
 			if (stringToEscape == null) {
 				normalizedToOriginalMapping.add(start);
 			} else {
 				if (stringToEscape.length() > 0) {
-					for (int i = 0; i < stringToEscape.toCharArray().length; i++) {
+					char[] chr2= stringToEscape.toCharArray(); 
+					for (int i = 0; i < chr2.length; i++) {
 						// one char is mapped to many. all chars have the same
 						// index in the original text
 						normalizedToOriginalMapping.add(start);
@@ -1029,7 +1037,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 		if (offset != -1) { // one of the texts is alignable to the other
 							// next step: get all tokens of the other text
-			List<SToken> textTokens = new Vector<SToken>();
+			List<SToken> textTokens = new ArrayList<SToken>();
 			for (Edge e : otherText.getSDocumentGraph().getInEdges(otherText.getSId())) {
 				// get all tokens of the other text
 				if (e instanceof STextualRelation) {
