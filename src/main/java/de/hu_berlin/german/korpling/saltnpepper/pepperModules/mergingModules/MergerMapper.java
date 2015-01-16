@@ -445,7 +445,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		String normalizedText = null;
 		StringBuilder normalizedTextBuilder = new StringBuilder();
 		// normalize the text
-		for (char c : sTextualDS.getSText().toCharArray()) {
+		char[] chr= sTextualDS.getSText().toCharArray();
+		for (char c : chr) {
 			String originalString = new String();
 			originalString += c;
 			String stringToEscape = escapeTable.get(originalString);
@@ -464,7 +465,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	protected String createOriginalToNormalizedMapping(STextualDS sTextualDS, List<Integer> originalToNormalizedMapping) {
 		StringBuilder normalizedTextBuilder = new StringBuilder();
 		int start = 0;
-		for (char c : sTextualDS.getSText().toCharArray()) {
+		char[] chr= sTextualDS.getSText().toCharArray();
+		for (char c : chr) {
 			String originalString = new String();
 			originalString += c;
 			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(originalString);
@@ -767,7 +769,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	protected int indexOfOmitChars(String stringToSearchIn, String stringToSearchFor, boolean useIndexOf, Set<Character> omitChars) {
 		/* remove all omit chars from the stringToSearchFor */
 		StringBuilder builder = new StringBuilder();
-		for (char sourceChar : stringToSearchFor.toCharArray()) {
+		char[] chr= stringToSearchFor.toCharArray();
+		for (char sourceChar : chr) {
 			if (!omitChars.contains(sourceChar)) {
 				builder.append(sourceChar);
 			}
@@ -778,7 +781,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			builder = new StringBuilder();
 			List<Integer> normalizedToOriginalMapping = new ArrayList<Integer>();
 			int start = 0;
-			for (char targetChar : stringToSearchIn.toCharArray()) {
+			char[] chr2= stringToSearchIn.toCharArray();
+			for (char targetChar : chr2) {
 				if (!omitChars.contains(targetChar)) { // no omit char
 					normalizedToOriginalMapping.add(start);
 					builder.append(targetChar);
@@ -817,7 +821,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			found = true;
 			// initialize the count of matched chars
 			int successfulMatchCount = 0;
-			for (char sourceChar : sourceString.toCharArray()) { // for all
+			char[] chr2= sourceString.toCharArray();
+			for (char sourceChar : chr2) { // for all
 																	// chars of
 																	// the
 																	// string to
@@ -913,7 +918,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		 */
 		List<Integer> normalizedToOriginalMapping = new ArrayList<Integer>();
 		int start = 0;
-		for (char c : sTextualDS.getSText().toCharArray()) {
+		char[] chr= sTextualDS.getSText().toCharArray();
+		for (char c : chr) {
 			String originalString = new String();
 			originalString += c;
 			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(originalString);
@@ -921,7 +927,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				normalizedToOriginalMapping.add(start);
 			} else {
 				if (stringToEscape.length() > 0) {
-					for (int i = 0; i < stringToEscape.toCharArray().length; i++) {
+					char[] chr2= stringToEscape.toCharArray();
+					for (int i = 0; i < chr2.length; i++) {
 						// one char is mapped to many. all chars have the same
 						// index in the original text
 						normalizedToOriginalMapping.add(start);
