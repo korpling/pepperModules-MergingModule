@@ -565,26 +565,18 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		for (MappingSubject subj : this.getMappingSubjects()) {
 			boolean hasTexts = true;
 			SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
-			if (sDoc != getContainer().getBaseDocument()) {// ignore the base
-															// document and
-															// align
-															// all other
+			if (sDoc != getContainer().getBaseDocument()) {
+				// ignore the base document and align all other
 				if (sDoc.getSDocumentGraph() == null) {
 					throw new PepperModuleDataException(this, "Cannot map document '" + SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()) + "', since it does not contain a document-structure.");
 				}
 				if (sDoc.getSDocumentGraph().getSTextualDSs() != null) {
 					// there are possibly texts
-					subj.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
 					if (sDoc.getSDocumentGraph().getSTextualDSs().size() > 0) {
 						// The other document has at least one text
 						HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-						for (STextualDS baseText : getContainer().getBaseDocument().getSDocumentGraph().getSTextualDSs()) { // for
-							// all
-							// texts
-							// of
-							// the
-							// base
-							// document
+						for (STextualDS baseText : getContainer().getBaseDocument().getSDocumentGraph().getSTextualDSs()) { 
+							// for all texts of the base document
 							nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 							// initialize the set of nonEquivalent token.
 							// Initially, all token do not have an equivalent.
