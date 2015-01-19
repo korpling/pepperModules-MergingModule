@@ -238,7 +238,7 @@ class MergeHandler implements SGraphTraverseHandler {
 					if ((sStart != -1) && (sLength != -1)) {
 						baseNode = baseGraph.createSToken(baseText, sStart, sStart + sLength);
 					} else {
-						logger.warn("Could not create token in target graph matching to node '" + SaltFactory.eINSTANCE.getGlobalId(currNode.getSElementId()) + "', because sStart-value (" + sStart + ") or sLength-value (" + sLength + ") was empty. ");
+						logger.warn("[Merger] Could not create token in target graph matching to node '" + SaltFactory.eINSTANCE.getGlobalId(currNode.getSElementId()) + "', because sStart-value (" + sStart + ") or sLength-value (" + sLength + ") was empty. ");
 					}
 				}
 				break;

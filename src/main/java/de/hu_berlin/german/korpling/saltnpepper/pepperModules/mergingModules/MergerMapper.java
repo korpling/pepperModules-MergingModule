@@ -230,26 +230,49 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			getContainer().setBaseDocument((SDocument) baseSubject.getSElementId().getSIdentifiableElement());
 		}
 
-		// align all texts and create the nonEquivalentTokenSets
-		// / base text -- < Other Document -- nonEquivalentTokens >
-		Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> nonEquivalentTokenSets = this.allignAllTexts();
-
-		// / choose the perfect STextualDS of the base Document
-		SDocument baseDoc = getContainer().getBaseDocument();
-		STextualDS baseText = chooseBaseText(baseDoc, nonEquivalentTokenSets);
-		logger.debug("In document {} was no primary text. Not sure if the Merger can deal with this. ");
-
-		// set the base text
-		getContainer().setBaseText(baseText);
-
-		// clear the table of non-equivalent tokens
-		nonEquivalentTokenSets.clear();
+		// // align all texts and create the nonEquivalentTokenSets
+		// // / base text -- < Other Document -- nonEquivalentTokens >
+		// Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>>
+		// nonEquivalentTokenSets = this.allignAllTexts();
+		//
+		// // / choose the perfect STextualDS of the base Document
+		// SDocument baseDoc = getContainer().getBaseDocument();
+		// STextualDS baseText = chooseBaseText(baseDoc,
+		// nonEquivalentTokenSets);
+		// logger.debug("In document {} was no primary text. Not sure if the Merger can deal with this. ");
+		//
+		// // set the base text
+		// getContainer().setBaseText(baseText);
+		//
+		// // clear the table of non-equivalent tokens
+		// nonEquivalentTokenSets.clear();
 
 		// merge two document-structures pairwise
 		for (MappingSubject subj : this.getMappingSubjects()) {
 			// for all documents
 			SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
 			if (sDoc != getContainer().getBaseDocument()) {
+
+				// TODO copied this from above, to check if it also works inside
+				// this loop --> check if alignTexts can also be called only for
+				// baseDocument and current document AND check if it is possible
+				// to call alignTexts() just once and not in alignAllTexts() and
+				// mergeDocumentStructure()
+				
+				// align all texts and create the nonEquivalentTokenSets
+				// / base text -- < Other Document -- nonEquivalentTokens >
+				Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> nonEquivalentTokenSets = allignAllTexts();
+
+				// / choose the perfect STextualDS of the base Document
+				SDocument baseDoc = getContainer().getBaseDocument();
+				STextualDS baseText = chooseBaseText(baseDoc, nonEquivalentTokenSets);
+				// clear the table of non-equivalent tokens
+				nonEquivalentTokenSets.clear();
+				logger.debug("In document {} was no primary text. Not sure if the Merger can deal with this. ", SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()));
+
+				// set the base text
+				getContainer().setBaseText(baseText);
+
 				// merge the document content
 				mergeDocumentStructures((SDocument) baseSubject.getSElementId().getSIdentifiableElement(), sDoc);
 			}
@@ -287,7 +310,24 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			for (STextualDS sTextualDS : other.getSDocumentGraph().getSTextualDSs()) {
 				// align the texts
-				this.alignTexts(getContainer().getBaseText(), sTextualDS, nonEquivalentTokensOfOtherText, node2NodeMap);
+				System.out.println("-----------------------------------> alignTexts() from mergeDocumentStructure()");
+				boolean isAlignable = alignTexts(getContainer().getBaseText(), sTextualDS, nonEquivalentTokensOfOtherText, node2NodeMap);
+				isAlignable = true;// TODO remove this
+
+				if ((isAlignable) && (logger.isTraceEnabled())) {
+					String baseId = SaltFactory.eINSTANCE.getGlobalId(getContainer().getBaseText().getSElementId());
+					String otherId = SaltFactory.eINSTANCE.getGlobalId(sTextualDS.getSElementId());
+					String format = "\t%-" + (baseId.length() > otherId.length() ? baseId.length() : otherId.length()) + "s: ";
+					StringBuilder trace = new StringBuilder();
+					trace.append("[Merger] merging texts:\n");
+					trace.append(String.format(format, baseId));
+					trace.append(getContainer().getBaseText().getSText());
+					trace.append("\n");
+					trace.append(String.format(format, otherId));
+					trace.append(sTextualDS.getSText());
+					logger.trace(trace.toString());
+				}
+
 				this.mergeTokens(getContainer().getBaseText(), sTextualDS, node2NodeMap);
 			}
 		} else {
@@ -566,8 +606,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 */
 
 	/**
-	 * This method tries to align all texts of all {@link SDocument} objects to
-	 * the base {@link STextualDS}.
+	 * This method tries to find matching texts in base document and other
+	 * document. A cross product is computed.
 	 * 
 	 * @return The data structure which contains all {@link SToken} objects
 	 *         contained in the {@link SDocument} which do not have an
@@ -602,7 +642,23 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 								// align the current base text with all texts of
 								// the other document
 								Map<SNode, SNode> equivalenceMap = new Hashtable<SNode, SNode>();
-								this.alignTexts(baseText, otherText, nonEquivalentTokenInOtherTexts, equivalenceMap);
+								System.out.println("-----------------------------------> alignTexts() from alignAllTexts()");
+								boolean isAlignable = alignTexts(baseText, otherText, nonEquivalentTokenInOtherTexts, equivalenceMap);
+								isAlignable = true;// TODO remove this
+
+								if ((isAlignable) && (logger.isTraceEnabled())) {
+									String baseId = SaltFactory.eINSTANCE.getGlobalId(baseText.getSElementId());
+									String otherId = SaltFactory.eINSTANCE.getGlobalId(otherText.getSElementId());
+									String format = "\t%-" + (baseId.length() > otherId.length() ? baseId.length() : otherId.length()) + "s: ";
+									StringBuilder trace = new StringBuilder();
+									trace.append("[Merger] merging texts:\n");
+									trace.append(String.format(format, baseId));
+									trace.append(baseText.getSText());
+									trace.append("\n");
+									trace.append(String.format(format, otherId));
+									trace.append(otherText.getSText());
+									logger.trace(trace.toString());
+								}
 							}
 							// / save all unique token of the other document
 							if (nonEquivalentTokenSets.containsKey(baseText)) {
@@ -664,10 +720,14 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * @return true on success and false on failure
 	 */
 	protected boolean alignTexts(STextualDS baseText, STextualDS otherText, Set<SToken> nonEquivalentTokenInOtherTexts, Map<SNode, SNode> equivalenceMap) {
-		if (baseText == null)
+		if (baseText == null) {
 			throw new PepperModuleException(this, "Cannot align the Text of the documents since the base SDocument reference is NULL");
-		if (otherText == null)
+		}
+		if (otherText == null) {
 			throw new PepperModuleException(this, "Cannot align the Text of the documents since the other SDocument reference is NULL");
+		}
+		System.out.println("nonEquivalentTokenInOtherTexts: " + nonEquivalentTokenInOtherTexts);
+		System.out.println("equivalenceMap: " + equivalenceMap);
 
 		// TODO REVISE THIS CODE
 		boolean returnVal = false;
