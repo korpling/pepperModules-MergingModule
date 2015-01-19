@@ -460,6 +460,16 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		return normalizedText;
 	}
 
+	/**
+	 * Creates a normalized text from the given {@link STextualDS} object and
+	 * returns it. Further a mapping passed as
+	 * <code>originalToNormalizedMapping</code>from the given text to the
+	 * normalized text is created.
+	 * 
+	 * @param sTextualDS
+	 * @param originalToNormalizedMapping
+	 * @return
+	 */
 	protected String createOriginalToNormalizedMapping(STextualDS sTextualDS, List<Integer> originalToNormalizedMapping) {
 		StringBuilder normalizedTextBuilder = new StringBuilder();
 		int start = 0;
@@ -485,6 +495,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				}
 			}
 		}
+		// add an additional entry for the position after the last character
+		// (imagine an empty token beginning and ending at last position of the
+		// text). This is necessary, because text positions are positions
+		// BETWEEN characters.
+		originalToNormalizedMapping.add(start++);
 
 		String normalizedText = normalizedTextBuilder.toString();
 		return normalizedText;
@@ -523,6 +538,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				for (STextualRelation textRel : sDocument.getSDocumentGraph().getSTextualRelations()) {
 					if (textRel.getSTextualDS().equals(sTextualDS)) {
 						SToken sToken = textRel.getSToken();
+						if (textRel.getSStart() >= originalToNormalizedMapping.size()) {
+							throw new PepperModuleException(this, "Cannot find token " + SaltFactory.eINSTANCE.getGlobalId(textRel.getSToken().getSElementId()) + " in  'originalToNormalizedMapping' list. This might be a bug. ");
+						}
 						int normalizedTokenStart = originalToNormalizedMapping.get(textRel.getSStart());
 						int normalizedTokenEnd = 0;
 						if (textRel.getSEnd() >= (originalToNormalizedMapping.size())) {
