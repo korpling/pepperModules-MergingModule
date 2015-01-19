@@ -257,23 +257,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			getContainer().setBaseDocument(getBaseDocument());
 		}
 
-		// // align all texts and create the nonEquivalentTokenSets
-		// // / base text -- < Other Document -- nonEquivalentTokens >
-		// Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>>
-		// nonEquivalentTokenSets = this.allignAllTexts();
-		//
-		// // / choose the perfect STextualDS of the base Document
-		// SDocument baseDoc = getContainer().getBaseDocument();
-		// STextualDS baseText = chooseBaseText(baseDoc,
-		// nonEquivalentTokenSets);
-		// logger.debug("In document {} was no primary text. Not sure if the Merger can deal with this. ");
-		//
-		// // set the base text
-		// getContainer().setBaseText(baseText);
-		//
-		// // clear the table of non-equivalent tokens
-		// nonEquivalentTokenSets.clear();
-
 		// merge two document-structures pairwise
 		for (MappingSubject subj : this.getMappingSubjects()) {
 			// for all documents
@@ -640,11 +623,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 */
 	private Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> allignAllTexts(SDocument baseDoc, SDocument otherDoc) {
 		Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> nonEquivalentTokenSets = new Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>>();
-		// for (MappingSubject subj : this.getMappingSubjects()) {
 		boolean hasTexts = true;
-		// SDocument sDoc = (SDocument)
-		// subj.getSElementId().getSIdentifiableElement();
-		// if (sDoc != getContainer().getBaseDocument()) {
 		// ignore the base document and align all other
 		if (otherDoc.getSDocumentGraph() == null) {
 			throw new PepperModuleDataException(this, "Cannot map document '" + SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()) + "', since it does not contain a document-structure.");
@@ -696,14 +675,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				}
 			} // for all texts of the base document
 		} // The other document has at least one text
-		// else { // The other document has NO text
-		// hasTexts = false;
-		// } // The other document has NO text
-		// } // there are possibly texts
-		// else { // The other document has NO text
-		// hasTexts = false;
-		// } // The other document has NO text
-
+	
 		if (!hasTexts) {
 			HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 			for (STextualDS baseText : getBaseDocument().getSDocumentGraph().getSTextualDSs()) {
@@ -721,8 +693,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				}
 			}
 		}
-		// }
-		// }
 		return nonEquivalentTokenSets;
 	}
 
