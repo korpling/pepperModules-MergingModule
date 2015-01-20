@@ -147,10 +147,48 @@ public class TokenMergeContainer {
 
 	/** The base {@link SDocument} object **/
 	private SDocument baseDocument = null;
+	/**
+	 * This method sets the base {@link SDocument}.
+	 * 
+	 * @param sDocument
+	 *            The {@link SDocument} to set as base.
+	 */
+	public void setBaseDocument(SDocument sDocument) {
+		this.baseDocument = sDocument;
+	}
 
+	/**
+	 * This method returns the base {@link SDocument} object.
+	 * 
+	 * @return The base {@link SDocument} or null, if there is no base
+	 *         {@link SDocument}
+	 */
+	public SDocument getBaseDocument() {
+		return this.baseDocument;
+	}
+	
 	/** The base {@link STextualDS} object **/
 	public STextualDS baseText = null;
+	/**
+	 * This method returns the base text.
+	 * 
+	 * @return The base text or null, if there is no such text.
+	 */
+	public STextualDS getBaseText() {
+		return this.baseText;
+	}
 
+	/**
+	 * This method sets the base text to the one specified by the given
+	 * {@link STextualDS}
+	 * 
+	 * @param text
+	 *            The {@link STextualDS} to set the base text to.
+	 */
+	public void setBaseText(STextualDS text) {
+		this.baseText = text;
+	}
+	
 	/**
 	 * The token equivalence map. For every {@link SToken} object which has an
 	 * equivalent {@link SToken} object, the map contains an hashmap as entry
@@ -167,8 +205,6 @@ public class TokenMergeContainer {
 
 	/** the map of normalized texts **/
 	private Hashtable<STextualDS, String> normalizedTextMap = null;
-
-	int maximumNormalizedTextLength = -1;
 
 	/**
 	 * This map contains a mapping from normalized index of a character to the
@@ -228,29 +264,10 @@ public class TokenMergeContainer {
 	 * @return The {@link SToken} objects ov the base text
 	 */
 	public EList<SToken> getBaseTextToken() {
-		return this.alignedTextsMap.get(this.baseText).getTokens();
+		return this.alignedTextsMap.get(getBaseText()).getTokens();
 	}
 
-	/**
-	 * This method sets the base {@link SDocument}.
-	 * 
-	 * @param sDocument
-	 *            The {@link SDocument} to set as base.
-	 */
-	public void setBaseDocument(SDocument sDocument) {
-		this.baseDocument = sDocument;
-	}
-
-	/**
-	 * This method returns the base {@link SDocument} object.
-	 * 
-	 * @return The base {@link SDocument} or null, if there is no base
-	 *         {@link SDocument}
-	 */
-	public SDocument getBaseDocument() {
-		return this.baseDocument;
-	}
-
+	private int maximumNormalizedTextLength = -1;
 	/**
 	 * This method adds the normalized text, specified by the parameter, for the
 	 * specified {@link STextualDS} of the specified {@link SDocument} object.
@@ -266,14 +283,14 @@ public class TokenMergeContainer {
 	public void addNormalizedText(SDocument doc, STextualDS sTextualDS, String normalizedText) {
 		if (maximumNormalizedTextLength == -1) {
 			this.maximumNormalizedTextLength = normalizedText.length();
-			this.baseText = sTextualDS;
-			this.baseDocument = doc;
+			setBaseText(sTextualDS);
+			setBaseDocument(doc);
 		} else {
 			if (normalizedText.length() > this.maximumNormalizedTextLength) {
 				// We found a new minimum
 				this.maximumNormalizedTextLength = normalizedText.length();
-				this.baseText = sTextualDS;
-				this.baseDocument = doc;
+				setBaseText(sTextualDS);
+				setBaseDocument(doc);
 			}
 		}
 		this.normalizedTextMap.put(sTextualDS, normalizedText);
@@ -290,26 +307,6 @@ public class TokenMergeContainer {
 	 */
 	public String getNormalizedText(STextualDS sTextualDS) {
 		return this.normalizedTextMap.get(sTextualDS);
-	}
-
-	/**
-	 * This method returns the base text.
-	 * 
-	 * @return The base text or null, if there is no such text.
-	 */
-	public STextualDS getBaseText() {
-		return this.baseText;
-	}
-
-	/**
-	 * This method sets the base text to the one specified by the given
-	 * {@link STextualDS}
-	 * 
-	 * @param text
-	 *            The {@link STextualDS} to set the base text to.
-	 */
-	public void setBaseText(STextualDS text) {
-		this.baseText = text;
 	}
 
 	/**

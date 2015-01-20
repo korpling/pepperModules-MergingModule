@@ -147,16 +147,18 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	private SDocument baseDocument = null;
 
 	/**
-	 * @return the {@link SDocument} which is the base document. That means, that all
-	 * document-structures are merged into this document.
+	 * @return the {@link SDocument} which is the base document. That means,
+	 *         that all document-structures are merged into this document.
 	 */
 	public SDocument getBaseDocument() {
 		return baseDocument;
 	}
+
 	/**
 	 * 
-	 * @param baseDocument the {@link SDocument} which is the base document. That means, that all
-	 * document-structures are merged into this document.
+	 * @param baseDocument
+	 *            the {@link SDocument} which is the base document. That means,
+	 *            that all document-structures are merged into this document.
 	 */
 	public void setBaseDocument(SDocument baseDocument) {
 		this.baseDocument = baseDocument;
@@ -196,7 +198,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			for (MappingSubject subj : getMappingSubjects()) {
 				if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
 					SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
-					if (sDoc != getBaseDocument()) {// document is not base corpus
+					if (sDoc != getBaseDocument()) {// document is not base
+													// corpus
 						SaltFactory.eINSTANCE.moveSAnnotations(sDoc, baseDocument);
 						SaltFactory.eINSTANCE.moveSMetaAnnotations(sDoc, baseDocument);
 					}
@@ -249,9 +252,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		}
 
 		if (baseSubject != null) {
-			//This is only for the JUnit tests
-			
-			if (getBaseDocument()== null){
+			// This is only for the JUnit tests
+
+			if (getBaseDocument() == null) {
 				setBaseDocument((SDocument) baseSubject.getSElementId().getSIdentifiableElement());
 			}
 			getContainer().setBaseDocument(getBaseDocument());
@@ -289,7 +292,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			initialSize = otherDoc.getSDocumentGraph().getSNodes().size();
 		}
 		node2NodeMap = new Hashtable<SNode, SNode>(initialSize);
-		
+
 		if (otherDoc.getSDocumentGraph().getSTextualDSs() != null) {
 			// there should be texts
 			logger.trace("[Merger] " + "Aligning the texts of {} to the base text. ", SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
@@ -300,7 +303,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			// align all texts and create the nonEquivalentTokenSets
 			// / base text -- < Other Document -- nonEquivalentTokens >
 			Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> nonEquivalentTokenSets = allignAllTexts(getBaseDocument(), otherDoc);
-	
+
 			// / choose the perfect STextualDS of the base Document
 			STextualDS baseText = chooseBaseText(getBaseDocument(), nonEquivalentTokenSets);
 			// clear the table of non-equivalent tokens
@@ -308,12 +311,13 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			logger.debug("In document {} was no primary text. Not sure if the Merger can deal with this. ", SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
 			// set the base text
 			getContainer().setBaseText(baseText);
-			
+
 			for (STextualDS sTextualDS : otherDoc.getSDocumentGraph().getSTextualDSs()) {
 				// align the texts
-				//TODO this line of code already was called in alignAllTexts, but removing it occurs a lot of exceptions
+				// TODO this line of code already was called in alignAllTexts,
+				// but removing it occurs a lot of exceptions
 				boolean isAlignable = alignTexts(getContainer().getBaseText(), sTextualDS, nonEquivalentTokensOfOtherText, node2NodeMap);
-				
+
 				mergeTokens(getContainer().getBaseText(), sTextualDS, node2NodeMap);
 			}
 		} else {
@@ -412,8 +416,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * @return The {@link STextualDS} which is suited best to be the base
 	 *         {@link STextualDS}
 	 */
-	protected STextualDS chooseBaseText(SDocument baseDoc, 
-										Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> nonEquivalentTokenSets) {
+	protected STextualDS chooseBaseText(SDocument baseDoc, Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> nonEquivalentTokenSets) {
 		STextualDS baseText = null;
 		int minimalNonEquivalentTokens = -1;
 		for (STextualDS text : baseDoc.getSDocumentGraph().getSTextualDSs()) {
@@ -551,11 +554,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			// create maps which give fast access to a token which is specified
 			// by it's original left/right value
-			Hashtable<Integer, SToken> tokensMappedByLeft = new Hashtable<Integer, SToken>();
-			Hashtable<Integer, SToken> tokensMappedByRight = new Hashtable<Integer, SToken>();
+			Hashtable<Integer, SToken> tokensByLeft = new Hashtable<Integer, SToken>();
+			Hashtable<Integer, SToken> tokensByRight = new Hashtable<Integer, SToken>();
 			for (STextualRelation textRel : sDocument.getSDocumentGraph().getSTextualRelations()) {
-				tokensMappedByLeft.put(textRel.getSStart(), textRel.getSToken());
-				tokensMappedByRight.put(textRel.getSEnd(), textRel.getSToken());
+				tokensByLeft.put(textRel.getSStart(), textRel.getSToken());
+				tokensByRight.put(textRel.getSEnd(), textRel.getSToken());
 			}
 
 			// normalize all textual datasources
@@ -653,7 +656,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				}
 			} // for all texts of the base document
 		} // The other document has at least one text
-	
+
 		if (!hasTexts) {
 			HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 			for (STextualDS baseText : getBaseDocument().getSDocumentGraph().getSTextualDSs()) {
@@ -887,14 +890,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 								nonEquivalentTokenInOtherTexts.remove(biggerTextToken);
 							} // if the base text is the smaller text
 
-						} // start and lengths are identical. We found an
-							// equivalence class
-						else { // start is identical but the length is not. No
-								// equivalence
-						} // start is identical but the length is not. No
-							// equivalence
-					} else { // start is not identical. No equivalence
-					} // start is not identical. No equivalence
+						} // start and lengths are identical. We found
+							// anequivalence class
+					}
 
 				} else { // the other token has either no start or no length ->
 							// ERROR
