@@ -552,15 +552,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			// check whether the document has any STextualDS
 			List<STextualDS> sTextualDSs = sDocument.getSDocumentGraph().getSTextualDSs();
 
-			// create maps which give fast access to a token which is specified
-			// by it's original left/right value
-			Hashtable<Integer, SToken> tokensByLeft = new Hashtable<Integer, SToken>();
-			Hashtable<Integer, SToken> tokensByRight = new Hashtable<Integer, SToken>();
-			for (STextualRelation textRel : sDocument.getSDocumentGraph().getSTextualRelations()) {
-				tokensByLeft.put(textRel.getSStart(), textRel.getSToken());
-				tokensByRight.put(textRel.getSEnd(), textRel.getSToken());
-			}
-
 			// normalize all textual datasources
 			for (STextualDS sTextualDS : sTextualDSs) {
 				List<Integer> originalToNormalizedMapping = new ArrayList<Integer>();
