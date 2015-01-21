@@ -300,6 +300,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			// align all texts and create the nonEquivalentTokenSets
 			// / base text -- < Other Document -- nonEquivalentTokens >
 			Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> nonEquivalentTokenSets = allignAllTexts(getBaseDocument(), otherDoc);
+			System.out.println("--------------__> " + nonEquivalentTokenSets);
 
 		} else {
 			// there are no texts. So, just copy everything into
@@ -307,6 +308,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			logger.warn("There is no text in document {} to be merged. Will not copy the tokens!", SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
 		}
 
+		System.out.println("mapped nodes: " + node2NodeMap);
 		SDocumentGraph otherGraph = otherDoc.getSDocumentGraph();
 		SDocumentGraph baseGraph = baseDoc.getSDocumentGraph();
 		MergeHandler handler = new MergeHandler(node2NodeMap, otherGraph, baseGraph, getContainer());
@@ -350,6 +352,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		// structure
 		int maxNumOfElements = 0;
 		for (MappingSubject subj : getMappingSubjects()) {
+			if (subj.getSElementId() == null) {
+				throw new PepperModuleException(this, "A MappingSubject does not contain a document object. This seems to be a bug. ");
+			}
 			if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
 				SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
 				// check if document and document structure is given
@@ -519,22 +524,27 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					// align the current base text with all texts of
 					// the other document
 					boolean isAlignable = alignTexts(baseText, otherText, nonEquivalentTokenInOtherTexts, node2NodeMap);
-					
-					System.out.println("--------------_> isAlignable: "+isAlignable);
+
+					System.out.println("--------------_> isAlignable: " + isAlignable);
 					isAlignable = true;// TODO remove this
 
-					if ((isAlignable) && (logger.isTraceEnabled())) {
-						String baseId = SaltFactory.eINSTANCE.getGlobalId(baseText.getSElementId());
-						String otherId = SaltFactory.eINSTANCE.getGlobalId(otherText.getSElementId());
-						String format = "\t%-" + (baseId.length() > otherId.length() ? baseId.length() : otherId.length()) + "s: ";
-						StringBuilder trace = new StringBuilder();
-						trace.append("[Merger] merging texts:\n");
-						trace.append(String.format(format, baseId));
-						trace.append(baseText.getSText());
-						trace.append("\n");
-						trace.append(String.format(format, otherId));
-						trace.append(otherText.getSText());
-						logger.trace(trace.toString());
+					if (isAlignable) {
+						// add matching texts to a list of all matching nodes
+						node2NodeMap.put(otherText, baseText);
+						
+						if (logger.isTraceEnabled()) {
+							String baseId = SaltFactory.eINSTANCE.getGlobalId(baseText.getSElementId());
+							String otherId = SaltFactory.eINSTANCE.getGlobalId(otherText.getSElementId());
+							String format = "\t%-" + (baseId.length() > otherId.length() ? baseId.length() : otherId.length()) + "s: ";
+							StringBuilder trace = new StringBuilder();
+							trace.append("[Merger] merging texts:\n");
+							trace.append(String.format(format, baseId));
+							trace.append(baseText.getSText());
+							trace.append("\n");
+							trace.append(String.format(format, otherId));
+							trace.append(otherText.getSText());
+							logger.trace(trace.toString());
+						}
 					}
 					mergeTokens(baseText, otherText, node2NodeMap);
 				}

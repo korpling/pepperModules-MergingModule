@@ -100,7 +100,7 @@ class MergeHandler implements SGraphTraverseHandler {
 
 	/**
 	 * a map to relate nodes contained by otherGraph to nodes from baseGraph, which
-	 * are mergable
+	 * are mergable. Key is other node, value is base node.
 	 **/
 	private Map<SNode, SNode> node2NodeMap = null;
 	/**
@@ -232,10 +232,10 @@ class MergeHandler implements SGraphTraverseHandler {
 					}
 					// Find the alignment of the current token to create a new
 					// one
-					Integer sStart = container.getAlignedTokenStart(textRel.getSTextualDS(), (SToken) currNode);
-					Integer sLength = container.getAlignedTokenLength(textRel.getSTextualDS(), (SToken) currNode);
+					Integer sStart = container.getAlignedTokenStart((STextualDS)node2NodeMap.get(textRel.getSTextualDS()), (SToken) currNode);
+					Integer sLength = container.getAlignedTokenLength((STextualDS)node2NodeMap.get(textRel.getSTextualDS()), (SToken) currNode);
 					if ((sStart != -1) && (sLength != -1)) {
-						baseNode = baseGraph.createSToken(textRel.getSTextualDS(), sStart, sStart + sLength);
+						baseNode = baseGraph.createSToken((STextualDS)node2NodeMap.get(textRel.getSTextualDS()), sStart, sStart + sLength);
 					} else {
 						logger.warn("[Merger] Could not create token in target graph matching to node '" + SaltFactory.eINSTANCE.getGlobalId(currNode.getSElementId()) + "', because sStart-value (" + sStart + ") or sLength-value (" + sLength + ") was empty. ");
 					}

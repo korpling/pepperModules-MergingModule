@@ -17,8 +17,7 @@
  */
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -328,13 +327,72 @@ public class MergerMapper_baseTest extends MergerMapper {
 	}
 
 	/**
+	 * Checks if three documents containing 2 texts each are mergebale (each
+	 * text of a document has a matching one in the other documents).
+	 */
+	@Test
+	public void testAlignTexts_n2m() {
+		//create document 1
+		SDocument doc1= SaltFactory.eINSTANCE.createSDocument();
+		doc1.setSId("doc1");
+		doc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		STextualDS text11= doc1.getSDocumentGraph().createSTextualDS("This is the first text.");
+		doc1.getSDocumentGraph().createSToken(text11, 0, 4);
+		doc1.getSDocumentGraph().createSToken(text11, 5, 7);
+		STextualDS text12= doc1.getSDocumentGraph().createSTextualDS("This is the second text.");
+		doc1.getSDocumentGraph().createSToken(text12, 0, 4);
+		doc1.getSDocumentGraph().createSToken(text12, 5, 7);
+		
+		//create document 2
+		SDocument doc2= SaltFactory.eINSTANCE.createSDocument();
+		doc2.setSId("doc2");
+		doc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		STextualDS text21= doc2.getSDocumentGraph().createSTextualDS("Thisisthefirsttext.");
+		doc2.getSDocumentGraph().createSToken(text21, 6, 9);
+		doc2.getSDocumentGraph().createSToken(text21, 9, 14);
+		STextualDS text22= doc2.getSDocumentGraph().createSTextualDS("Thisisthesecondtext.");
+		doc2.getSDocumentGraph().createSToken(text22, 6, 9);
+		doc2.getSDocumentGraph().createSToken(text22, 9, 15);
+		
+		//create document 3
+		SDocument doc3= SaltFactory.eINSTANCE.createSDocument();
+		doc3.setSId("doc3");
+		doc3.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		STextualDS text31= doc3.getSDocumentGraph().createSTextualDS("This   is   the   first    text.");
+		doc3.getSDocumentGraph().createSToken(text31, 27, 31);
+		doc3.getSDocumentGraph().createSToken(text31, 31, 32);
+		STextualDS text32= doc3.getSDocumentGraph().createSTextualDS("This   is   the   second   text.");
+		doc3.getSDocumentGraph().createSToken(text32, 27, 31);
+		doc3.getSDocumentGraph().createSToken(text32, 31, 32);
+		
+		//create mapping subjects for documents
+		MappingSubject sub1 = new MappingSubject();
+		sub1.setSElementId(doc1.getSElementId());
+		getFixture().getMappingSubjects().add(sub1);
+		
+		MappingSubject sub2 = new MappingSubject();
+		sub2.setSElementId(doc2.getSElementId());
+		getFixture().getMappingSubjects().add(sub2);
+		
+		MappingSubject sub3 = new MappingSubject();
+		sub3.setSElementId(doc3.getSElementId());
+		getFixture().getMappingSubjects().add(sub3);
+		
+		this.mergeDocumentStructures(chooseBaseDocument());
+
+		assertEquals(2, doc1.getSDocumentGraph().getSTextualDSs().size());
+		assertEquals(12, doc1.getSDocumentGraph().getSTokens().size());
+		assertEquals(12, doc1.getSDocumentGraph().getSTextualRelations().size());
+	}
+
+	/**
 	 * Checks, that algorithm chooses the expected base document automatically.
 	 * Should be the one having the most nodes and relations (in sum).
 	 */
 	@Test
 	public void testChooseBaseDocument() {
-		SaltProject project= SaltFactory.eINSTANCE.createSaltProject();
-		
+		SaltProject project = SaltFactory.eINSTANCE.createSaltProject();
+
 		SCorpusGraph g1 = SaltFactory.eINSTANCE.createSCorpusGraph();
 		project.getSCorpusGraphs().add(g1);
 		SDocument d1_1 = g1.createSDocument(URI.createURI("/c1/d1"));
@@ -344,7 +402,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 		MappingSubject subj_1 = new MappingSubject();
 		subj_1.setSElementId(d1_1.getSElementId());
 		getFixture().getMappingSubjects().add(subj_1);
-		
+
 		SCorpusGraph g2 = SaltFactory.eINSTANCE.createSCorpusGraph();
 		project.getSCorpusGraphs().add(g2);
 		SDocument d1_2 = g2.createSDocument(URI.createURI("/c1/d1"));
@@ -354,7 +412,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 		MappingSubject subj_2 = new MappingSubject();
 		subj_2.setSElementId(d1_2.getSElementId());
 		getFixture().getMappingSubjects().add(subj_2);
-	
+
 		SCorpusGraph g3 = SaltFactory.eINSTANCE.createSCorpusGraph();
 		project.getSCorpusGraphs().add(g3);
 		SDocument d1_3 = g3.createSDocument(URI.createURI("/c1/d1"));
@@ -364,7 +422,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 		MappingSubject subj_3 = new MappingSubject();
 		subj_3.setSElementId(d1_3.getSElementId());
 		getFixture().getMappingSubjects().add(subj_3);
-	
+
 		this.initialize();
 		// normalize all texts
 		for (MappingSubject subj : getFixture().getMappingSubjects()) {
