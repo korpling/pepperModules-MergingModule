@@ -310,11 +310,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			getContainer().setBaseText(baseText);
 
 			for (STextualDS sTextualDS : otherDoc.getSDocumentGraph().getSTextualDSs()) {
-				// align the texts
-				// TODO this line of code already was called in alignAllTexts,
-				// but removing it occurs a lot of exceptions
-				boolean isAlignable = alignTexts(getContainer().getBaseText(), sTextualDS, nonEquivalentTokensOfOtherText, node2NodeMap);
-
 				mergeTokens(getContainer().getBaseText(), sTextualDS, node2NodeMap);
 			}
 		} else {
@@ -456,10 +451,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	}
 
 	/**
-	 * Normalizes all primary texts of the given {@link SDocument}. The normalized text corresponding to 
-	 * its original is added to the {@link TokenMergeContainer}. Also each token corresponding to its start and
-	 * end position in the normalized text is added to the {@link TokenMergeContainer}.
-	 * <br/>
+	 * Normalizes all primary texts of the given {@link SDocument}. The
+	 * normalized text corresponding to its original is added to the
+	 * {@link TokenMergeContainer}. Also each token corresponding to its start
+	 * and end position in the normalized text is added to the
+	 * {@link TokenMergeContainer}. <br/>
 	 * Note: only the normalization is done. The equivalent {@link SToken} are
 	 * not determined in any way. For this functionality, you need to use
 	 * {@link alignDocuments}.
@@ -476,7 +472,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			List<STextualDS> sTextualDSs = sDocument.getSDocumentGraph().getSTextualDSs();
 			for (STextualDS sTextualDS : sTextualDSs) {
 				// normalize all textual datasources
-				
+
 				List<Integer> originalToNormalizedMapping = new ArrayList<Integer>();
 				String normalizedText = createOriginalToNormalizedMapping(sTextualDS, originalToNormalizedMapping);
 				for (STextualRelation textRel : sDocument.getSDocumentGraph().getSTextualRelations()) {
@@ -485,9 +481,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 						if (textRel.getSStart() >= originalToNormalizedMapping.size()) {
 							throw new PepperModuleException(this, "Cannot find token " + SaltFactory.eINSTANCE.getGlobalId(textRel.getSToken().getSElementId()) + " in  'originalToNormalizedMapping' list. This might be a bug. ");
 						}
-						//the start position of current token in normalized text
+						// the start position of current token in normalized
+						// text
 						int normalizedTokenStart = originalToNormalizedMapping.get(textRel.getSStart());
-						//the end position of current token in normalized text
+						// the end position of current token in normalized text
 						int normalizedTokenEnd = 0;
 						if (textRel.getSEnd() >= (originalToNormalizedMapping.size())) {
 							if (textRel.getSEnd() >= (originalToNormalizedMapping.size() + 1)) {
@@ -588,9 +585,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				for (STextualDS otherText : otherDoc.getSDocumentGraph().getSTextualDSs()) {
 					// align the current base text with all texts of
 					// the other document
-					Map<SNode, SNode> equivalenceMap = new Hashtable<SNode, SNode>();
-					System.out.println("-----------------------------------> alignTexts() from alignAllTexts()");
-					boolean isAlignable = alignTexts(baseText, otherText, nonEquivalentTokenInOtherTexts, equivalenceMap);
+					boolean isAlignable = alignTexts(baseText, otherText, nonEquivalentTokenInOtherTexts, node2NodeMap);
+					
+					System.out.println("--------------_> isAlignable: "+isAlignable);
 					isAlignable = true;// TODO remove this
 
 					if ((isAlignable) && (logger.isTraceEnabled())) {
@@ -785,8 +782,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		String normalizedOtherText = getContainer().getNormalizedText(otherText);
 
 		// set the mapping of the normalized base text to the original base text
-		if (getContainer().getBaseTextPositionByNormalizedTextPosition(getContainer().getBaseText(), 0) == -1) {
-			getContainer().setBaseTextPositionByNormalizedTextPosition(baseText, this.createBaseTextNormOriginalMapping(getContainer().getBaseText()));
+		if (getContainer().getBaseTextPositionByNormalizedTextPosition(baseText, 0) == -1) {
+			getContainer().setBaseTextPositionByNormalizedTextPosition(baseText, this.createBaseTextNormOriginalMapping(baseText));
 		}
 
 		int offset = -1;
@@ -805,8 +802,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			smallerText = baseText;
 		} // if the base text fits into the other text by size
 
-		if (offset != -1) {// if the normalized bigger text is contained in the
-							// normalized smaller text
+		if (offset != -1) {
+			// if the normalized smaller text is contained in the normalized
+			// bigger text
 
 			returnVal = true;
 			// get the tokens of the other text.
@@ -877,11 +875,13 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * of the first occurence is returned.
 	 * 
 	 * @param stringToSearchIn
+	 *            String in which is searched
 	 * @param stringToSearchFor
-	 * @param omitCharArray
+	 *            String which is to search
 	 * @param useIndexof
 	 *            If this flag is set, all omit chars are removed from both
 	 *            provided strings and a normal indexOf is used
+	 * @param omitCharArray
 	 * @return the index on success and -1 on failure
 	 */
 	protected int indexOfOmitChars(String stringToSearchIn, String stringToSearchFor, boolean useIndexOf, Set<Character> omitChars) {
@@ -1035,12 +1035,12 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		return normalizedToOriginalMapping;
 	}
 
-	/* *****************************************************************************
-	 * Merging Methods
-	 * **********************************************************
-	 * ******************
+	/**
+	 * 
+	 * @param baseText
+	 * @param otherText
+	 * @param equivalenceMap
 	 */
-
 	protected void mergeTokens(STextualDS baseText, STextualDS otherText, Map<SNode, SNode> equivalenceMap) {
 		// We want to merge the tokens of the other text into the base text.
 		// first we need the two normalized texts
@@ -1048,8 +1048,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		String normalizedOtherText = getContainer().getNormalizedText(otherText);
 
 		// set the mapping of the normalized base text to the original base text
-		if (getContainer().getBaseTextPositionByNormalizedTextPosition(getContainer().getBaseText(), 0) == -1) {
-			getContainer().setBaseTextPositionByNormalizedTextPosition(baseText, this.createBaseTextNormOriginalMapping(getContainer().getBaseText()));
+		if (getContainer().getBaseTextPositionByNormalizedTextPosition(baseText, 0) == -1) {
+			getContainer().setBaseTextPositionByNormalizedTextPosition(baseText, this.createBaseTextNormOriginalMapping(baseText));
 		}
 
 		int offset = -1;

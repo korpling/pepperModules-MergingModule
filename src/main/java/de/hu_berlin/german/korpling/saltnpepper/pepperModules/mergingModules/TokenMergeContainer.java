@@ -203,8 +203,8 @@ public class TokenMergeContainer {
 	 **/
 	private Hashtable<STextualDS, AlignedTokensMap> alignedTextsMap = null;
 
-	/** the map of normalized texts **/
-	private Hashtable<STextualDS, String> normalizedTextMap = null;
+	/** maps an original text to its normalized representation **/
+	private Hashtable<STextualDS, String> normalizedTexts = null;
 
 	/**
 	 * This map contains a mapping from normalized index of a character to the
@@ -215,7 +215,7 @@ public class TokenMergeContainer {
 	public TokenMergeContainer() {
 		this.equivalentToken = new Hashtable<SToken, Hashtable<STextualDS, SToken>>();
 		this.alignedTextsMap = new Hashtable<STextualDS, AlignedTokensMap>();
-		this.normalizedTextMap = new Hashtable<STextualDS, String>();
+		this.normalizedTexts = new Hashtable<STextualDS, String>();
 		this.normalizedBaseTextToOriginalBaseText = new Hashtable<STextualDS, List<Integer>>();
 	}
 
@@ -283,7 +283,7 @@ public class TokenMergeContainer {
 				setBaseDocument(doc);
 			}
 		}
-		this.normalizedTextMap.put(sTextualDS, normalizedText);
+		this.normalizedTexts.put(sTextualDS, normalizedText);
 	}
 
 	/**
@@ -296,7 +296,7 @@ public class TokenMergeContainer {
 	 *         the given {@link STextualDS}
 	 */
 	public String getNormalizedText(STextualDS sTextualDS) {
-		return this.normalizedTextMap.get(sTextualDS);
+		return this.normalizedTexts.get(sTextualDS);
 	}
 
 	/**
@@ -489,8 +489,8 @@ public class TokenMergeContainer {
 		if (this.alignedTextsMap.containsKey(sDocument)) {
 			this.alignedTextsMap.remove(sDocument);
 		}
-		if (this.normalizedTextMap.containsKey(sDocument)) {
-			this.normalizedTextMap.remove(sDocument);
+		if (this.normalizedTexts.containsKey(sDocument)) {
+			this.normalizedTexts.remove(sDocument);
 		}
 		if (sDocument == this.baseDocument) {
 			this.normalizedBaseTextToOriginalBaseText.clear();
