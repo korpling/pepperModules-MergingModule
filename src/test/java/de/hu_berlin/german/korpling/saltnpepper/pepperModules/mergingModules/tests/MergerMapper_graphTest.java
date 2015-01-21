@@ -393,7 +393,7 @@ public class MergerMapper_graphTest extends MergerMapper {
 			SToken base = baseTextToken.get(i);
 			SToken otherToken = otherTextToken.get(j);
 			STextualDS otherText = sDoc1.getSDocumentGraph().getSTextualDSs().get(0);
-			assertEquals("Base Token " + base.getSName() + " (start: " + this.container.getAlignedTokenStart(this.container.getBaseText(), base) + ") and other token " + otherToken.getSName() + " (start: " + this.container.getAlignedTokenStart(otherText, otherToken) + ") should be equal.", this.container.getTokenMapping(base, otherText), otherToken);
+			assertEquals("Base Token " + base.getSName() + "  and other token " + otherToken.getSName() + " (start: " + this.container.getAlignedTokenStart(otherText, otherToken) + ") should be equal.", this.container.getTokenMapping(base, otherText), otherToken);
 			j++;
 		}
 
@@ -407,7 +407,7 @@ public class MergerMapper_graphTest extends MergerMapper {
 			SToken base = baseTextToken.get(i);
 			SToken otherToken = otherTextToken.get(j);
 			STextualDS otherText = sDoc1.getSDocumentGraph().getSTextualDSs().get(0);
-			assertEquals("Base Token " + base.getSName() + " (start: " + this.container.getAlignedTokenStart(this.container.getBaseText(), base) + ") and other token " + otherToken.getSName() + " (start: " + this.container.getAlignedTokenStart(otherText, otherToken) + ") should be equal.", this.container.getTokenMapping(base, otherText), otherToken);
+			assertEquals("Base Token " + base.getSName() + ") and other token " + otherToken.getSName() + " (start: " + this.container.getAlignedTokenStart(otherText, otherToken) + ") should be equal.", this.container.getTokenMapping(base, otherText), otherToken);
 			j++;
 		}
 	}
@@ -466,7 +466,6 @@ public class MergerMapper_graphTest extends MergerMapper {
 
 		// test 1 : sDoc2 must be the base document
 		this.container.setBaseDocument(sDoc1);
-		this.container.setBaseText(sDoc1.getSDocumentGraph().getSTextualDSs().get(0));
 
 		// test 2 : align must return true
 		HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();

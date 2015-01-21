@@ -309,7 +309,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 		SDocumentGraph otherGraph = otherDoc.getSDocumentGraph();
 		SDocumentGraph baseGraph = baseDoc.getSDocumentGraph();
-		MergeHandler handler = new MergeHandler(node2NodeMap, otherGraph, baseGraph, getContainer().baseText, getContainer());
+		MergeHandler handler = new MergeHandler(node2NodeMap, otherGraph, baseGraph, getContainer());
 
 		EList<SNode> tokens = otherGraph.getSRoots();
 		if ((tokens == null) || (tokens.size() == 0)) {

@@ -38,6 +38,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SStructuredNode;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STYPE_NAME;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SAnnotation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SGraphTraverseHandler;
@@ -97,14 +98,6 @@ class MergeHandler implements SGraphTraverseHandler {
 		this.baseGraph = baseGraph;
 	}
 
-	/** anchor text of baseGraph **/
-	private STextualDS baseText = null;
-
-	/** anchor text of baseGraph **/
-	public void setBaseText(STextualDS baseText) {
-		this.baseText = baseText;
-	}
-
 	/**
 	 * a map to relate nodes contained by otherGraph to nodes from baseGraph, which
 	 * are mergable
@@ -116,9 +109,8 @@ class MergeHandler implements SGraphTraverseHandler {
 	 **/
 	private TokenMergeContainer container = null;
 
-	public MergeHandler(Map<SNode, SNode> node2NodeMap, SDocumentGraph otherGraph, SDocumentGraph baseGraph, STextualDS baseText, TokenMergeContainer container) {
+	public MergeHandler(Map<SNode, SNode> node2NodeMap, SDocumentGraph otherGraph, SDocumentGraph baseGraph, TokenMergeContainer container) {
 		this.node2NodeMap = node2NodeMap;
-		setBaseText(baseText);
 		setOtherGraph(otherGraph);
 		setBaseGraph(baseGraph);
 		this.container = container;
@@ -231,12 +223,19 @@ class MergeHandler implements SGraphTraverseHandler {
 				if (baseNode != null) {
 					// Match found
 				} else {
+					STextualRelation textRel= null;
+					for (SRelation rel: currNode.getOutgoingSRelations()){
+						if (rel instanceof STextualRelation){
+							textRel= (STextualRelation)rel;
+							break;
+						}
+					}
 					// Find the alignment of the current token to create a new
 					// one
-					Integer sStart = container.getAlignedTokenStart(baseText, (SToken) currNode);
-					Integer sLength = container.getAlignedTokenLength(baseText, (SToken) currNode);
+					Integer sStart = container.getAlignedTokenStart(textRel.getSTextualDS(), (SToken) currNode);
+					Integer sLength = container.getAlignedTokenLength(textRel.getSTextualDS(), (SToken) currNode);
 					if ((sStart != -1) && (sLength != -1)) {
-						baseNode = baseGraph.createSToken(baseText, sStart, sStart + sLength);
+						baseNode = baseGraph.createSToken(textRel.getSTextualDS(), sStart, sStart + sLength);
 					} else {
 						logger.warn("[Merger] Could not create token in target graph matching to node '" + SaltFactory.eINSTANCE.getGlobalId(currNode.getSElementId()) + "', because sStart-value (" + sStart + ") or sLength-value (" + sLength + ") was empty. ");
 					}

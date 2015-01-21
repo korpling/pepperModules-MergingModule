@@ -167,28 +167,6 @@ public class TokenMergeContainer {
 		return this.baseDocument;
 	}
 	
-	/** The base {@link STextualDS} object **/
-	public STextualDS baseText = null;
-	/**
-	 * This method returns the base text.
-	 * 
-	 * @return The base text or null, if there is no such text.
-	 */
-	public STextualDS getBaseText() {
-		return this.baseText;
-	}
-
-	/**
-	 * This method sets the base text to the one specified by the given
-	 * {@link STextualDS}
-	 * 
-	 * @param text
-	 *            The {@link STextualDS} to set the base text to.
-	 */
-	public void setBaseText(STextualDS text) {
-		this.baseText = text;
-	}
-	
 	/**
 	 * The token equivalence map. For every {@link SToken} object which has an
 	 * equivalent {@link SToken} object, the map contains an hashmap as entry
@@ -273,13 +251,11 @@ public class TokenMergeContainer {
 	public void addNormalizedText(SDocument doc, STextualDS sTextualDS, String normalizedText) {
 		if (maximumNormalizedTextLength == -1) {
 			this.maximumNormalizedTextLength = normalizedText.length();
-			setBaseText(sTextualDS);
 			setBaseDocument(doc);
 		} else {
 			if (normalizedText.length() > this.maximumNormalizedTextLength) {
 				// We found a new minimum
 				this.maximumNormalizedTextLength = normalizedText.length();
-				setBaseText(sTextualDS);
 				setBaseDocument(doc);
 			}
 		}
