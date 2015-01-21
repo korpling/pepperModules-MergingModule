@@ -384,62 +384,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	}
 
 	/**
-	 * This method chooses a base {@link STextualDS} for the given base
-	 * {@link SDocument} heuristically by determining the {@link STextualDS}
-	 * which has the least count of tokens which do not have an equivalent in
-	 * all other documents.
-	 * 
-	 * @param baseDoc
-	 *            The base {@link SDocument}
-	 * @param nonEquivalentTokenSets
-	 *            The set of tokens which do not have an equivalent in the base
-	 *            {@link STextualDS}
-	 * @return The {@link STextualDS} which is suited best to be the base
-	 *         {@link STextualDS}
-	 */
-	private STextualDS chooseBaseText(SDocument baseDoc, Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> nonEquivalentTokenSets) {
-		STextualDS baseText = null;
-		int minimalNonEquivalentTokens = -1;
-		for (STextualDS text : baseDoc.getSDocumentGraph().getSTextualDSs()) {
-			// for all texts of the base document
-			Hashtable<SDocument, HashSet<SToken>> nonEQTokensInOtherDoc = nonEquivalentTokenSets.get(text);
-			if (nonEQTokensInOtherDoc != null) {
-				// there is a set of non-equivalent token for the current
-				// base text
-				int countOfNonEquivalentTokens = 0;
-				for (SDocument otherDoc : nonEQTokensInOtherDoc.keySet()) {
-					// count the number of tokens of all documents which do
-					// not have an equivalent in the current base text
-					countOfNonEquivalentTokens += nonEQTokensInOtherDoc.get(otherDoc).size();
-				} // count the number of tokens of all documents which do
-					// have an equivalent in the current base text
-				if (minimalNonEquivalentTokens == -1) {
-					// if the minimalNonEquivalentTokens value is -1, we did
-					// not process a document, yet. initialize
-					minimalNonEquivalentTokens = countOfNonEquivalentTokens;
-					baseText = text;
-				} // if the minimalNonEquivalentTokens value is -1, we did
-					// process a document, yet. initialize
-				else { // there is some base text
-					if (minimalNonEquivalentTokens > countOfNonEquivalentTokens) {
-						// if there are less non-equivalent tokens for this
-						// text than for
-						// some other, set this text as base text
-						minimalNonEquivalentTokens = countOfNonEquivalentTokens;
-						baseText = text;
-					} // if there are less non-equivalent tokens for this
-						// text than for some other, set this text as base
-				}
-			} // there is a set of non-equivalent token for the current base
-				// text
-		}
-		if (baseText != null) {
-			logger.trace("[Merger] " + "Chose base text. It is text with id '{}'.", SaltFactory.eINSTANCE.getGlobalId(baseText.getSElementId()));
-		}
-		return baseText;
-	}
-
-	/**
 	 * Normalizes all primary texts of the given {@link SDocument}. The
 	 * normalized text corresponding to its original is added to the
 	 * {@link TokenMergeContainer}. Also each token corresponding to its start
