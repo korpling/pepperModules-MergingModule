@@ -45,7 +45,6 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 
 /**
@@ -183,8 +182,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				}
 				logger.debug("[Merger] " + str.toString());
 			}
-
-			boolean isEmpty = true;
 
 			// base subject containing the base document
 			MappingSubject baseSubject = chooseBaseDocument();
@@ -462,33 +459,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * Normalizing STextualDS
 	 * ******************************************************************
 	 */
-
-	/**
-	 * This method normalizes the text specified by the given {@link STextualDS}
-	 * .
-	 * 
-	 * @param sTextualDS
-	 *            the {@link STextualDS} to normalize
-	 * @return The normalized text
-	 */
-	private static String normalizeText(STextualDS sTextualDS, Map<String, String> escapeTable) {
-		String normalizedText = null;
-		StringBuilder normalizedTextBuilder = new StringBuilder();
-		// normalize the text
-		char[] chr = sTextualDS.getSText().toCharArray();
-		for (char c : chr) {
-			String stringToEscape = escapeTable.get(String.valueOf(c));
-			// fill the StringBuilder
-			if (stringToEscape != null) {
-				normalizedTextBuilder.append(stringToEscape);
-			} else {
-				normalizedTextBuilder.append(c);
-			}
-		}
-		// now we have the normalized text
-		normalizedText = normalizedTextBuilder.toString();
-		return normalizedText;
-	}
 
 	/**
 	 * Creates a normalized text from the given {@link STextualDS} object and
@@ -1070,64 +1040,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		return normalizedToOriginalMapping;
 	}
 
-	/* ********************************************************************
-	 * Mergeability Checks
-	 * *******************************************************************
-	 */
-
-	/**
-	 * This method checks whether the provided documents are mergeable. I.e., it
-	 * is checked whether at least one text of the one document is alignible
-	 * with at least one text of the other document.
-	 * 
-	 * @param doc1
-	 *            Some {@link SDocument}
-	 * @param doc2
-	 *            Some {@link SDocument}
-	 * @return true, if one of the {@link SDocument} objects is meargeable into
-	 *         the other and false, else
-	 */
-	public boolean isMergeable(SDocument doc1, SDocument doc2) {
-		boolean retVal = false;
-
-		List<STextualDS> doc1Texts = doc1.getSDocumentGraph().getSTextualDSs();
-		List<STextualDS> doc2Texts = doc2.getSDocumentGraph().getSTextualDSs();
-		if (doc1Texts != null && doc2Texts != null) { // both documents should
-														// have texts
-			if ((!doc1Texts.isEmpty()) && (!doc2Texts.isEmpty())) { // both
-																	// documents
-																	// do have
-																	// at least
-																	// one text
-				for (STextualDS text1 : doc1Texts) {
-					String normalizedText1 = normalizeText(text1, ((MergerProperties) getProperties()).getEscapeMapping());
-					for (STextualDS text2 : doc2Texts) {
-						String normalizedText2 = normalizeText(text1, ((MergerProperties) getProperties()).getEscapeMapping());
-						if (indexOfOmitChars(normalizedText1, normalizedText2, true, ((MergerProperties) getProperties()).getPunctuations()) != -1 || indexOfOmitChars(normalizedText2, normalizedText1, true, ((MergerProperties) getProperties()).getPunctuations()) != -1
-
-						) {
-							retVal = true;
-							break;
-						}
-					}
-					if (retVal) {
-						break;
-					}
-				}
-			} // both documents do have at least one text
-			else { // one document does not have a text. We can merge
-				retVal = true;
-			} // one document does not have a text. We can merge
-
-		} // both documents should have texts
-		else { // at least one document obviously does not have a text. We can
-				// merge.
-			retVal = true;
-		} // at least one document obviously does not have a text. We can merge.
-
-		return retVal;
-	}
-
 	/* *****************************************************************************
 	 * Merging Methods
 	 * **********************************************************
@@ -1237,59 +1149,5 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			// move the annotations from the other text to the base text
 		SaltFactory.eINSTANCE.moveSAnnotations(otherText, baseText);
 		SaltFactory.eINSTANCE.moveSMetaAnnotations(otherText, baseText);
-	}
-
-	class NodeParameters {
-		String canonicalClassName;
-		Map<String, Integer> outgoingCount;
-		Map<String, Integer> inboundCount;
-
-		public NodeParameters(SNode n, SGraph g) {
-			canonicalClassName = n.getClass().getCanonicalName();
-			addEdges(inboundCount, g.getInEdges(n.getSId()));
-			addEdges(outgoingCount, g.getOutEdges(n.getSId()));
-		}
-
-		private void addEdges(Map<String, Integer> map, List<Edge> edges) {
-			for (Edge e : edges) {
-				Integer i;
-				if (map.containsKey(e.getClass().getCanonicalName())) {
-					i = map.get(e.getClass().getCanonicalName()) + 1;
-				} else {
-					i = 1;
-				}
-				inboundCount.put(e.getClass().getCanonicalName(), i);
-			}
-		}
-
-		@Override
-		public boolean equals(Object other) {
-			if (!(other instanceof NodeParameters)) {
-				return false;
-			}
-			NodeParameters param = (NodeParameters) other;
-			if (!param.canonicalClassName.equals(this.canonicalClassName)) {
-				return false;
-			}
-			if (param.outgoingCount.size() != this.outgoingCount.size()) {
-				return false;
-			}
-			if (!isMapEqual(param.inboundCount, this.inboundCount)) {
-				return false;
-			}
-			if (!isMapEqual(param.outgoingCount, this.outgoingCount)) {
-				return false;
-			}
-			return true;
-		}
-
-		private boolean isMapEqual(Map<String, Integer> map1, Map<String, Integer> map2) {
-			for (String key : map1.keySet()) {
-				if (map1.get(key) != map2.get(key)) {
-					return false;
-				}
-			}
-			return true;
-		}
 	}
 }
