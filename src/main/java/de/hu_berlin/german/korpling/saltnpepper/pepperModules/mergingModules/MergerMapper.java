@@ -455,56 +455,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		return baseText;
 	}
 
-	/* *******************************************************************
-	 * Normalizing STextualDS
-	 * ******************************************************************
-	 */
-
-	/**
-	 * Creates a normalized text from the given {@link STextualDS} object and
-	 * returns it. Further a mapping passed as
-	 * <code>originalToNormalizedMapping</code>from the given text to the
-	 * normalized text is created.
-	 * 
-	 * @param sTextualDS
-	 * @param originalToNormalizedMapping
-	 * @return
-	 */
-	private String createOriginalToNormalizedMapping(STextualDS sTextualDS, List<Integer> originalToNormalizedMapping) {
-		StringBuilder normalizedTextBuilder = new StringBuilder();
-		int start = 0;
-		char[] chr = sTextualDS.getSText().toCharArray();
-		for (char c : chr) {
-			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(String.valueOf(c));
-			if (stringToEscape == null) {
-				originalToNormalizedMapping.add(start);
-				normalizedTextBuilder.append(c);
-				start += 1;
-			} else {
-				if (stringToEscape.length() > 0) {
-					originalToNormalizedMapping.add(start);
-					for (int i = 0; i < stringToEscape.length(); i++) {
-						// one char is mapped to many. all chars have the same
-						// index in the original text
-						start += 1;
-					}
-					normalizedTextBuilder.append(stringToEscape);
-				} else { // one char is mapped to the empty string.
-							// TODO: TALK ABOUT THIS!
-					originalToNormalizedMapping.add(start);
-				}
-			}
-		}
-		// add an additional entry for the position after the last character
-		// (imagine an empty token beginning and ending at last position of the
-		// text). This is necessary, because text positions are positions
-		// BETWEEN characters.
-		originalToNormalizedMapping.add(start++);
-
-		String normalizedText = normalizedTextBuilder.toString();
-		return normalizedText;
-	}
-
 	/**
 	 * Normalizes all primary texts of the given {@link SDocument}. The normalized text corresponding to 
 	 * its original is added to the {@link TokenMergeContainer}. Also each token corresponding to its start and
@@ -554,6 +504,51 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				getContainer().addNormalizedText(sDocument, sTextualDS, normalizedText);
 			}
 		}
+	}
+
+	/**
+	 * Creates a normalized text from the given {@link STextualDS} object and
+	 * returns it. Further a mapping passed as
+	 * <code>originalToNormalizedMapping</code>from the given text to the
+	 * normalized text is created.
+	 * 
+	 * @param sTextualDS
+	 * @param originalToNormalizedMapping
+	 * @return
+	 */
+	private String createOriginalToNormalizedMapping(STextualDS sTextualDS, List<Integer> originalToNormalizedMapping) {
+		StringBuilder normalizedTextBuilder = new StringBuilder();
+		int start = 0;
+		char[] chr = sTextualDS.getSText().toCharArray();
+		for (char c : chr) {
+			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(String.valueOf(c));
+			if (stringToEscape == null) {
+				originalToNormalizedMapping.add(start);
+				normalizedTextBuilder.append(c);
+				start += 1;
+			} else {
+				if (stringToEscape.length() > 0) {
+					originalToNormalizedMapping.add(start);
+					for (int i = 0; i < stringToEscape.length(); i++) {
+						// one char is mapped to many. all chars have the same
+						// index in the original text
+						start += 1;
+					}
+					normalizedTextBuilder.append(stringToEscape);
+				} else { // one char is mapped to the empty string.
+							// TODO: TALK ABOUT THIS!
+					originalToNormalizedMapping.add(start);
+				}
+			}
+		}
+		// add an additional entry for the position after the last character
+		// (imagine an empty token beginning and ending at last position of the
+		// text). This is necessary, because text positions are positions
+		// BETWEEN characters.
+		originalToNormalizedMapping.add(start++);
+
+		String normalizedText = normalizedTextBuilder.toString();
+		return normalizedText;
 	}
 
 	/* *******************************************************************

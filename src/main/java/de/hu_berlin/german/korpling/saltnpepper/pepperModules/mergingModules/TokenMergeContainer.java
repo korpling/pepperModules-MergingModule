@@ -257,16 +257,6 @@ public class TokenMergeContainer {
 		return baseTextPosition;
 	}
 
-	/**
-	 * This method returns the {@link SToken} objects which overlap the base
-	 * text.
-	 * 
-	 * @return The {@link SToken} objects ov the base text
-	 */
-	public EList<SToken> getBaseTextToken() {
-		return this.alignedTextsMap.get(getBaseText()).getTokens();
-	}
-
 	private int maximumNormalizedTextLength = -1;
 	/**
 	 * This method adds the normalized text, specified by the parameter, for the

@@ -207,7 +207,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 			SToken base = baseTextToken.get(i);
 			SToken otherToken = otherTextToken.get(j);
 			STextualDS otherText = sDoc1.getSDocumentGraph().getSTextualDSs().get(0);
-			assertEquals("Base Token " + base.getSName() + " (start: " + this.container.getAlignedTokenStart(this.container.getBaseText(), base) + ") and other token " + otherToken.getSName() + " (start: " + this.container.getAlignedTokenStart(otherText, otherToken) + ") should be equal.", this.container.getTokenMapping(base, otherText), otherToken);
+			assertEquals("Base Token " + base.getSName() + " and other token " + otherToken.getSName() + " (start: " + this.container.getAlignedTokenStart(otherText, otherToken) + ") should be equal.", this.container.getTokenMapping(base, otherText), otherToken);
 			j++;
 		}
 	}
@@ -325,7 +325,6 @@ public class MergerMapper_baseTest extends MergerMapper {
 
 		// assert base document = sDoc1 & baseText = norm
 		assertEquals("The base Document should be document 1. but it is not!", sDoc1, this.container.getBaseDocument());
-		assertEquals("The base text should be norm of document 1. but it is not!", sTextDS1, this.container.getBaseText());
 	}
 
 	/**
