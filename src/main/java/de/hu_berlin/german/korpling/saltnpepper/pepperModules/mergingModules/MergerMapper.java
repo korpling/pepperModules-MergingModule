@@ -286,7 +286,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 *            equivalent tokens in the base
 	 * @return
 	 */
-	protected void mergeDocumentStructures(SDocument baseDoc, SDocument otherDoc) {
+	private void mergeDocumentStructures(SDocument baseDoc, SDocument otherDoc) {
 		int initialSize = getBaseDocument().getSDocumentGraph().getSNodes().size();
 		if (otherDoc.getSDocumentGraph().getSNodes().size() > initialSize) {
 			initialSize = otherDoc.getSDocumentGraph().getSNodes().size();
@@ -416,7 +416,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * @return The {@link STextualDS} which is suited best to be the base
 	 *         {@link STextualDS}
 	 */
-	protected STextualDS chooseBaseText(SDocument baseDoc, Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> nonEquivalentTokenSets) {
+	private STextualDS chooseBaseText(SDocument baseDoc, Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> nonEquivalentTokenSets) {
 		STextualDS baseText = null;
 		int minimalNonEquivalentTokens = -1;
 		for (STextualDS text : baseDoc.getSDocumentGraph().getSTextualDSs()) {
@@ -471,7 +471,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 *            the {@link STextualDS} to normalize
 	 * @return The normalized text
 	 */
-	protected static String normalizeText(STextualDS sTextualDS, Map<String, String> escapeTable) {
+	private static String normalizeText(STextualDS sTextualDS, Map<String, String> escapeTable) {
 		String normalizedText = null;
 		StringBuilder normalizedTextBuilder = new StringBuilder();
 		// normalize the text
@@ -500,7 +500,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * @param originalToNormalizedMapping
 	 * @return
 	 */
-	protected String createOriginalToNormalizedMapping(STextualDS sTextualDS, List<Integer> originalToNormalizedMapping) {
+	private String createOriginalToNormalizedMapping(STextualDS sTextualDS, List<Integer> originalToNormalizedMapping) {
 		StringBuilder normalizedTextBuilder = new StringBuilder();
 		int start = 0;
 		char[] chr = sTextualDS.getSText().toCharArray();
@@ -536,7 +536,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	}
 
 	/**
-	 * This method normalizes all primary texts for the given {@link SDocument}.
+	 * Normalizes all primary texts of the given {@link SDocument}. The normalized text corresponding to 
+	 * its original is added to the {@link TokenMergeContainer}. Also each token corresponding to its start and
+	 * end position in the normalized text is added to the {@link TokenMergeContainer}.
+	 * <br/>
 	 * Note: only the normalization is done. The equivalent {@link SToken} are
 	 * not determined in any way. For this functionality, you need to use
 	 * {@link alignDocuments}.
@@ -551,9 +554,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		if (sDocument.getSDocumentGraph() != null) {
 			// check whether the document has any STextualDS
 			List<STextualDS> sTextualDSs = sDocument.getSDocumentGraph().getSTextualDSs();
-
-			// normalize all textual datasources
 			for (STextualDS sTextualDS : sTextualDSs) {
+				// normalize all textual datasources
+				
 				List<Integer> originalToNormalizedMapping = new ArrayList<Integer>();
 				String normalizedText = createOriginalToNormalizedMapping(sTextualDS, originalToNormalizedMapping);
 				for (STextualRelation textRel : sDocument.getSDocumentGraph().getSTextualRelations()) {
@@ -562,7 +565,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 						if (textRel.getSStart() >= originalToNormalizedMapping.size()) {
 							throw new PepperModuleException(this, "Cannot find token " + SaltFactory.eINSTANCE.getGlobalId(textRel.getSToken().getSElementId()) + " in  'originalToNormalizedMapping' list. This might be a bug. ");
 						}
+						//the start position of current token in normalized text
 						int normalizedTokenStart = originalToNormalizedMapping.get(textRel.getSStart());
+						//the end position of current token in normalized text
 						int normalizedTokenEnd = 0;
 						if (textRel.getSEnd() >= (originalToNormalizedMapping.size())) {
 							if (textRel.getSEnd() >= (originalToNormalizedMapping.size() + 1)) {
