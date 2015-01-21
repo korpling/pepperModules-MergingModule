@@ -301,17 +301,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			// / base text -- < Other Document -- nonEquivalentTokens >
 			Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> nonEquivalentTokenSets = allignAllTexts(getBaseDocument(), otherDoc);
 
-			// / choose the perfect STextualDS of the base Document
-			STextualDS baseText = chooseBaseText(getBaseDocument(), nonEquivalentTokenSets);
-			// clear the table of non-equivalent tokens
-			nonEquivalentTokenSets.clear();
-			logger.debug("In document {} was no primary text. Not sure if the Merger can deal with this. ", SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
-			// set the base text
-			getContainer().setBaseText(baseText);
-
-			for (STextualDS sTextualDS : otherDoc.getSDocumentGraph().getSTextualDSs()) {
-				mergeTokens(getContainer().getBaseText(), sTextualDS, node2NodeMap);
-			}
 		} else {
 			// there are no texts. So, just copy everything into
 			// the base document graph
@@ -603,6 +592,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 						trace.append(otherText.getSText());
 						logger.trace(trace.toString());
 					}
+					mergeTokens(baseText, otherText, node2NodeMap);
 				}
 				// / save all unique token of the other document
 				if (nonEquivalentTokenSets.containsKey(baseText)) {
