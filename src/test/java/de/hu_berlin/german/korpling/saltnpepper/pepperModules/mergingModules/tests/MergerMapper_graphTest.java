@@ -670,7 +670,7 @@ public class MergerMapper_graphTest extends MergerMapper {
 		sub3.setSElementId(doc3.getSElementId());
 		getFixture().getMappingSubjects().add(sub3);
 		
-		this.mergeDocumentStructures(chooseBaseDocument());
+		this.mergeDocumentStructures(sub0);
 
 		assertEquals(3, doc0.getSDocumentGraph().getSTextualDSs().size());
 		assertEquals(23, doc0.getSDocumentGraph().getSTokens().size());

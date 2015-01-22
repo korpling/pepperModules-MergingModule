@@ -292,14 +292,14 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 		if (otherDoc.getSDocumentGraph().getSTextualDSs() != null) {
 			// there should be texts
-			logger.trace("[Merger] " + "Aligning the texts of {} to the base text. ", SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
+			logger.trace("[Merger] " + "Aligning the texts of {} with text in base document. ", SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
 
 			Set<SToken> nonEquivalentTokensOfOtherText = new HashSet<SToken>();
 			nonEquivalentTokensOfOtherText.addAll(otherDoc.getSDocumentGraph().getSTokens());
 
 			// align all texts and create the nonEquivalentTokenSets
 			// / base text -- < Other Document -- nonEquivalentTokens >
-			Map<STextualDS, Map<SDocument, HashSet<SToken>>> nonEquivalentTokenSets = allignAllTexts(getBaseDocument(), otherDoc);
+			Map<STextualDS, Map<SDocument, HashSet<SToken>>> nonEquivalentTokenSets = alignAllTexts(getBaseDocument(), otherDoc);
 		} else {
 			// there are no texts. So, just copy everything into
 			// the base document graph
@@ -547,7 +547,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 *         contained in the {@link SDocument} which do not have an
 	 *         equivalent in the {@link STextualDS} specified as key.
 	 */
-	private Map<STextualDS, Map<SDocument, HashSet<SToken>>> allignAllTexts(SDocument baseDoc, SDocument otherDoc) {
+	private Map<STextualDS, Map<SDocument, HashSet<SToken>>> alignAllTexts(SDocument baseDoc, SDocument otherDoc) {
 		Map<STextualDS, Map<SDocument, HashSet<SToken>>> nonEquivalentTokenSets = new HashMap<STextualDS, Map<SDocument, HashSet<SToken>>>();
 		boolean hasTexts = true;
 		// ignore the base document and align all other
