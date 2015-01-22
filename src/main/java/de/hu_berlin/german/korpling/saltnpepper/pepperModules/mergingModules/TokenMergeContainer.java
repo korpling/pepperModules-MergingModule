@@ -17,8 +17,9 @@
  */
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
@@ -48,14 +49,14 @@ public class TokenMergeContainer {
 	 */
 	public class AlignedTokensMap {
 		public AlignedTokensMap() {
-			this.tokenLeftMap = new Hashtable<SToken, Integer>();
-			this.tokenRightMap = new Hashtable<SToken, Integer>();
-			this.tokensByStart = new Hashtable<Integer, SToken>();
+			this.tokenLeftMap = new HashMap<SToken, Integer>();
+			this.tokenRightMap = new HashMap<SToken, Integer>();
+			this.tokensByStart = new HashMap<Integer, SToken>();
 		}
 
-		private Hashtable<SToken, Integer> tokenLeftMap = null;
-		private Hashtable<SToken, Integer> tokenRightMap = null;
-		private Hashtable<Integer, SToken> tokensByStart = null;
+		private Map<SToken, Integer> tokenLeftMap = null;
+		private Map<SToken, Integer> tokenRightMap = null;
+		private Map<Integer, SToken> tokensByStart = null;
 
 		/**
 		 * This method returns all {@link SToken} objects contained in this
@@ -174,28 +175,28 @@ public class TokenMergeContainer {
 	 * which contains the equivalent {@link SToken} object as value and the
 	 * {@link STextualDS} object as key.
 	 **/
-	private Hashtable<SToken, Hashtable<STextualDS, SToken>> equivalentToken = null;
+	private Map<SToken, Map<STextualDS, SToken>> equivalentToken = null;
 
 	/**
 	 * The map of aligned texts which is a map with the {@link STextualDS}
 	 * objects as keys and the {@link AlignedTokensMap} as value.
 	 **/
-	private Hashtable<STextualDS, AlignedTokensMap> alignedTextsMap = null;
+	private Map<STextualDS, AlignedTokensMap> alignedTextsMap = null;
 
 	/** maps an original text to its normalized representation **/
-	private Hashtable<STextualDS, String> normalizedTexts = null;
+	private Map<STextualDS, String> normalizedTexts = null;
 
 	/**
 	 * This map contains a mapping from normalized index of a character to the
 	 * index in the original text for every base {@link STextualDS} objects.
 	 **/
-	private Hashtable<STextualDS, List<Integer>> normalizedBaseTextToOriginalBaseText = null;
+	private Map<STextualDS, List<Integer>> normalizedBaseTextToOriginalBaseText = null;
 
 	public TokenMergeContainer() {
-		this.equivalentToken = new Hashtable<SToken, Hashtable<STextualDS, SToken>>();
-		this.alignedTextsMap = new Hashtable<STextualDS, AlignedTokensMap>();
-		this.normalizedTexts = new Hashtable<STextualDS, String>();
-		this.normalizedBaseTextToOriginalBaseText = new Hashtable<STextualDS, List<Integer>>();
+		this.equivalentToken = new HashMap<SToken, Map<STextualDS, SToken>>();
+		this.alignedTextsMap = new HashMap<STextualDS, AlignedTokensMap>();
+		this.normalizedTexts = new HashMap<STextualDS, String>();
+		this.normalizedBaseTextToOriginalBaseText = new HashMap<STextualDS, List<Integer>>();
 	}
 
 	/**
@@ -420,7 +421,7 @@ public class TokenMergeContainer {
 			}
 		} else {// there is currently no mapping for the specified base text
 				// token
-			Hashtable<STextualDS, SToken> newMapping = new Hashtable<STextualDS, SToken>();
+			Map<STextualDS, SToken> newMapping = new HashMap<STextualDS, SToken>();
 			newMapping.put(otherSText, otherTextToken);
 			this.equivalentToken.put(baseTextToken, newMapping);
 		}
@@ -453,7 +454,7 @@ public class TokenMergeContainer {
 	 * 
 	 * @return The equivalence map.
 	 */
-	public Hashtable<SToken, Hashtable<STextualDS, SToken>> getEquivalenceMap() {
+	public Map<SToken, Map<STextualDS, SToken>> getEquivalenceMap() {
 		return this.equivalentToken;
 	}
 
@@ -478,7 +479,7 @@ public class TokenMergeContainer {
 			this.normalizedBaseTextToOriginalBaseText.clear();
 		}
 		for (SToken tok : this.equivalentToken.keySet()) {
-			Hashtable<STextualDS, SToken> map = this.equivalentToken.get(tok);
+			Map<STextualDS, SToken> map = this.equivalentToken.get(tok);
 			if (map != null && map.containsKey(sDocument)) {
 				this.equivalentToken.get(tok).remove(sDocument);
 			}

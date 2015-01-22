@@ -19,8 +19,8 @@
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -288,7 +288,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		if (otherDoc.getSDocumentGraph().getSNodes().size() > initialSize) {
 			initialSize = otherDoc.getSDocumentGraph().getSNodes().size();
 		}
-		node2NodeMap = new Hashtable<SNode, SNode>(initialSize);
+		node2NodeMap = new HashMap<SNode, SNode>(initialSize);
 
 		if (otherDoc.getSDocumentGraph().getSTextualDSs() != null) {
 			// there should be texts
@@ -299,7 +299,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			// align all texts and create the nonEquivalentTokenSets
 			// / base text -- < Other Document -- nonEquivalentTokens >
-			Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> nonEquivalentTokenSets = allignAllTexts(getBaseDocument(), otherDoc);
+			Map<STextualDS, Map<SDocument, HashSet<SToken>>> nonEquivalentTokenSets = allignAllTexts(getBaseDocument(), otherDoc);
 		} else {
 			// there are no texts. So, just copy everything into
 			// the base document graph
@@ -547,8 +547,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 *         contained in the {@link SDocument} which do not have an
 	 *         equivalent in the {@link STextualDS} specified as key.
 	 */
-	private Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> allignAllTexts(SDocument baseDoc, SDocument otherDoc) {
-		Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> nonEquivalentTokenSets = new Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>>();
+	private Map<STextualDS, Map<SDocument, HashSet<SToken>>> allignAllTexts(SDocument baseDoc, SDocument otherDoc) {
+		Map<STextualDS, Map<SDocument, HashSet<SToken>>> nonEquivalentTokenSets = new HashMap<STextualDS, Map<SDocument, HashSet<SToken>>>();
 		boolean hasTexts = true;
 		// ignore the base document and align all other
 		if (otherDoc.getSDocumentGraph() == null) {
@@ -598,7 +598,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				if (nonEquivalentTokenSets.containsKey(baseText)) {
 					nonEquivalentTokenSets.get(baseText).put(otherDoc, nonEquivalentTokenInOtherTexts);
 				} else {
-					Hashtable<SDocument, HashSet<SToken>> newTab = new Hashtable<SDocument, HashSet<SToken>>();
+					Map<SDocument, HashSet<SToken>> newTab = new HashMap<SDocument, HashSet<SToken>>();
 					newTab.put(otherDoc, nonEquivalentTokenInOtherTexts);
 					nonEquivalentTokenSets.put(baseText, newTab);
 				}
@@ -616,7 +616,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				if (nonEquivalentTokenSets.containsKey(baseText)) {
 					nonEquivalentTokenSets.get(baseText).put(otherDoc, nonEquivalentTokenInOtherTexts);
 				} else {
-					Hashtable<SDocument, HashSet<SToken>> newTab = new Hashtable<SDocument, HashSet<SToken>>();
+					Map<SDocument, HashSet<SToken>> newTab = new HashMap<SDocument, HashSet<SToken>>();
 					newTab.put(otherDoc, nonEquivalentTokenInOtherTexts);
 					nonEquivalentTokenSets.put(baseText, newTab);
 				}
