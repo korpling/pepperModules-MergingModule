@@ -155,6 +155,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 		template.add(4);
 		template.add(6);
 		template.add(7);
+		template.add(8);
 		assertEquals(template, this.createBaseTextNormOriginalMapping(doc1.getSDocumentGraph().getSTextualDSs().get(0)));
 	}
 
@@ -327,8 +328,28 @@ public class MergerMapper_baseTest extends MergerMapper {
 	}
 
 	/**
-	 * Checks if three documents containing 2 texts each are mergebale (each
+	 * Checks if three documents containing 2 texts each, are mergebale (each
 	 * text of a document has a matching one in the other documents).
+	 * <ol>
+	 * 	<li>document 1:
+	 *   <ol>
+	 *    <li>This is the first text.</li>
+	 *    <li>This is the second text.</li>
+	 *   </ol>
+	 *  </li>
+	 *  <li>document 2:
+	 *   <ol>
+	 *    <li>Thisisthefirsttext.</li>
+	 *    <li>Thisisthesecondtext.</li>
+	 *   </ol>
+	 *  </li>
+	 *  <li>document 3:
+	 *   <ol>
+	 *    <li>This   is   the   first    text.</li>
+	 *    <li>This   is   the   second   text.</li>
+	 *   </ol>
+	 *  </li>
+	 * </ol>
 	 */
 	@Test
 	public void testAlignTexts_n2m() {

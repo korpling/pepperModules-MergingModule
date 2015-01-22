@@ -485,6 +485,58 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		String normalizedText = normalizedTextBuilder.toString();
 		return normalizedText;
 	}
+	
+	/**
+	 * This method creates a reverse mapping list for the given Text. If the
+	 * given text is normalized including the removal of whitespaces, the
+	 * position of characters is changed. But if the position of a character in
+	 * the original text is needed, we need more information. This method
+	 * generates the needed information.
+	 * 
+	 * @param sTextualDS
+	 *            The {@link STextualDS}
+	 * @return A list of integers. The integer at index i specifies the position
+	 *         of the i'th character of the normalized text in the original
+	 *         text. Example: Let c be the second character in the original text
+	 *         and a whitespace the first character in the original text. Since
+	 *         the whitespace is removed, c is the first character in the
+	 *         normalized text. The first element of the returned list will
+	 *         contain the number 2 since c was the second char, originally.
+	 */
+	protected List<Integer> createBaseTextNormOriginalMapping(STextualDS sTextualDS) {
+		/**
+		 * Example1: dipl: " this is" 01234567 norm: "thisis" 012345 0->1
+		 * 1->2,... Example2: dipl: " thäs is" 01234567 norm: "thaesis" 0123456
+		 * 0->1 1->2 2->3 3->3 4->4 5->6 6->7
+		 */
+		List<Integer> normalizedToOriginalMapping = new ArrayList<Integer>();
+		int start = 0;
+		char[] chr = sTextualDS.getSText().toCharArray();
+		for (char c : chr) {
+			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(String.valueOf(c));
+			if (stringToEscape == null) {
+				normalizedToOriginalMapping.add(start);
+			} else {
+				if (stringToEscape.length() > 0) {
+					char[] chr2 = stringToEscape.toCharArray();
+					for (int i = 0; i < chr2.length; i++) {
+						// one char is mapped to many. all chars have the same
+						// index in the original text
+						normalizedToOriginalMapping.add(start);
+					}
+				} else { // one char is mapped to the empty string.
+							// do nothing
+				}
+			}
+			start += 1;
+		}
+		// add an additional entry for the position after the last character
+		// (imagine an empty token beginning and ending at last position of the
+		// text). This is necessary, because text positions are positions
+		// BETWEEN characters.
+		normalizedToOriginalMapping.add(start++);
+		return normalizedToOriginalMapping;
+	}
 
 	/* *******************************************************************
 	 * Aligning STextualDS
@@ -525,7 +577,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					// the other document
 					boolean isAlignable = alignTexts(baseText, otherText, nonEquivalentTokenInOtherTexts, node2NodeMap);
 
-					System.out.println("--------------_> isAlignable: " + isAlignable);
 					isAlignable = true;// TODO remove this
 
 					if (isAlignable) {
@@ -930,53 +981,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		}
 
 		return retVal;
-	}
-
-	/**
-	 * This method creates a reverse mapping list for the given Text. If the
-	 * given text is normalized including the removal of whitespaces, the
-	 * position of characters is changed. But if the position of a character in
-	 * the original text is needed, we need more information. This method
-	 * generates the needed information.
-	 * 
-	 * @param sTextualDS
-	 *            The {@link STextualDS}
-	 * @return A list of integers. The integer at index i specifies the position
-	 *         of the i'th character of the normalized text in the original
-	 *         text. Example: Let c be the second character in the original text
-	 *         and a whitespace the first character in the original text. Since
-	 *         the whitespace is removed, c is the first character in the
-	 *         normalized text. The first element of the returned list will
-	 *         contain the number 2 since c was the second char, originally.
-	 */
-	protected List<Integer> createBaseTextNormOriginalMapping(STextualDS sTextualDS) {
-		/**
-		 * Example1: dipl: " this is" 01234567 norm: "thisis" 012345 0->1
-		 * 1->2,... Example2: dipl: " thäs is" 01234567 norm: "thaesis" 0123456
-		 * 0->1 1->2 2->3 3->3 4->4 5->6 6->7
-		 */
-		List<Integer> normalizedToOriginalMapping = new ArrayList<Integer>();
-		int start = 0;
-		char[] chr = sTextualDS.getSText().toCharArray();
-		for (char c : chr) {
-			String stringToEscape = ((MergerProperties) getProperties()).getEscapeMapping().get(String.valueOf(c));
-			if (stringToEscape == null) {
-				normalizedToOriginalMapping.add(start);
-			} else {
-				if (stringToEscape.length() > 0) {
-					char[] chr2 = stringToEscape.toCharArray();
-					for (int i = 0; i < chr2.length; i++) {
-						// one char is mapped to many. all chars have the same
-						// index in the original text
-						normalizedToOriginalMapping.add(start);
-					}
-				} else { // one char is mapped to the empty string.
-							// do nothing
-				}
-			}
-			start += 1;
-		}
-		return normalizedToOriginalMapping;
 	}
 
 	/**

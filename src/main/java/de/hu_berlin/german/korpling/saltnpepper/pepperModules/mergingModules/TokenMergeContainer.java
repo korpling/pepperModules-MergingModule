@@ -225,11 +225,17 @@ public class TokenMergeContainer {
 	 */
 	public int getBaseTextPositionByNormalizedTextPosition(STextualDS sTextualDS, int position) {
 		int baseTextPosition = -1;
-		if (this.normalizedBaseTextToOriginalBaseText.containsKey(sTextualDS)) {
-			if (this.normalizedBaseTextToOriginalBaseText.get(sTextualDS).size() > position) {
+		
+		System.out.println("position: "+ position);
+		System.out.println("original: "+ sTextualDS.getSText());
+		System.out.println("normalization: "+ normalizedTexts.get(sTextualDS.getSText()));
+		
+		if (normalizedBaseTextToOriginalBaseText.containsKey(sTextualDS)) {
+			System.out.println("map table: "+ normalizedBaseTextToOriginalBaseText.get(sTextualDS));
+			if (normalizedBaseTextToOriginalBaseText.get(sTextualDS).size() > position) {
 				baseTextPosition = this.normalizedBaseTextToOriginalBaseText.get(sTextualDS).get(position);
 			} else {
-				throw new PepperModuleException("Given position of character in the normalized text '" + position + "' was bigger than the size of table ('" + normalizedBaseTextToOriginalBaseText.get(sTextualDS).size() + "') mapping the original to the normalized text.");
+				throw new PepperModuleException("Given position of character in the normalized text '" + position + "' was bigger than the size of the normalized text '" + normalizedBaseTextToOriginalBaseText.get(sTextualDS).size() + "'.");
 			}
 		}
 		return baseTextPosition;
