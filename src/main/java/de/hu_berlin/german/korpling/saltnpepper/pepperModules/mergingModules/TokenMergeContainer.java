@@ -147,6 +147,7 @@ public class TokenMergeContainer {
 
 	/** The base {@link SDocument} object **/
 	private SDocument baseDocument = null;
+
 	/**
 	 * This method sets the base {@link SDocument}.
 	 * 
@@ -166,7 +167,7 @@ public class TokenMergeContainer {
 	public SDocument getBaseDocument() {
 		return this.baseDocument;
 	}
-	
+
 	/**
 	 * The token equivalence map. For every {@link SToken} object which has an
 	 * equivalent {@link SToken} object, the map contains an hashmap as entry
@@ -236,6 +237,7 @@ public class TokenMergeContainer {
 	}
 
 	private int maximumNormalizedTextLength = -1;
+
 	/**
 	 * This method adds the normalized text, specified by the parameter, for the
 	 * specified {@link STextualDS} of the specified {@link SDocument} object.
@@ -312,9 +314,11 @@ public class TokenMergeContainer {
 	 */
 	public int getAlignedTokenStart(STextualDS sTextualDS, SToken sToken) {
 		int returnVal = -1;
-		if (this.alignedTextsMap.containsKey(sTextualDS)) {
-			AlignedTokensMap map = this.alignedTextsMap.get(sTextualDS);
-			returnVal = map.getStart(sToken);
+		if (sTextualDS != null) {
+			if (this.alignedTextsMap.containsKey(sTextualDS)) {
+				AlignedTokensMap map = this.alignedTextsMap.get(sTextualDS);
+				returnVal = map.getStart(sToken);
+			}
 		}
 		return returnVal;
 	}
@@ -334,6 +338,7 @@ public class TokenMergeContainer {
 	 */
 	public int getAlignedTokenLength(STextualDS sTextualDS, SToken sToken) {
 		int returnVal = -1;
+		
 		if (this.alignedTextsMap.containsKey(sTextualDS)) {
 			AlignedTokensMap map = this.alignedTextsMap.get(sTextualDS);
 			returnVal = map.getLength(sToken);
@@ -454,6 +459,7 @@ public class TokenMergeContainer {
 
 	/**
 	 * This method frees the memory used by the specified {@SDocument
+	 * 
 	 * 
 	 * } in the {@link TokenMergeContainer}.
 	 * 
