@@ -299,7 +299,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			// align all texts and create the nonEquivalentTokenSets
 			// / base text -- < Other Document -- nonEquivalentTokens >
-			Map<STextualDS, Map<SDocument, HashSet<SToken>>> nonEquivalentTokenSets = alignAllTexts(getBaseDocument(), otherDoc);
+			alignAllTexts(getBaseDocument(), otherDoc);
 		} else {
 			// there are no texts. So, just copy everything into
 			// the base document graph
@@ -535,20 +535,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		return normalizedToOriginalMapping;
 	}
 
-	/* *******************************************************************
-	 * Aligning STextualDS
-	 * ******************************************************************
-	 */
 	/**
 	 * This method tries to find matching texts in base document and other
 	 * document. A cross product is computed.
-	 * 
-	 * @return The data structure which contains all {@link SToken} objects
-	 *         contained in the {@link SDocument} which do not have an
-	 *         equivalent in the {@link STextualDS} specified as key.
 	 */
-	private Map<STextualDS, Map<SDocument, HashSet<SToken>>> alignAllTexts(SDocument baseDoc, SDocument otherDoc) {
-		Map<STextualDS, Map<SDocument, HashSet<SToken>>> nonEquivalentTokenSets = new HashMap<STextualDS, Map<SDocument, HashSet<SToken>>>();
+	private void alignAllTexts(SDocument baseDoc, SDocument otherDoc) {
 		boolean hasTexts = true;
 		// ignore the base document and align all other
 		if (otherDoc.getSDocumentGraph() == null) {
@@ -594,35 +585,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					}
 					mergeTokens(baseText, otherText, node2NodeMap);
 				}
-				// / save all unique token of the other document
-				if (nonEquivalentTokenSets.containsKey(baseText)) {
-					nonEquivalentTokenSets.get(baseText).put(otherDoc, nonEquivalentTokenInOtherTexts);
-				} else {
-					Map<SDocument, HashSet<SToken>> newTab = new HashMap<SDocument, HashSet<SToken>>();
-					newTab.put(otherDoc, nonEquivalentTokenInOtherTexts);
-					nonEquivalentTokenSets.put(baseText, newTab);
-				}
 			} // for all texts of the base document
 		} // The other document has at least one text
-
-		if (!hasTexts) {
-			HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-			for (STextualDS baseText : getBaseDocument().getSDocumentGraph().getSTextualDSs()) {
-				nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-				if (otherDoc.getSDocumentGraph().getSTokens() != null) {
-					// mark all tokens of the other document as unique
-					nonEquivalentTokenInOtherTexts.addAll(otherDoc.getSDocumentGraph().getSTokens());
-				}
-				if (nonEquivalentTokenSets.containsKey(baseText)) {
-					nonEquivalentTokenSets.get(baseText).put(otherDoc, nonEquivalentTokenInOtherTexts);
-				} else {
-					Map<SDocument, HashSet<SToken>> newTab = new HashMap<SDocument, HashSet<SToken>>();
-					newTab.put(otherDoc, nonEquivalentTokenInOtherTexts);
-					nonEquivalentTokenSets.put(baseText, newTab);
-				}
-			}
-		}
-		return nonEquivalentTokenSets;
 	}
 
 	/**
