@@ -574,8 +574,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					// the other document
 					boolean isAlignable = alignTexts(baseText, otherText, nonEquivalentTokenInOtherTexts, node2NodeMap);
 
-					isAlignable = true;// TODO remove this
-
 					if (isAlignable) {
 						// add matching texts to a list of all matching nodes
 						node2NodeMap.put(otherText, baseText);
