@@ -294,8 +294,10 @@ public class TokenMergeContainer {
 	 */
 	public SToken getAlignedTokenByStart(STextualDS sTextualDS, int start) {
 		SToken tok = null;
-		if (this.alignedTextsMap.containsKey(sTextualDS)) {
-			tok = this.alignedTextsMap.get(sTextualDS).getTokenByStart(start);
+		if (sTextualDS!= null){
+			if (this.alignedTextsMap.containsKey(sTextualDS)) {
+				tok = this.alignedTextsMap.get(sTextualDS).getTokenByStart(start);
+			}
 		}
 		return tok;
 	}
@@ -339,10 +341,11 @@ public class TokenMergeContainer {
 	 */
 	public int getAlignedTokenLength(STextualDS sTextualDS, SToken sToken) {
 		int returnVal = -1;
-		
-		if (this.alignedTextsMap.containsKey(sTextualDS)) {
-			AlignedTokensMap map = this.alignedTextsMap.get(sTextualDS);
-			returnVal = map.getLength(sToken);
+		if (sTextualDS!= null){
+			if (this.alignedTextsMap.containsKey(sTextualDS)) {
+				AlignedTokensMap map = this.alignedTextsMap.get(sTextualDS);
+				returnVal = map.getLength(sToken);
+			}
 		}
 		return returnVal;
 	}

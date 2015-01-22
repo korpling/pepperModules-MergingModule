@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 
+import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.junit.Before;
@@ -40,6 +41,8 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDocumentGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SSpan;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SSpanningRelation;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SStructure;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SStructuredNode;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SLayer;
@@ -494,6 +497,184 @@ public class MergerMapper_graphTest extends MergerMapper {
 		assertTrue(equivalenceMapSize != equivalenceMap.size());
 		assertEquals(baseTextToken.size() + 1, equivalenceMap.size());
 		assertNotNull(equivalenceMap.get(otherTextToken.get(6)));
+	}
+	
+	/**
+	 * Merges 4 documents containing the following texts:
+	 * <ol>
+	 * 	<li>
+	 * 		<ol>
+	 * 			<li>Wie?UNINTERPRETABLE#Ne?</li>
+	 * 			<li>SPK3!Wenndumehrals50Stundenhast,bekommstdumehrGeld.</li>
+	 * 			<li>Nein.</li>
+	 * 		</ol>
+	 * 	</li>
+	 *  <li>Wie?UNINTERPRETABLE#Ne?</li>
+	 * 	<li>SPK3!Wenndumehrals50Stundenhast,bekommstdumehrGeld.</li>
+	 * 	<li>Nein.</li>
+	 * </ol>
+	 */
+	@Test
+	public void testMerge_MultipleDocumentsWithMultipleTexts() {
+		EList<SStructuredNode> structures=null; 
+			
+		//document 0
+		SDocument doc0= SaltFactory.eINSTANCE.createSDocument();
+		doc0.setSId("doc0");
+		doc0.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		STextualDS text01= doc0.getSDocumentGraph().createSTextualDS("Wie?UNINTERPRETABLE#Ne?");
+		SToken tok01= doc0.getSDocumentGraph().createSToken(text01, 0, 3);
+		SToken tok02= doc0.getSDocumentGraph().createSToken(text01, 3, 4);
+		SToken tok03= doc0.getSDocumentGraph().createSToken(text01, 4, 19);
+		SToken tok04= doc0.getSDocumentGraph().createSToken(text01, 19, 20);
+		SToken tok05= doc0.getSDocumentGraph().createSToken(text01, 20, 22);
+		SToken tok06= doc0.getSDocumentGraph().createSToken(text01, 22, 23);
+		
+		STextualDS text02= doc0.getSDocumentGraph().createSTextualDS("SPK3!Wenndumehrals50Stundenhast,bekommstdumehrGeld.");
+		SToken tok07= doc0.getSDocumentGraph().createSToken(text02, 0, 4);
+		SToken tok08= doc0.getSDocumentGraph().createSToken(text02, 4, 5);
+		SToken tok09= doc0.getSDocumentGraph().createSToken(text02, 5, 9);
+		SToken tok010= doc0.getSDocumentGraph().createSToken(text02, 9, 11);
+		SToken tok011= doc0.getSDocumentGraph().createSToken(text02, 11, 15);
+		SToken tok012= doc0.getSDocumentGraph().createSToken(text02, 15, 18);
+		SToken tok013= doc0.getSDocumentGraph().createSToken(text02, 18, 20);
+		SToken tok014= doc0.getSDocumentGraph().createSToken(text02, 20, 27);
+		SToken tok015= doc0.getSDocumentGraph().createSToken(text02, 27, 31);
+		SToken tok016= doc0.getSDocumentGraph().createSToken(text02, 31, 32);
+		SToken tok017= doc0.getSDocumentGraph().createSToken(text02, 32, 40);
+		SToken tok018= doc0.getSDocumentGraph().createSToken(text02, 40, 42);
+		SToken tok019= doc0.getSDocumentGraph().createSToken(text02, 42, 46);
+		SToken tok020= doc0.getSDocumentGraph().createSToken(text02, 46, 50);
+		SToken tok021= doc0.getSDocumentGraph().createSToken(text02, 50, 51);
+		
+		STextualDS text03= doc0.getSDocumentGraph().createSTextualDS("Nein.?");
+		SToken tok022= doc0.getSDocumentGraph().createSToken(text03, 0, 4);
+		SToken tok023= doc0.getSDocumentGraph().createSToken(text03, 4, 5);
+		
+		//create document 1
+		SDocument doc1= SaltFactory.eINSTANCE.createSDocument();
+		doc1.setSId("doc1");
+		doc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		STextualDS text11= doc1.getSDocumentGraph().createSTextualDS("Wie?UNINTERPRETABLE#Ne?.");
+		SToken tok11= doc1.getSDocumentGraph().createSToken(text11, 0, 3);
+		SToken tok12= doc1.getSDocumentGraph().createSToken(text11, 3, 4);
+		SToken tok13= doc1.getSDocumentGraph().createSToken(text11, 4, 19);
+		SToken tok14= doc1.getSDocumentGraph().createSToken(text11, 19, 20);
+		SToken tok15= doc1.getSDocumentGraph().createSToken(text11, 20, 22);
+		SToken tok16= doc1.getSDocumentGraph().createSToken(text11, 22, 23);
+		SStructure struct11= doc1.getSDocumentGraph().createSStructure(tok11);
+		struct11.createSAnnotation(null, "cat", "ADVX");
+		SStructure struct12= doc1.getSDocumentGraph().createSStructure(tok12);
+		struct12.createSAnnotation(null, "cat", "NSU");
+		structures= new BasicEList<SStructuredNode>();
+		structures.add(struct11);
+		structures.add(struct12);
+		SStructure struct13= doc1.getSDocumentGraph().createSStructure(structures);
+		struct13.createSAnnotation(null, "cat", "VROOT");
+		
+		SStructure struct14= doc1.getSDocumentGraph().createSStructure(tok13);
+		struct14.createSAnnotation(null, "cat", "FRAG");
+		structures= new BasicEList<SStructuredNode>();
+		structures.add(struct14);
+		structures.add(tok14);
+		SStructure struct15= doc1.getSDocumentGraph().createSStructure(structures);
+		struct15.createSAnnotation(null, "cat", "VROOT");
+		
+		SStructure struct16= doc1.getSDocumentGraph().createSStructure(tok15);
+		struct16.createSAnnotation(null, "cat", "DM");
+		structures= new BasicEList<SStructuredNode>();
+		structures.add(struct16);
+		structures.add(tok16);
+		SStructure struct17= doc1.getSDocumentGraph().createSStructure(structures);
+		struct17.createSAnnotation(null, "cat", "VROOT");	
+		
+		//create document 2
+		SDocument doc2= SaltFactory.eINSTANCE.createSDocument();
+		doc2.setSId("doc2");
+		doc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		STextualDS text22= doc2.getSDocumentGraph().createSTextualDS("SPK3!Wenndumehrals50Stundenhast,bekommstdumehrGeld.");
+		SToken tok21= doc2.getSDocumentGraph().createSToken(text22, 0, 4);
+		SToken tok22= doc2.getSDocumentGraph().createSToken(text22, 4, 5);
+		SToken tok23= doc2.getSDocumentGraph().createSToken(text22, 5, 9);
+		SToken tok24= doc2.getSDocumentGraph().createSToken(text22, 9, 11);
+		SToken tok25= doc2.getSDocumentGraph().createSToken(text22, 11, 15);
+		SToken tok26= doc2.getSDocumentGraph().createSToken(text22, 15, 18);
+		SToken tok27= doc2.getSDocumentGraph().createSToken(text22, 18, 20);
+		SToken tok28= doc2.getSDocumentGraph().createSToken(text22, 20, 27);
+		SToken tok29= doc2.getSDocumentGraph().createSToken(text22, 27, 31);
+		SToken tok210= doc2.getSDocumentGraph().createSToken(text22, 31, 32);
+		SToken tok211= doc2.getSDocumentGraph().createSToken(text22, 32, 40);
+		SToken tok212= doc2.getSDocumentGraph().createSToken(text22, 40, 42);
+		SToken tok213= doc2.getSDocumentGraph().createSToken(text22, 42, 46);
+		SToken tok214= doc2.getSDocumentGraph().createSToken(text22, 46, 50);
+		SToken tok215= doc2.getSDocumentGraph().createSToken(text22, 50, 51);
+		SStructure struct01= doc2.getSDocumentGraph().createSStructure(tok21);
+		struct01.createSAnnotation(null, "cat", "NX");
+		SStructure struct02= doc2.getSDocumentGraph().createSStructure(tok22);
+		struct02.createSAnnotation(null, "cat", "DM");
+		structures= new BasicEList<SStructuredNode>();
+		structures.add(struct01);
+		structures.add(struct02);
+		SStructure struct03= doc2.getSDocumentGraph().createSStructure(structures);
+		struct03.createSAnnotation(null, "cat", "VROOT");
+		
+		SStructure struct04= doc2.getSDocumentGraph().createSStructure(tok23);
+		struct04.createSAnnotation(null, "cat", "C");
+		SStructure struct05= doc2.getSDocumentGraph().createSStructure(tok24);
+		struct05.createSAnnotation(null, "cat", "NX");
+		SStructure struct06= doc2.getSDocumentGraph().createSStructure(tok25);
+		struct06.createSAnnotation(null, "cat", "NX");
+		structures= new BasicEList<SStructuredNode>();
+		structures.add(tok26);
+		structures.add(tok27);
+		structures.add(tok28);
+		SStructure struct07= doc2.getSDocumentGraph().createSStructure(structures);
+		struct07.createSAnnotation(null, "cat", "NX");
+		structures= new BasicEList<SStructuredNode>();
+		structures.add(struct05);
+		structures.add(struct06);
+		structures.add(struct07);
+		SStructure struct08= doc2.getSDocumentGraph().createSStructure(structures);
+		struct08.createSAnnotation(null, "cat", "MF");
+		
+		
+		//create document 3
+		SDocument doc3= SaltFactory.eINSTANCE.createSDocument();
+		doc3.setSId("doc3");
+		doc3.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		STextualDS text31= doc3.getSDocumentGraph().createSTextualDS("Nein.");
+		SToken tok31= doc3.getSDocumentGraph().createSToken(text31, 0, 4);
+		SToken tok32= doc3.getSDocumentGraph().createSToken(text31, 4, 5);
+		SStructure struct31= doc3.getSDocumentGraph().createSStructure(tok31);
+		struct31.createSAnnotation(null, "cat", "DM");
+		structures= new BasicEList<SStructuredNode>();
+		structures.add(struct31);
+		structures.add(tok32);
+		SStructure struct32= doc3.getSDocumentGraph().createSStructure(structures);
+		struct32.createSAnnotation(null, "cat", "VROOT");
+		
+		//create mapping subjects for documents
+		MappingSubject sub0 = new MappingSubject();
+		sub0.setSElementId(doc0.getSElementId());
+		getFixture().getMappingSubjects().add(sub0);
+				
+		MappingSubject sub1 = new MappingSubject();
+		sub1.setSElementId(doc1.getSElementId());
+		getFixture().getMappingSubjects().add(sub1);
+		
+		MappingSubject sub2 = new MappingSubject();
+		sub2.setSElementId(doc2.getSElementId());
+		getFixture().getMappingSubjects().add(sub2);
+		
+		MappingSubject sub3 = new MappingSubject();
+		sub3.setSElementId(doc3.getSElementId());
+		getFixture().getMappingSubjects().add(sub3);
+		
+		this.mergeDocumentStructures(chooseBaseDocument());
+
+		assertEquals(3, doc0.getSDocumentGraph().getSTextualDSs().size());
+		assertEquals(23, doc0.getSDocumentGraph().getSTokens().size());
+		assertEquals(17, doc0.getSDocumentGraph().getSStructures().size());
 	}
 
 	@Test
