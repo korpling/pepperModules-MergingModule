@@ -300,15 +300,12 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			// align all texts and create the nonEquivalentTokenSets
 			// / base text -- < Other Document -- nonEquivalentTokens >
 			Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>> nonEquivalentTokenSets = allignAllTexts(getBaseDocument(), otherDoc);
-			System.out.println("--------------__> " + nonEquivalentTokenSets);
-
 		} else {
 			// there are no texts. So, just copy everything into
 			// the base document graph
 			logger.warn("There is no text in document {} to be merged. Will not copy the tokens!", SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
 		}
 
-		System.out.println("mapped nodes: " + node2NodeMap);
 		SDocumentGraph otherGraph = otherDoc.getSDocumentGraph();
 		SDocumentGraph baseGraph = baseDoc.getSDocumentGraph();
 		MergeHandler handler = new MergeHandler(node2NodeMap, otherGraph, baseGraph, getContainer());
@@ -630,117 +627,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		return nonEquivalentTokenSets;
 	}
 
-	// /**
-	// * This method tries to find matching texts in base document and other
-	// * document. A cross product is computed.
-	// *
-	// * @return The data structure which contains all {@link SToken} objects
-	// * contained in the {@link SDocument} which do not have an
-	// * equivalent in the {@link STextualDS} specified as key.
-	// */
-	// private Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>>
-	// allignAllTexts() {
-	// Hashtable<STextualDS, Hashtable<SDocument, HashSet<SToken>>>
-	// nonEquivalentTokenSets = new Hashtable<STextualDS, Hashtable<SDocument,
-	// HashSet<SToken>>>();
-	// for (MappingSubject subj : this.getMappingSubjects()) {
-	// boolean hasTexts = true;
-	// SDocument sDoc = (SDocument)
-	// subj.getSElementId().getSIdentifiableElement();
-	// if (sDoc != getContainer().getBaseDocument()) {
-	// // ignore the base document and align all other
-	// if (sDoc.getSDocumentGraph() == null) {
-	// throw new PepperModuleDataException(this, "Cannot map document '" +
-	// SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()) +
-	// "', since it does not contain a document-structure.");
-	// }
-	// if (sDoc.getSDocumentGraph().getSTextualDSs() != null) {
-	// // there are possibly texts
-	// if (sDoc.getSDocumentGraph().getSTextualDSs().size() > 0) {
-	// // The other document has at least one text
-	// HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-	// for (STextualDS baseText :
-	// getContainer().getBaseDocument().getSDocumentGraph().getSTextualDSs()) {
-	// // for all texts of the base document
-	// nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-	// // initialize the set of nonEquivalent token.
-	// // Initially, all token do not have an equivalent.
-	// // in alignTexts, tokens which DO have an equivalent
-	// // are removed from the set
-	// if (sDoc.getSDocumentGraph().getSTokens() != null) {
-	// nonEquivalentTokenInOtherTexts.addAll(sDoc.getSDocumentGraph().getSTokens());
-	// }
-	// for (STextualDS otherText : sDoc.getSDocumentGraph().getSTextualDSs()) {
-	// // align the current base text with all texts of
-	// // the other document
-	// Map<SNode, SNode> equivalenceMap = new Hashtable<SNode, SNode>();
-	// System.out.println("-----------------------------------> alignTexts() from alignAllTexts()");
-	// boolean isAlignable = alignTexts(baseText, otherText,
-	// nonEquivalentTokenInOtherTexts, equivalenceMap);
-	// isAlignable = true;// TODO remove this
-	//
-	// if ((isAlignable) && (logger.isTraceEnabled())) {
-	// String baseId =
-	// SaltFactory.eINSTANCE.getGlobalId(baseText.getSElementId());
-	// String otherId =
-	// SaltFactory.eINSTANCE.getGlobalId(otherText.getSElementId());
-	// String format = "\t%-" + (baseId.length() > otherId.length() ?
-	// baseId.length() : otherId.length()) + "s: ";
-	// StringBuilder trace = new StringBuilder();
-	// trace.append("[Merger] merging texts:\n");
-	// trace.append(String.format(format, baseId));
-	// trace.append(baseText.getSText());
-	// trace.append("\n");
-	// trace.append(String.format(format, otherId));
-	// trace.append(otherText.getSText());
-	// logger.trace(trace.toString());
-	// }
-	// }
-	// // / save all unique token of the other document
-	// if (nonEquivalentTokenSets.containsKey(baseText)) {
-	// nonEquivalentTokenSets.get(baseText).put(sDoc,
-	// nonEquivalentTokenInOtherTexts);
-	// } else {
-	// Hashtable<SDocument, HashSet<SToken>> newTab = new Hashtable<SDocument,
-	// HashSet<SToken>>();
-	// newTab.put(sDoc, nonEquivalentTokenInOtherTexts);
-	// nonEquivalentTokenSets.put(baseText, newTab);
-	// }
-	// } // for all texts of the base document
-	// } // The other document has at least one text
-	// else { // The other document has NO text
-	// hasTexts = false;
-	// } // The other document has NO text
-	// } // there are possibly texts
-	// else { // The other document has NO text
-	// hasTexts = false;
-	// } // The other document has NO text
-	//
-	// if (!hasTexts) {
-	// HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-	// for (STextualDS baseText :
-	// getContainer().getBaseDocument().getSDocumentGraph().getSTextualDSs()) {
-	// nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
-	// if (sDoc.getSDocumentGraph().getSTokens() != null) {
-	// // mark all tokens of the other document as unique
-	// nonEquivalentTokenInOtherTexts.addAll(sDoc.getSDocumentGraph().getSTokens());
-	// }
-	// if (nonEquivalentTokenSets.containsKey(baseText)) {
-	// nonEquivalentTokenSets.get(baseText).put(sDoc,
-	// nonEquivalentTokenInOtherTexts);
-	// } else {
-	// Hashtable<SDocument, HashSet<SToken>> newTab = new Hashtable<SDocument,
-	// HashSet<SToken>>();
-	// newTab.put(sDoc, nonEquivalentTokenInOtherTexts);
-	// nonEquivalentTokenSets.put(baseText, newTab);
-	// }
-	// }
-	// }
-	// }
-	// }
-	// return nonEquivalentTokenSets;
-	// }
-
 	/**
 	 * This method aligns the normalized texts of the given {@link STextualDS}
 	 * objects and <b>also</b> aligns the {@link SToken} including the creation
@@ -767,9 +653,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		if (otherText == null) {
 			throw new PepperModuleException(this, "Cannot align the Text of the documents since the other SDocument reference is NULL");
 		}
-		System.out.println("nonEquivalentTokenInOtherTexts: " + nonEquivalentTokenInOtherTexts);
-		System.out.println("equivalenceMap: " + equivalenceMap);
-
+		
 		// TODO REVISE THIS CODE
 		boolean returnVal = false;
 		// first we need the two normalized texts

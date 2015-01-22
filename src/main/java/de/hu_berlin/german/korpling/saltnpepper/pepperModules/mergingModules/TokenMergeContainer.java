@@ -225,13 +225,7 @@ public class TokenMergeContainer {
 	 */
 	public int getBaseTextPositionByNormalizedTextPosition(STextualDS sTextualDS, int position) {
 		int baseTextPosition = -1;
-		
-		System.out.println("position: "+ position);
-		System.out.println("original: "+ sTextualDS.getSText());
-		System.out.println("normalization: "+ normalizedTexts.get(sTextualDS.getSText()));
-		
 		if (normalizedBaseTextToOriginalBaseText.containsKey(sTextualDS)) {
-			System.out.println("map table: "+ normalizedBaseTextToOriginalBaseText.get(sTextualDS));
 			if (normalizedBaseTextToOriginalBaseText.get(sTextualDS).size() > position) {
 				baseTextPosition = this.normalizedBaseTextToOriginalBaseText.get(sTextualDS).get(position);
 			} else {
