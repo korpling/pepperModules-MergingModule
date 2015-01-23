@@ -426,7 +426,9 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		for (SCorpus sCorpus : corpora) {
 			start(sCorpus.getSElementId());
 		}
-
+		
+		end();
+		
 		// only wait for controllers which have been added by end()
 		for (PepperMapperController controller : this.getMapperControllers().values()) {
 			if (!alreadyWaitedFor.contains(controller)) {
@@ -439,7 +441,28 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 			}
 		}
 	}
-
+	
+	/**
+	 * Removes all corpus-structures except the base corpus-structure
+	 */
+	@Override
+	public void end() throws PepperModuleException {
+		List<SCorpusGraph> removeCorpusStructures= new ArrayList<SCorpusGraph>();
+		for (SCorpusGraph graph: getSaltProject().getSCorpusGraphs()){
+			if (graph!= getBaseCorpusStructure()){
+				removeCorpusStructures.add(graph);
+			}
+		}
+		if (removeCorpusStructures.size()>0){
+			for (SCorpusGraph graph: removeCorpusStructures){
+				getSaltProject().getSCorpusGraphs().remove(graph);
+			}
+		}
+		if (removeCorpusStructures.size()!= 1){
+			logger.warn("Could not remove all corpus-structures from salt project which are not the base corpus-structure. Left structures are: '"+removeCorpusStructures+"'. ");
+		}
+	}
+	
 	/**
 	 * Creates a {@link PepperMapper} of type {@link MergerMapper}. Therefore
 	 * the table {@link #givenSlots} must contain an entry for the given
