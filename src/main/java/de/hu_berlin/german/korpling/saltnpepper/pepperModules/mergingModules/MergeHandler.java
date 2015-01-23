@@ -71,7 +71,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SRelation;
  * 
  */
 class MergeHandler implements SGraphTraverseHandler {
-	public static final Logger logger = LoggerFactory.getLogger(MergeHandler.class);
+	public static final Logger logger = LoggerFactory.getLogger(Merger.MODULE_NAME);
 	/** graph whose nodes and relations are to copy **/
 	private SDocumentGraph otherGraph = null;
 

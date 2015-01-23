@@ -57,7 +57,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
  */
 public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
-	private static final Logger logger = LoggerFactory.getLogger(MergerMapper.class);
+	private static final Logger logger = LoggerFactory.getLogger(Merger.MODULE_NAME);
 
 	protected boolean isTestMode = false;
 

@@ -39,7 +39,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
  */
 public class TokenMergeContainer {
 
-	private static final Logger logger = LoggerFactory.getLogger(TokenMergeContainer.class);
+	private static final Logger logger = LoggerFactory.getLogger(Merger.MODULE_NAME);
 
 	/**
 	 * This class contains all tokens which were aligned and allows a search for

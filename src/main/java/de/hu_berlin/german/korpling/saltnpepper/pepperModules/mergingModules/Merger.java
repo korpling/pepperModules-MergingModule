@@ -59,11 +59,13 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
  */
 @Component(name = "MergerComponent", factory = "PepperManipulatorComponentFactory")
 public class Merger extends PepperManipulatorImpl implements PepperManipulator {
-	private static final Logger logger = LoggerFactory.getLogger(Merger.class);
+	public static final String MODULE_NAME="Merger";
+	
+	private static final Logger logger = LoggerFactory.getLogger(MODULE_NAME);
 
 	public Merger() {
 		super();
-		setName("Merger");
+		setName(MODULE_NAME);
 		setProperties(new MergerProperties());
 	}
 
@@ -486,7 +488,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				mappingSubject.setSElementId(id);
 				mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
 				mapper.getMappingSubjects().add(mappingSubject);
-				if (getBaseCorpusStructure().equals(((SDocument) id.getSIdentifiableElement()).getSCorpusGraph())) {
+				if (getBaseCorpusStructure()== (((SDocument) id.getSIdentifiableElement()).getSCorpusGraph())) {
 					noBase = false;
 				}
 			}
