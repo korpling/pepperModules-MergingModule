@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+
+
+	<article>
+		<h1>Complex Merging sample</h1>
+		<section>
+			This sample demonstrates a complex Pepper workflow whos aim is to
+			merge corpus data from different sources to a single corpus and make
+			some postprocessings to bring this corpus to ANNIS. The corpus we
+			convert in this sample are an excerpt, which was provided by the <a
+				href="http://www.kiezdeutschkorpus.de/corpus.html">kidko</a> corpus.
+			Parts of the corpus have been annotated with the tool <a
+				href="www.exmaralda.org">EXMARaLDA</a> (step 1.1) other parts have
+			been annotated syntactically and were stored in the <a
+				href="http://www.ims.uni-stuttgart.de/forschung/ressourcen/werkzeuge/TIGERSearch/doc/html/TigerXML.html">TigerXML
+				format</a> (step 1.2 until 1.4) and have to be merged together (step 2). Since this
+			corpus has multiple speakers (three in this sample), it has more than
+			one primary texts. To prepare such data for ANNIS, we need to
+			construct a segmentation for each speaker (step 3 and 4). Finally the
+			data can be exported to teh relANNIS format (step5).
+		</section>
+		<section>
+			<h2>The sample corpus</h2>
+			We used an excerpt of the <a
+				href="http://www.kiezdeutschkorpus.de/corpus.html">kidko</a> corpus
+			to show the workflow.
+			<blockquote>The KiezDeutsch-Korpus (KiDKo) is a
+				multi-modal digital corpus of spontaneous discourse data from
+				informal, oral peer group situations in multi- and monoethnic speech
+				communities.</blockquote>
+			In this excerpt we have three different speakers 1) MuH25MA, 2)
+			SPK101 and 3) SPK102 each having an own primary text. <img alt=""
+				src="./img/exmaralda.png" /> All three primary texts are
+			syntactically annotated. These annotations are stored in TigerXML. <br />
+			The corpus therefore consists of four files: one exmaralda file and
+			three TigerXML file (one for each speaker). To meet the file
+			structure proposed by Pepper we get the following file structure: <img
+				alt="" src="./img/fileStructure.png" /> Since Pepper recommends to
+			put each format into an extra folder, we have an exmaralda and a
+			tiger folder at root level. For the tiger sources, we have a folder
+			for each speaker, this is necessary to address the files with an own
+			importer each. Since the merging in Pepper is oriented along the
+			corpus structure, we must ensure, that the file structure (from which
+			the corpus structure is computed in the used formats) is always the
+			same. This is also the reason, why all files have the same name.
+		</section>
+		<section>
+			<h2>The workflow</h2>
+			The workflow we used for our task looks like this:
+			<code> &lt;?xml version="1.0" encoding="UTF-8"?>
+&lt;?xml-model href="/home/florian/work/SaltNPepper/workspace/pepper/pepper-framework/src/main/resources/schema/10/pepper.rnc" type="application/relax-ng-compact-syntax"?>
+&lt;pepper-job id="" version="1.0">
+    &lt;!-- step 1.1 -->
+    &lt;importer name="EXMARaLDAImporter" path="./exmaralda/myCorpus">
+        &lt;customization>
+		&lt;property key="cleanModel">true&lt;/property>
+                &lt;property key="pepper.after.addSLayer">grid&lt;/property>	
+	&lt;/customization>
+    &lt;/importer>
+    &lt;!-- step 1.2 -->
+    &lt;importer name="Tiger2Importer" path="./tiger1/myCorpus">
+        &lt;customization>
+                &lt;property key="pepper.after.addSLayer">tree&lt;/property>
+	&lt;/customization>
+    &lt;/importer>
+    &lt;!-- step 1.3 -->
+    &lt;importer name="Tiger2Importer" path="./tiger2/myCorpus">
+        &lt;customization>
+                &lt;property key="pepper.after.addSLayer">tree&lt;/property>
+	&lt;/customization>
+    &lt;/importer>
+    &lt;!-- step 1.4 -->
+    &lt;importer name="Tiger2Importer" path="./tiger3/myCorpus">
+        &lt;customization>
+                &lt;property key="pepper.after.addSLayer">tree&lt;/property>
+	&lt;/customization>
+    &lt;/importer>
+    &lt;!-- step 2 -->
+    &lt;manipulator name="Merger">
+	&lt;customization>
+		&lt;property key="firstAsBase">true&lt;/property>	
+	&lt;/customization>
+    &lt;/manipulator>
+    &lt;!-- step 3 -->
+    &lt;manipulator name="Timeline2Token"/>
+    &lt;!-- step 4 -->
+    &lt;manipulator name="OrderRelationAdder"/>
+&lt;!--    &lt;exporter name="DOTExporter" path="./dot"/>-->
+    &lt;!-- step 5 -->
+    &lt;exporter name="RelANNISExporter" path="./relANNIS"/>
+&lt;/pepper-job> </code>
+
+		</section>
+	</article>
+</body>
+</html>

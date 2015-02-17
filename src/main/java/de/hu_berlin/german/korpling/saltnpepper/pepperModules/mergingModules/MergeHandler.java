@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.exceptions.PepperModuleException;
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
+import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Edge;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.GRAPH_TRAVERSE_TYPE;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDocumentGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SPointingRelation;
@@ -99,8 +100,8 @@ class MergeHandler implements SGraphTraverseHandler {
 	}
 
 	/**
-	 * a map to relate nodes contained by otherGraph to nodes from baseGraph, which
-	 * are mergable. Key is other node, value is base node.
+	 * a map to relate nodes contained by otherGraph to nodes from baseGraph,
+	 * which are mergable. Key is other node, value is base node.
 	 **/
 	private Map<SNode, SNode> node2NodeMap = null;
 	/**
@@ -135,16 +136,38 @@ class MergeHandler implements SGraphTraverseHandler {
 			} else if (baseTargetNode == null) {
 				logger.warn("[Merger] Cannot merge SPointingRelation '" + otherRel.getSId() + "', because no matching node was found in source graph for source node '" + otherRel.getSTarget() + "'. ");
 			} else {
-				SPointingRelation baseRel = SaltFactory.eINSTANCE.createSPointingRelation();
-				baseRel.setSSource(baseSourceNode);
-				baseRel.setSTarget(baseTargetNode);
-				for (String type : otherRel.getSTypes()) {
-					baseRel.addSType(type);
+				EList<Edge> rels = baseGraph.getEdges(baseSourceNode.getSId(), baseTargetNode.getSId());
+				boolean skip = false;
+				if ((rels != null) && (rels.size() > 0)) {
+					for (Edge rel : rels) {
+						if (rel instanceof SPointingRelation) {
+							// there is already a pointing relation between
+							// nodes
+
+							if (((SPointingRelation) rel).getSTypes().containsAll(otherRel.getSTypes())) {
+								// skip relation when base graph already
+								// contains an
+								// equal relation
+								skip = true;
+								break;
+							}
+						}
+					}
 				}
-				SaltFactory.eINSTANCE.moveSAnnotations(otherRel, baseRel);
-				SaltFactory.eINSTANCE.moveSMetaAnnotations(otherRel, baseRel);
-				baseGraph.addSRelation(baseRel);
-				copySLayers(otherRel, baseRel);
+				if (!skip) {
+					SPointingRelation baseRel = SaltFactory.eINSTANCE.createSPointingRelation();
+					baseRel.setSSource(baseSourceNode);
+					baseRel.setSTarget(baseTargetNode);
+					for (String type : otherRel.getSTypes()) {
+						baseRel.addSType(type);
+					}
+					SaltFactory.eINSTANCE.moveSAnnotations(otherRel, baseRel);
+					SaltFactory.eINSTANCE.moveSMetaAnnotations(otherRel, baseRel);
+					baseGraph.addSRelation(baseRel);
+					copySLayers(otherRel, baseRel);
+					System.out.println("---> Copied rel: "+ baseRel);
+					System.out.println("---> Copied rel: "+ baseRel.getSSource()+" --> "+baseRel.getSTarget());
+				}
 			}
 		}
 	}
@@ -156,8 +179,8 @@ class MergeHandler implements SGraphTraverseHandler {
 	private Set<SRelation> visitedRelations = new HashSet<SRelation>();
 
 	/**
-	 * Called by Pepper as callback, when otherGraph is traversed. Currently only
-	 * returns <code>true</code> to traverse the entire graph.
+	 * Called by Pepper as callback, when otherGraph is traversed. Currently
+	 * only returns <code>true</code> to traverse the entire graph.
 	 */
 	@Override
 	public boolean checkConstraint(GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SRelation sRelation, SNode currNode, long order) {
@@ -223,19 +246,19 @@ class MergeHandler implements SGraphTraverseHandler {
 				if (baseNode != null) {
 					// Match found
 				} else {
-					STextualRelation textRel= null;
-					for (SRelation rel: currNode.getOutgoingSRelations()){
-						if (rel instanceof STextualRelation){
-							textRel= (STextualRelation)rel;
+					STextualRelation textRel = null;
+					for (SRelation rel : currNode.getOutgoingSRelations()) {
+						if (rel instanceof STextualRelation) {
+							textRel = (STextualRelation) rel;
 							break;
 						}
 					}
 					// Find the alignment of the current token to create a new
 					// one
-					Integer sStart = container.getAlignedTokenStart((STextualDS)node2NodeMap.get(textRel.getSTextualDS()), (SToken) currNode);
-					Integer sLength = container.getAlignedTokenLength((STextualDS)node2NodeMap.get(textRel.getSTextualDS()), (SToken) currNode);
+					Integer sStart = container.getAlignedTokenStart((STextualDS) node2NodeMap.get(textRel.getSTextualDS()), (SToken) currNode);
+					Integer sLength = container.getAlignedTokenLength((STextualDS) node2NodeMap.get(textRel.getSTextualDS()), (SToken) currNode);
 					if ((sStart != -1) && (sLength != -1)) {
-						baseNode = baseGraph.createSToken((STextualDS)node2NodeMap.get(textRel.getSTextualDS()), sStart, sStart + sLength);
+						baseNode = baseGraph.createSToken((STextualDS) node2NodeMap.get(textRel.getSTextualDS()), sStart, sStart + sLength);
 					} else {
 						logger.warn("[Merger] Could not create token in target graph matching to node '" + SaltFactory.eINSTANCE.getGlobalId(currNode.getSElementId()) + "', because sStart-value (" + sStart + ") or sLength-value (" + sLength + ") was empty. ");
 					}
@@ -278,8 +301,8 @@ class MergeHandler implements SGraphTraverseHandler {
 
 	/**
 	 * Copies the {@link SNode} or {@link SRelation} objects passed as
-	 * <code>other</code> to all layers, the object passed as <code>base</code> is
-	 * connected with. If no such layer exists in target graph, it will be
+	 * <code>other</code> to all layers, the object passed as <code>base</code>
+	 * is connected with. If no such layer exists in target graph, it will be
 	 * created and all its annotations will be moved.
 	 * 
 	 * @param other
