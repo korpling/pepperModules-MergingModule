@@ -32,16 +32,15 @@ public class MergerProperties extends PepperModuleProperties {
 	 */
 	private static final long serialVersionUID = 4689923498383429801L;
 
-	public static final String PREFIX = "merger.";
-	public static final String PROP_PUNCTUATIONS = PREFIX + "punctuations";
-	public static final String PROP_ESCAPE_MAPPING = PREFIX + "escapeMapping";
-	public static final String PROP_COPY_NODES = PREFIX + "copyNodes";
+	public static final String PROP_PUNCTUATIONS = "punctuations";
+	public static final String PROP_ESCAPE_MAPPING = "escapeMapping";
+	public static final String PROP_COPY_NODES = "copyNodes";
 	/**
 	 * If this property is set to 'true', the base document is always the one,
 	 * which belongs to the first SCorpusGraph (the first importer in Pepper
 	 * workflow description). The value either could be 'true' or false.
 	 **/
-	public static final String PROP_FIRST_AS_BASE = PREFIX + "firstAsBase";
+	public static final String PROP_FIRST_AS_BASE = "firstAsBase";
 
 	/** Default punctuation characters **/
 	public static final String PUNCTUATION_DEFAULT = "'.',',',':',';','!','?','(',')','{','}','<','>'";
