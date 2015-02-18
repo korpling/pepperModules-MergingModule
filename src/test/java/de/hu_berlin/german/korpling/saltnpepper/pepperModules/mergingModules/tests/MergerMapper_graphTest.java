@@ -33,6 +33,7 @@ import org.junit.Test;
 
 import de.hu_berlin.german.korpling.saltnpepper.pepper.common.DOCUMENT_STATUS;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.MappingSubject;
+import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperModuleProperty;
 import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.MergerMapper;
 import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.MergerProperties;
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
@@ -497,6 +498,51 @@ public class MergerMapper_graphTest extends MergerMapper {
 		assertTrue(equivalenceMapSize != equivalenceMap.size());
 		assertEquals(baseTextToken.size() + 1, equivalenceMap.size());
 		assertNotNull(equivalenceMap.get(otherTextToken.get(6)));
+	}
+	
+	/**
+	 * Merges 2 documents by merging texts and tokens, but not spans and structures, they should be copied.
+	 */
+	@Test
+	public void testCopyNodes() {
+		SDocument sDoc1 = SaltFactory.eINSTANCE.createSDocument();
+		sDoc1.setSId("doc1");
+		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		SampleGenerator.createPrimaryData(sDoc1);
+		SampleGenerator.createTokens(sDoc1);
+		SampleGenerator.createInformationStructureSpan(sDoc1);
+		SampleGenerator.createSyntaxStructure(sDoc1);
+		
+		SDocument sDoc2 = SaltFactory.eINSTANCE.createSDocument();
+		sDoc2.setSId("doc2");
+		sDoc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		SampleGenerator.createPrimaryData(sDoc2);
+		SampleGenerator.createTokens(sDoc2);
+		SampleGenerator.createInformationStructureSpan(sDoc2);
+		SampleGenerator.createSyntaxStructure(sDoc2);
+		
+		int tokens= sDoc1.getSDocumentGraph().getSTokens().size();
+		int spans= sDoc1.getSDocumentGraph().getSSpans().size() + sDoc2.getSDocumentGraph().getSSpans().size();
+		int structs= sDoc1.getSDocumentGraph().getSStructures().size() + sDoc2.getSDocumentGraph().getSStructures().size();
+		
+		//create mapping subjects for documents
+		MappingSubject sub1 = new MappingSubject();
+		sub1.setSElementId(sDoc1.getSElementId());
+		getFixture().getMappingSubjects().add(sub1);
+		
+		MappingSubject sub2 = new MappingSubject();
+		sub2.setSElementId(sDoc2.getSElementId());
+		getFixture().getMappingSubjects().add(sub2);
+		
+		MergerProperties props= new MergerProperties();
+		PepperModuleProperty<Boolean> prop= (PepperModuleProperty<Boolean>)props.getProperty(MergerProperties.PROP_COPY_NODES);
+		prop.setValue(true);
+		this.setProperties(props);
+		this.mergeDocumentStructures(sub1);
+		
+		assertEquals(tokens, sDoc1.getSDocumentGraph().getSTokens().size());
+		assertEquals(spans, sDoc1.getSDocumentGraph().getSSpans().size());
+		assertEquals(structs, sDoc1.getSDocumentGraph().getSStructures().size());
 	}
 	
 	/**

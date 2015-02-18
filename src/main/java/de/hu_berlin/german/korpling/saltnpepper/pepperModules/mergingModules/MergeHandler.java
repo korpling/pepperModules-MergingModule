@@ -98,6 +98,16 @@ class MergeHandler implements SGraphTraverseHandler {
 	public void setBaseGraph(SDocumentGraph baseGraph) {
 		this.baseGraph = baseGraph;
 	}
+	
+	private MergerProperties properties= null;
+
+	public MergerProperties getProperties() {
+		return properties;
+	}
+
+	public void setProperties(MergerProperties properties) {
+		this.properties = properties;
+	}
 
 	/**
 	 * a map to relate nodes contained by otherGraph to nodes from baseGraph,
@@ -230,16 +240,28 @@ class MergeHandler implements SGraphTraverseHandler {
 	 */
 	private void mergeNode(SNode currNode, STYPE_NAME sTypeRelations, STYPE_NAME sTypeNode) {
 		SNode baseNode = null;
+		
+		//list of all equivalents to children of current node in base document
 		List<SNode> childrens = getChildren(currNode, sTypeRelations);
+		
+		if (	(currNode instanceof SToken)||
+				(!getProperties().isCopyNodes())) {
+			// do not copy all nodes in case
+			
+			// list all parents in base document sharing the children
+			List<SNode> sharedParents = new ArrayList<SNode>();
+			if (childrens.size() > 0) {
+				sharedParents = getSharedParent(childrens, sTypeNode);
+			}
+			if (sharedParents.size() > 0) {
+				// an equivalent to current node in base document was found
 
-		List<SNode> sharedParents = new ArrayList<SNode>();
-		if (childrens.size() > 0) {
-			sharedParents = getSharedParent(childrens, sTypeNode);
+				baseNode = sharedParents.get(0);
+			}
 		}
-		if (sharedParents.size() > 0) {
-			// TODO: match found, check for annotations?
-			baseNode = sharedParents.get(0);
-		} else {
+		if (baseNode== null){
+			//no equivalent to currNode in base document was found
+			
 			switch (sTypeNode) {
 			case STOKEN: {
 				baseNode = node2NodeMap.get(currNode);
@@ -266,7 +288,6 @@ class MergeHandler implements SGraphTraverseHandler {
 				break;
 			}
 			case SSPAN: {
-				// TODO: better way to cast
 				EList<SToken> toSTokens = new BasicEList<SToken>();
 				for (SNode sNode : childrens) {
 					toSTokens.add((SToken) sNode);
@@ -275,7 +296,6 @@ class MergeHandler implements SGraphTraverseHandler {
 				break;
 			}
 			case SSTRUCTURE: {
-				// TODO: better way to cast
 				EList<SStructuredNode> baseStructureNodes = new BasicEList<SStructuredNode>();
 				for (SNode sNode : childrens) {
 					baseStructureNodes.add((SStructuredNode) sNode);
@@ -290,6 +310,7 @@ class MergeHandler implements SGraphTraverseHandler {
 			moveAnnosForRelations(currNode, baseNode);
 		}
 		if (baseNode != null) {
+			System.out.println("map "+SaltFactory.eINSTANCE.getGlobalId(currNode.getSElementId())+" ("+((SDocumentGraph)currNode.getSGraph()).getSText(currNode)+") to "+SaltFactory.eINSTANCE.getGlobalId(baseNode.getSElementId())+" ("+((SDocumentGraph)baseNode.getSGraph()).getSText(baseNode)+")");
 			node2NodeMap.put(currNode, baseNode);
 			// copies all layers and add node baseNode to them
 			copySLayers(currNode, baseNode);
@@ -387,7 +408,8 @@ class MergeHandler implements SGraphTraverseHandler {
 	}
 
 	/**
-	 * Returns a list of all direct children of the passed {@link SNode}. The
+	 * Returns a list of nodes in base document. The returned nodes are equivalents to the
+	 * direct children of the passed parent node. The
 	 * children are retrieved via traversing of relations of the passed
 	 * {@link STYPE_NAME}.
 	 * 
@@ -398,7 +420,7 @@ class MergeHandler implements SGraphTraverseHandler {
 	 * @return a list of children nodes
 	 */
 	private List<SNode> getChildren(SNode parent, STYPE_NAME sTypeRelation) {
-		EList<SNode> baseList = new BasicEList<SNode>();
+		EList<SNode> children = new BasicEList<SNode>();
 		EList<SRelation> relations = parent.getOutgoingSRelations();
 		if (relations != null) {
 			for (SRelation relation : relations) {
@@ -408,11 +430,11 @@ class MergeHandler implements SGraphTraverseHandler {
 						throw new PepperModuleException("Cannot merge data, because otherBase was null for relation '" + relation + "'. ");
 					}
 					SNode baseNode = node2NodeMap.get(otherNode);
-					baseList.add(baseNode);
+					children.add(baseNode);
 				}
 			}
 		}
-		return baseList;
+		return children;
 	}
 
 	/**

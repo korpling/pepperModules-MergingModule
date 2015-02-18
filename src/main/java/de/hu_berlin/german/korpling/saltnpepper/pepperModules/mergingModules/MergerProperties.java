@@ -35,6 +35,7 @@ public class MergerProperties extends PepperModuleProperties {
 	public static final String PREFIX = "merger.";
 	public static final String PROP_PUNCTUATIONS = PREFIX + "punctuations";
 	public static final String PROP_ESCAPE_MAPPING = PREFIX + "escapeMapping";
+	public static final String PROP_COPY_NODES = PREFIX + "copyNodes";
 	/**
 	 * If this property is set to 'true', the base document is always the one,
 	 * which belongs to the first SCorpusGraph (the first importer in Pepper
@@ -62,6 +63,7 @@ public class MergerProperties extends PepperModuleProperties {
 		this.addProperty(new PepperModuleProperty<String>(PROP_PUNCTUATIONS, String.class, "Determines the punctuation characters used to be ignored for merging. The value is a comma separated list, each entry must be surrounded by a quot: 'PUNCTUATION' (, 'PUNCTUATION')* .", PUNCTUATION_DEFAULT));
 		this.addProperty(new PepperModuleProperty<String>(PROP_ESCAPE_MAPPING, String.class, "Determines the mapping used in normalization step, to map special characters like umlauts. This value is a comma separated list of mappings: \"REPLACED_CHARACTER\" : \"REPLACEMENT\" (, \"REPLACED_CHARACTER\" : \"REPLACEMENT\")*", ESCAPE_MAPPING_DEFAULT));
 		this.addProperty(new PepperModuleProperty<Boolean>(PROP_FIRST_AS_BASE, Boolean.class, "If this property is set to 'true', the base document is always the one, which belongs to the first SCorpusGraph (the first importer in Pepper workflow description). The value either could be 'true' or 'false'. If this value is set to false, the base document is computed automically (normally the one with the largest primary text).", false, false));
+		this.addProperty(new PepperModuleProperty<Boolean>(PROP_COPY_NODES, Boolean.class, "Determines if SSpan and SStructure nodes should be copied or merged. Merged means to move all annotations to the equivalent in base document. If value is true they will be copied.", false, false));
 	}
 
 	/**
@@ -147,6 +149,18 @@ public class MergerProperties extends PepperModuleProperties {
 	 */
 	public Boolean isFirstAsBase() {
 		PepperModuleProperty<Boolean> prop = (PepperModuleProperty<Boolean>) getProperty(PROP_FIRST_AS_BASE);
+		return (Boolean.valueOf(prop.getValue()));
+	}
+
+	/**
+	 * Determines if SSpan and SStructure nodes should be copied or merged.
+	 * Merged means to move all annotations to the equivalent in base document.
+	 * If value is true they will be copied .
+	 * 
+	 * @return
+	 */
+	public Boolean isCopyNodes() {
+		PepperModuleProperty<Boolean> prop = (PepperModuleProperty<Boolean>) getProperty(PROP_COPY_NODES);
 		return (Boolean.valueOf(prop.getValue()));
 	}
 }
