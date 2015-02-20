@@ -175,8 +175,6 @@ class MergeHandler implements SGraphTraverseHandler {
 					SaltFactory.eINSTANCE.moveSMetaAnnotations(otherRel, baseRel);
 					baseGraph.addSRelation(baseRel);
 					copySLayers(otherRel, baseRel);
-					System.out.println("---> Copied rel: "+ baseRel);
-					System.out.println("---> Copied rel: "+ baseRel.getSSource()+" --> "+baseRel.getSTarget());
 				}
 			}
 		}
@@ -310,7 +308,6 @@ class MergeHandler implements SGraphTraverseHandler {
 			moveAnnosForRelations(currNode, baseNode);
 		}
 		if (baseNode != null) {
-			System.out.println("map "+SaltFactory.eINSTANCE.getGlobalId(currNode.getSElementId())+" ("+((SDocumentGraph)currNode.getSGraph()).getSText(currNode)+") to "+SaltFactory.eINSTANCE.getGlobalId(baseNode.getSElementId())+" ("+((SDocumentGraph)baseNode.getSGraph()).getSText(baseNode)+")");
 			node2NodeMap.put(currNode, baseNode);
 			// copies all layers and add node baseNode to them
 			copySLayers(currNode, baseNode);

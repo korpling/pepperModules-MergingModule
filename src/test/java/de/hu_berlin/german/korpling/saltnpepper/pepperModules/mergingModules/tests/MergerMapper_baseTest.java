@@ -124,7 +124,6 @@ public class MergerMapper_baseTest extends MergerMapper {
 		baseText = "Thisisnosmallexampl.Itisasmallerexampl";
 		otherText = "example";
 		assertEquals(this.indexOfOmitChars(baseText, otherText, false, ((MergerProperties) getProperties()).getPunctuations()), -1);
-
 	}
 
 	/**
