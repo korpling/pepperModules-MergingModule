@@ -317,9 +317,30 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		if (getSaltProject() == null) {
 			throw new PepperFWException("No salt project was set in module '" + getName() + ", " + getVersion() + "'.");
 		}
+		if (mappingTable== null){
+			//nothing to be done here
+			
+			logger.warn("[Merger] Cannot merge corpora or documents, since only one corpus structure is given. ");
+			
+			boolean isStart = true;
+			SElementId sElementId = null;
+			DocumentController documentController = null;
+			while ((isStart) || (sElementId != null)) {
+				isStart = false;
+				documentController = this.getModuleController().next();
+				if (documentController == null) {
+					break;
+				}
+				sElementId = documentController.getsDocumentId();
+				getModuleController().complete(documentController);
+			}
+			this.end();
+			
+			return;
+		}
 		enhanceBaseCorpusStructure();
-
-		if (logger.isDebugEnabled()) {
+		if (	(logger.isDebugEnabled())&&
+				(mappingTable!= null)){
 			StringBuilder mergerMapping = new StringBuilder();
 			mergerMapping.append("Computed mapping for merging:\n");
 			for (String key : mappingTable.keySet()) {
