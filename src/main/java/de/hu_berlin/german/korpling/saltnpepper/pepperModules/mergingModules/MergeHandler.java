@@ -193,6 +193,12 @@ class MergeHandler implements SGraphTraverseHandler {
 	@Override
 	public boolean checkConstraint(GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SRelation sRelation, SNode currNode, long order) {
 		if (sRelation != null) {
+			if (sRelation instanceof SPointingRelation){
+				//in case of relation is pointing relation, ignore it, it will be processed later
+				
+				return(false);
+			}
+			
 			if (visitedRelations.contains(sRelation)) {
 				return (false);
 			} else {
@@ -221,6 +227,11 @@ class MergeHandler implements SGraphTraverseHandler {
 		} else if (currNode instanceof SSpan) {
 			mergeNode(currNode, STYPE_NAME.SSPANNING_RELATION, STYPE_NAME.SSPAN);
 		} else if (currNode instanceof SStructure) {
+			if (edge== null){
+				System.out.println("-->"+ SaltFactory.eINSTANCE.getGlobalId(currNode.getSElementId()));
+			}else{
+				System.out.println(SaltFactory.eINSTANCE.getGlobalId(edge.getSSource().getSElementId())+"-"+edge.getSId()+"->"+ SaltFactory.eINSTANCE.getGlobalId(currNode.getSElementId()));
+			}
 			mergeNode(currNode, STYPE_NAME.SDOMINANCE_RELATION, STYPE_NAME.SSTRUCTURE);
 		} else if (currNode instanceof STextualDS) {
 			// base text should be merged already
@@ -244,7 +255,7 @@ class MergeHandler implements SGraphTraverseHandler {
 		
 		if (	(currNode instanceof SToken)||
 				(!getProperties().isCopyNodes())) {
-			// do not copy all nodes in case
+			// do not copy all nodes, merge isntead
 			
 			// list all parents in base document sharing the children
 			List<SNode> sharedParents = new ArrayList<SNode>();
@@ -299,6 +310,7 @@ class MergeHandler implements SGraphTraverseHandler {
 					baseStructureNodes.add((SStructuredNode) sNode);
 				}
 				baseNode = baseGraph.createSStructure(baseStructureNodes);
+				System.out.println("Created structure: "+ baseNode);
 				break;
 			}
 			default:
