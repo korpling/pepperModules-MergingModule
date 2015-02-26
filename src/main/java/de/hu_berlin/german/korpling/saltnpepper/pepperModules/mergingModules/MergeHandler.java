@@ -223,16 +223,18 @@ class MergeHandler implements SGraphTraverseHandler {
 	@Override
 	public void nodeLeft(GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SNode currNode, SRelation edge, SNode otherNode, long order) {
 		if (currNode instanceof SToken) {
+			// if node is a token, always merge, to copy annotations and layers
 			mergeNode(currNode, null, STYPE_NAME.STOKEN);
-		} else if (currNode instanceof SSpan) {
-			mergeNode(currNode, STYPE_NAME.SSPANNING_RELATION, STYPE_NAME.SSPAN);
-		} else if (currNode instanceof SStructure) {
-			if (edge== null){
-				System.out.println("-->"+ SaltFactory.eINSTANCE.getGlobalId(currNode.getSElementId()));
-			}else{
-				System.out.println(SaltFactory.eINSTANCE.getGlobalId(edge.getSSource().getSElementId())+"-"+edge.getSId()+"->"+ SaltFactory.eINSTANCE.getGlobalId(currNode.getSElementId()));
+		}else if (currNode instanceof SSpan) {
+			if (!node2NodeMap.containsKey(currNode)){
+				//if node was already merged, ignore it
+				mergeNode(currNode, STYPE_NAME.SSPANNING_RELATION, STYPE_NAME.SSPAN);
 			}
-			mergeNode(currNode, STYPE_NAME.SDOMINANCE_RELATION, STYPE_NAME.SSTRUCTURE);
+		} else if (currNode instanceof SStructure) {
+			if (!node2NodeMap.containsKey(currNode)){
+				//if node was already merged, ignore it
+				mergeNode(currNode, STYPE_NAME.SDOMINANCE_RELATION, STYPE_NAME.SSTRUCTURE);
+			}
 		} else if (currNode instanceof STextualDS) {
 			// base text should be merged already
 		} else {
@@ -310,7 +312,6 @@ class MergeHandler implements SGraphTraverseHandler {
 					baseStructureNodes.add((SStructuredNode) sNode);
 				}
 				baseNode = baseGraph.createSStructure(baseStructureNodes);
-				System.out.println("Created structure: "+ baseNode);
 				break;
 			}
 			default:
