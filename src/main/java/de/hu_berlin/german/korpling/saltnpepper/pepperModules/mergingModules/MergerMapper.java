@@ -268,6 +268,13 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * contained in the other {@link SDocument} but not in the base
 	 * {@link SDocument} to determine which {@link SToken} has no equivalent in
 	 * the base {@link SDocument}.
+	 * <br/>
+	 * To merge the other graph into base graph, the other graph is traversed by 
+	 * top down depth first order. On backtracking (nodeLeft) for each node (current node)
+	 * all childs are computed. For these child mapping partners in base graph
+	 * are computed, if mapping childs have been found, their common parent (if 
+	 * there are more than one, the first one is taken) is the maaping partner 
+	 * for the current node. 
 	 * 
 	 * @param baseDoc
 	 * @param otherDoc
@@ -305,12 +312,12 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		MergeHandler handler = new MergeHandler(node2NodeMap, otherGraph, baseGraph, getContainer());
 		handler.setProperties((MergerProperties)getProperties());
 
-		EList<SNode> tokens = otherGraph.getSRoots();
-		if ((tokens == null) || (tokens.size() == 0)) {
+		EList<SNode> roots = otherGraph.getSRoots();
+		if ((roots == null) || (roots.size() == 0)) {
 			logger.warn("Cannot start the traversing for merging document-structure, since no tokens exist for document '" + SaltFactory.eINSTANCE.getGlobalId(otherGraph.getSDocument().getSElementId()) + "'.");
 		} else {
 			logger.trace("[Merger] Merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(baseDoc.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
-			otherGraph.traverse(tokens, GRAPH_TRAVERSE_TYPE.TOP_DOWN_DEPTH_FIRST, "merger_" + SaltFactory.eINSTANCE.getGlobalId(baseDoc.getSElementId()), handler, false);
+			otherGraph.traverse(roots, GRAPH_TRAVERSE_TYPE.TOP_DOWN_DEPTH_FIRST, "merger_" + SaltFactory.eINSTANCE.getGlobalId(baseDoc.getSElementId()), handler, false);
 			// finally merge pointing relations
 			handler.mergeSPointingRelations(otherGraph, baseGraph);
 			logger.trace("[Merger] Done with merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(baseDoc.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
