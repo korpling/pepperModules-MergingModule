@@ -541,7 +541,7 @@ public class MergerMapper_graphTest extends MergerMapper {
 		this.mergeDocumentStructures(sub1);
 		
 		assertEquals(tokens, sDoc1.getSDocumentGraph().getSTokens().size());
-		assertEquals("Given spans: "+sDoc1.getSDocumentGraph().getSSpans(), spans, sDoc1.getSDocumentGraph().getSSpans().size());
+		assertEquals(spans, sDoc1.getSDocumentGraph().getSSpans().size());
 		assertEquals(structs, sDoc1.getSDocumentGraph().getSStructures().size());
 	}
 	
