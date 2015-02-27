@@ -1,6 +1,6 @@
 ![SaltNPepper project](./gh-site/img/SaltNPepper_logo2010.png)
 # MergingModules
-This project provides a manipulator to merge corpora from different sources. This module is implemented for the linguistic converter framework Pepper (see https://u.hu-berlin.de/saltnpepper). A detailed description of the manipulator can be found in [Merger](#details1) or in [poster](http://dx.doi.org/10.5281/zenodo.15640).
+This project provides a manipulator to merge corpora from different sources. This module is implemented for the linguistic converter framework Pepper (see https://u.hu-berlin.de/saltnpepper). A detailed description of the manipulator can be found in [Merger](#details1) or in a [poster](http://dx.doi.org/10.5281/zenodo.15640) presented at the DGfS 2014.
 
 Pepper is a pluggable framework to convert a variety of linguistic formats (like [TigerXML](http://www.ims.uni-stuttgart.de/forschung/ressourcen/werkzeuge/TIGERSearch/doc/html/TigerXML.html), the [EXMARaLDA format](http://www.exmaralda.org/), [PAULA](http://www.sfb632.uni-potsdam.de/paula.html) etc.) into each other. Furthermore Pepper uses Salt (see https://github.com/korpling/salt), the graph-based meta model for linguistic data, which acts as an intermediate model to reduce the number of mappings to be implemented. That means converting data from a format _A_ to format _B_ consists of two steps. First the data is mapped from format _A_ to Salt and second from Salt to format _B_. This detour reduces the number of Pepper modules from _n<sup>2</sup>-n_ (in the case of a direct mapping) to _2n_ to handle a number of n formats.
 
@@ -84,6 +84,7 @@ The Merger allows to merge an unbound number of corpora to a single corpus with 
 
 ## Properties
 The merging can be customized by using the properties listed in the following table. 
+
 |name of property			|possible values		|default value|	
 |---------------------------|-----------------------|-------------|
 |punctuations			    |String	                |'.',',',':',';','!','?','(',')','{','}','<','>'|
@@ -116,7 +117,8 @@ The merging is along the document structure, but before two or more document str
 ## Identification of mergable documents
 To give an example of the identification of merging partners for documents, imagine two corpus structures comming from different sources, one for instance from a TIGER XML document and the other one from a EXMARaLDA document. Since neither TIGER XML nor EXMARaLDA encode the corpus structure explicitly, it is taken from the folder structure, the corpus is organized in. For our example, the root folder, which is addressed by the importer is both times the folder 'myCorpus'. This folder contains two sub-folders 'subCorpus1' and 'subCorpus2'. Each folder further contains two documents, the TIGER XML or EXMARaLDA files.
 
-1. TIGER XML 
+1. TIGER XML
+
    ```
    myCorpus
    |
@@ -132,7 +134,8 @@ To give an example of the identification of merging partners for documents, imag
       |
       +--document4
    ```
-1. EXMARaLDA 
+1. EXMARaLDA
+
    ```
    myCorpus
    |
@@ -167,20 +170,19 @@ Both text do not differ in their content, but in their form. Therefore they are 
 After normalizing, both texts are compared by String comparision. In our our case, the second text is a substring of the first text and therefore mergable (the same goes, if both texts are equal or text 1 is a subset of text 2). 
 When two mergable texts are found, an offset mapping is computed, which maps the normalized text to the original text. For the second text, this will result in the following map:
 
-|normalized |original |
-|text       |text     |
-|-----------|---------|
-| 1  | 1   |
-| 2  | 2   |
-| 3  | 3   |
-| 4  | 4   |
-| 5  | 12  |
-| 6  | 13  |
-| 7  | 15  |
-| 8  | 16  |
-| 9  | 17  |
-| 10 | 18  |
-|... | ... |
+|character|normalized text |original text |
+|---------|----------------|--------------|
+| t | 1  | 1   |
+| h | 2  | 2   |
+| i | 3  | 3   |
+| s | 4  | 4   |
+| i | 5  | 12  |
+| s | 6  | 13  |
+| a | 7  | 15  |
+| s | 8  | 16  |
+| a | 9  | 17  |
+| m | 10 | 18  |
+| ... |... | ... |
 
 With this map the offsets for tokens pointing to the textual datasource can be mapped between the two documents using the normalized text as base.
 
@@ -188,12 +190,14 @@ With this map the offsets for tokens pointing to the textual datasource can be m
 For each token it is now possible to detect if there is a merging partner in the other document or not with the use of the computed offsets. In case, there is no merging partner, the token is copied. In case there is a merging partner, all annotations on the token are copied. Since Salt is a graph based model, each linguistic annotation and structure is modeled as either a node an edge or a label. That means, basing on tokens, the graphs can be traversed in a bottom up like traversal to visit each node and each edge. To be more precise we give an example. Imagine the two following document structures:
 
 1. document structure 1
+
    ```
          a
      /   |   \
    tok1 tok2 tok3
    ```
 1. document structure 2
+
    ```
          b
      /   |   \
