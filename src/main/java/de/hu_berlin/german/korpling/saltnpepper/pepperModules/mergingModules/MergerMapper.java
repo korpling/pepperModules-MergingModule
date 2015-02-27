@@ -21,10 +21,14 @@ package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.print.attribute.standard.MediaSize.Other;
+
+import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,10 +46,14 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpusGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDocumentGraph;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDominanceRelation;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SSpanningRelation;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STYPE_NAME;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SRelation;
 
 /**
  * This class does the real merging, the main task is to merge a set of document
@@ -312,7 +320,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		MergeHandler handler = new MergeHandler(node2NodeMap, otherGraph, baseGraph, getContainer());
 		handler.setProperties((MergerProperties)getProperties());
 
-		EList<SNode> roots = otherGraph.getSRoots();
+		
+		EList<SNode> roots= getRoots(otherGraph);
+//		EList<SNode> roots= otherGraph.getRootsBySRelation(STYPE_NAME.SDOMINANCE_RELATION);
+//		roots.addAll(otherGraph.getRootsBySRelation(STYPE_NAME.SSPANNING_RELATION));
+//		EList<SNode> roots = otherGraph.getSRoots();
 		if ((roots == null) || (roots.size() == 0)) {
 			logger.warn("Cannot start the traversing for merging document-structure, since no tokens exist for document '" + SaltFactory.eINSTANCE.getGlobalId(otherGraph.getSDocument().getSElementId()) + "'.");
 		} else {
@@ -322,6 +334,50 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			handler.mergeSPointingRelations(otherGraph, baseGraph);
 			logger.trace("[Merger] Done with merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(baseDoc.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
 		}
+	}
+	
+	/**
+	 * Emits root nodes, which are roots for {@link SDominanceRelation} and {@link SSpanningRelation} only.
+	 * For instance for the sample:
+	 *<pre>
+	 *       struct1
+	 *     //      ||
+	 *   span1     ||   span2
+	 * 	/    \     ||    |
+	 * tok1	tok2  tok3  tok4
+	 * </pre>
+	 * the nodes:
+	 * 
+	 * struct1 and span2 are returned, even if a pointing relation connects struct1 and span2.
+	 * 
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	private EList<SNode> getRoots(SDocumentGraph other){
+		HashSet<SNode> retSet = new LinkedHashSet<SNode>();
+		EList<SRelation> relations= new BasicEList<SRelation>();
+		relations.addAll((EList<SRelation>) (EList<? extends SRelation>) other.getSSpanningRelations());
+		relations.addAll((EList<SRelation>) (EList<? extends SRelation>) other.getSDominanceRelations());
+		HashSet<SNode> notRootElements= new HashSet<SNode>();
+		for (SRelation relation: relations)
+		{
+			//mark destination as no root
+			if (!notRootElements.contains(relation.getSTarget()))
+				notRootElements.add(relation.getSTarget());
+			//if source is not also a destination
+			if (	(!notRootElements.contains(relation.getSSource())) &&
+					(!retSet.contains(relation.getSSource())))
+				retSet.add(relation.getSSource());
+			//remove wrong stored nodes in retList
+			if (retSet.contains(relation.getSTarget()))
+				retSet.remove(relation.getSTarget());
+		}
+		EList<SNode> retVal= null;
+		if(!retSet.isEmpty())
+		{
+			retVal= new BasicEList<SNode>(retSet);
+		}
+		return(retVal);
 	}
 
 	/** the {@link TokenMergeContainer} instance **/
