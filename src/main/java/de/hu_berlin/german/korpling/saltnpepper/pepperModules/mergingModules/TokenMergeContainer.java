@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 Humboldt University of Berlin, INRIA.
+ * Copyright 2009 Humboldt-Universität zu Berlin, INRIA.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,9 @@
  */
 package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
@@ -38,7 +39,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructu
  */
 public class TokenMergeContainer {
 
-	private static final Logger logger = LoggerFactory.getLogger(TokenMergeContainer.class);
+	private static final Logger logger = LoggerFactory.getLogger(Merger.MODULE_NAME);
 
 	/**
 	 * This class contains all tokens which were aligned and allows a search for
@@ -48,14 +49,14 @@ public class TokenMergeContainer {
 	 */
 	public class AlignedTokensMap {
 		public AlignedTokensMap() {
-			this.tokenLeftMap = new Hashtable<SToken, Integer>();
-			this.tokenRightMap = new Hashtable<SToken, Integer>();
-			this.tokensByStart = new Hashtable<Integer, SToken>();
+			this.tokenLeftMap = new HashMap<SToken, Integer>();
+			this.tokenRightMap = new HashMap<SToken, Integer>();
+			this.tokensByStart = new HashMap<Integer, SToken>();
 		}
 
-		private Hashtable<SToken, Integer> tokenLeftMap = null;
-		private Hashtable<SToken, Integer> tokenRightMap = null;
-		private Hashtable<Integer, SToken> tokensByStart = null;
+		private Map<SToken, Integer> tokenLeftMap = null;
+		private Map<SToken, Integer> tokenRightMap = null;
+		private Map<Integer, SToken> tokensByStart = null;
 
 		/**
 		 * This method returns all {@link SToken} objects contained in this
@@ -148,8 +149,25 @@ public class TokenMergeContainer {
 	/** The base {@link SDocument} object **/
 	private SDocument baseDocument = null;
 
-	/** The base {@link STextualDS} object **/
-	public STextualDS baseText = null;
+	/**
+	 * This method sets the base {@link SDocument}.
+	 * 
+	 * @param sDocument
+	 *            The {@link SDocument} to set as base.
+	 */
+	public void setBaseDocument(SDocument sDocument) {
+		this.baseDocument = sDocument;
+	}
+
+	/**
+	 * This method returns the base {@link SDocument} object.
+	 * 
+	 * @return The base {@link SDocument} or null, if there is no base
+	 *         {@link SDocument}
+	 */
+	public SDocument getBaseDocument() {
+		return this.baseDocument;
+	}
 
 	/**
 	 * The token equivalence map. For every {@link SToken} object which has an
@@ -157,30 +175,28 @@ public class TokenMergeContainer {
 	 * which contains the equivalent {@link SToken} object as value and the
 	 * {@link STextualDS} object as key.
 	 **/
-	private Hashtable<SToken, Hashtable<STextualDS, SToken>> equivalentToken = null;
+	private Map<SToken, Map<STextualDS, SToken>> equivalentToken = null;
 
 	/**
 	 * The map of aligned texts which is a map with the {@link STextualDS}
 	 * objects as keys and the {@link AlignedTokensMap} as value.
 	 **/
-	private Hashtable<STextualDS, AlignedTokensMap> alignedTextsMap = null;
+	private Map<STextualDS, AlignedTokensMap> alignedTextsMap = null;
 
-	/** the map of normalized texts **/
-	private Hashtable<STextualDS, String> normalizedTextMap = null;
-
-	int maximumNormalizedTextLength = -1;
+	/** maps an original text to its normalized representation **/
+	private Map<STextualDS, String> normalizedTexts = null;
 
 	/**
 	 * This map contains a mapping from normalized index of a character to the
 	 * index in the original text for every base {@link STextualDS} objects.
 	 **/
-	private Hashtable<STextualDS, List<Integer>> normalizedBaseTextToOriginalBaseText = null;
+	private Map<STextualDS, List<Integer>> normalizedBaseTextToOriginalBaseText = null;
 
 	public TokenMergeContainer() {
-		this.equivalentToken = new Hashtable<SToken, Hashtable<STextualDS, SToken>>();
-		this.alignedTextsMap = new Hashtable<STextualDS, AlignedTokensMap>();
-		this.normalizedTextMap = new Hashtable<STextualDS, String>();
-		this.normalizedBaseTextToOriginalBaseText = new Hashtable<STextualDS, List<Integer>>();
+		this.equivalentToken = new HashMap<SToken, Map<STextualDS, SToken>>();
+		this.alignedTextsMap = new HashMap<STextualDS, AlignedTokensMap>();
+		this.normalizedTexts = new HashMap<STextualDS, String>();
+		this.normalizedBaseTextToOriginalBaseText = new HashMap<STextualDS, List<Integer>>();
 	}
 
 	/**
@@ -211,45 +227,17 @@ public class TokenMergeContainer {
 	 */
 	public int getBaseTextPositionByNormalizedTextPosition(STextualDS sTextualDS, int position) {
 		int baseTextPosition = -1;
-		if (this.normalizedBaseTextToOriginalBaseText.containsKey(sTextualDS)) {
-			if (this.normalizedBaseTextToOriginalBaseText.get(sTextualDS).size() > position) {
+		if (normalizedBaseTextToOriginalBaseText.containsKey(sTextualDS)) {
+			if (normalizedBaseTextToOriginalBaseText.get(sTextualDS).size() > position) {
 				baseTextPosition = this.normalizedBaseTextToOriginalBaseText.get(sTextualDS).get(position);
 			} else {
-				throw new PepperModuleException("Given position of character in the normalized text '" + position + "' was bigger than the size of table ('" + normalizedBaseTextToOriginalBaseText.get(sTextualDS).size() + "') mapping the original to the normalized text.");
+				throw new PepperModuleException("Given position of character in the normalized text '" + position + "' was bigger than the size of the normalized text '" + normalizedBaseTextToOriginalBaseText.get(sTextualDS).size() + "'.");
 			}
 		}
 		return baseTextPosition;
 	}
 
-	/**
-	 * This method returns the {@link SToken} objects which overlap the base
-	 * text.
-	 * 
-	 * @return The {@link SToken} objects ov the base text
-	 */
-	public EList<SToken> getBaseTextToken() {
-		return this.alignedTextsMap.get(this.baseText).getTokens();
-	}
-
-	/**
-	 * This method sets the base {@link SDocument}.
-	 * 
-	 * @param sDocument
-	 *            The {@link SDocument} to set as base.
-	 */
-	public void setBaseDocument(SDocument sDocument) {
-		this.baseDocument = sDocument;
-	}
-
-	/**
-	 * This method returns the base {@link SDocument} object.
-	 * 
-	 * @return The base {@link SDocument} or null, if there is no base
-	 *         {@link SDocument}
-	 */
-	public SDocument getBaseDocument() {
-		return this.baseDocument;
-	}
+	private int maximumNormalizedTextLength = -1;
 
 	/**
 	 * This method adds the normalized text, specified by the parameter, for the
@@ -266,17 +254,15 @@ public class TokenMergeContainer {
 	public void addNormalizedText(SDocument doc, STextualDS sTextualDS, String normalizedText) {
 		if (maximumNormalizedTextLength == -1) {
 			this.maximumNormalizedTextLength = normalizedText.length();
-			this.baseText = sTextualDS;
-			this.baseDocument = doc;
+			setBaseDocument(doc);
 		} else {
 			if (normalizedText.length() > this.maximumNormalizedTextLength) {
 				// We found a new minimum
 				this.maximumNormalizedTextLength = normalizedText.length();
-				this.baseText = sTextualDS;
-				this.baseDocument = doc;
+				setBaseDocument(doc);
 			}
 		}
-		this.normalizedTextMap.put(sTextualDS, normalizedText);
+		this.normalizedTexts.put(sTextualDS, normalizedText);
 	}
 
 	/**
@@ -289,27 +275,7 @@ public class TokenMergeContainer {
 	 *         the given {@link STextualDS}
 	 */
 	public String getNormalizedText(STextualDS sTextualDS) {
-		return this.normalizedTextMap.get(sTextualDS);
-	}
-
-	/**
-	 * This method returns the base text.
-	 * 
-	 * @return The base text or null, if there is no such text.
-	 */
-	public STextualDS getBaseText() {
-		return this.baseText;
-	}
-
-	/**
-	 * This method sets the base text to the one specified by the given
-	 * {@link STextualDS}
-	 * 
-	 * @param text
-	 *            The {@link STextualDS} to set the base text to.
-	 */
-	public void setBaseText(STextualDS text) {
-		this.baseText = text;
+		return this.normalizedTexts.get(sTextualDS);
 	}
 
 	/**
@@ -328,8 +294,10 @@ public class TokenMergeContainer {
 	 */
 	public SToken getAlignedTokenByStart(STextualDS sTextualDS, int start) {
 		SToken tok = null;
-		if (this.alignedTextsMap.containsKey(sTextualDS)) {
-			tok = this.alignedTextsMap.get(sTextualDS).getTokenByStart(start);
+		if (sTextualDS!= null){
+			if (this.alignedTextsMap.containsKey(sTextualDS)) {
+				tok = this.alignedTextsMap.get(sTextualDS).getTokenByStart(start);
+			}
 		}
 		return tok;
 	}
@@ -349,9 +317,11 @@ public class TokenMergeContainer {
 	 */
 	public int getAlignedTokenStart(STextualDS sTextualDS, SToken sToken) {
 		int returnVal = -1;
-		if (this.alignedTextsMap.containsKey(sTextualDS)) {
-			AlignedTokensMap map = this.alignedTextsMap.get(sTextualDS);
-			returnVal = map.getStart(sToken);
+		if (sTextualDS != null) {
+			if (this.alignedTextsMap.containsKey(sTextualDS)) {
+				AlignedTokensMap map = this.alignedTextsMap.get(sTextualDS);
+				returnVal = map.getStart(sToken);
+			}
 		}
 		return returnVal;
 	}
@@ -371,9 +341,11 @@ public class TokenMergeContainer {
 	 */
 	public int getAlignedTokenLength(STextualDS sTextualDS, SToken sToken) {
 		int returnVal = -1;
-		if (this.alignedTextsMap.containsKey(sTextualDS)) {
-			AlignedTokensMap map = this.alignedTextsMap.get(sTextualDS);
-			returnVal = map.getLength(sToken);
+		if (sTextualDS!= null){
+			if (this.alignedTextsMap.containsKey(sTextualDS)) {
+				AlignedTokensMap map = this.alignedTextsMap.get(sTextualDS);
+				returnVal = map.getLength(sToken);
+			}
 		}
 		return returnVal;
 	}
@@ -452,7 +424,7 @@ public class TokenMergeContainer {
 			}
 		} else {// there is currently no mapping for the specified base text
 				// token
-			Hashtable<STextualDS, SToken> newMapping = new Hashtable<STextualDS, SToken>();
+			Map<STextualDS, SToken> newMapping = new HashMap<STextualDS, SToken>();
 			newMapping.put(otherSText, otherTextToken);
 			this.equivalentToken.put(baseTextToken, newMapping);
 		}
@@ -485,12 +457,13 @@ public class TokenMergeContainer {
 	 * 
 	 * @return The equivalence map.
 	 */
-	public Hashtable<SToken, Hashtable<STextualDS, SToken>> getEquivalenceMap() {
+	public Map<SToken, Map<STextualDS, SToken>> getEquivalenceMap() {
 		return this.equivalentToken;
 	}
 
 	/**
 	 * This method frees the memory used by the specified {@SDocument
+	 * 
 	 * 
 	 * } in the {@link TokenMergeContainer}.
 	 * 
@@ -502,14 +475,14 @@ public class TokenMergeContainer {
 		if (this.alignedTextsMap.containsKey(sDocument)) {
 			this.alignedTextsMap.remove(sDocument);
 		}
-		if (this.normalizedTextMap.containsKey(sDocument)) {
-			this.normalizedTextMap.remove(sDocument);
+		if (this.normalizedTexts.containsKey(sDocument)) {
+			this.normalizedTexts.remove(sDocument);
 		}
 		if (sDocument == this.baseDocument) {
 			this.normalizedBaseTextToOriginalBaseText.clear();
 		}
 		for (SToken tok : this.equivalentToken.keySet()) {
-			Hashtable<STextualDS, SToken> map = this.equivalentToken.get(tok);
+			Map<STextualDS, SToken> map = this.equivalentToken.get(tok);
 			if (map != null && map.containsKey(sDocument)) {
 				this.equivalentToken.get(tok).remove(sDocument);
 			}

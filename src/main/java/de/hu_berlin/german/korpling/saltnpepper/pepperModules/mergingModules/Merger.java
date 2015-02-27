@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 Humboldt University of Berlin, INRIA.
+ * Copyright 2009 Humboldt-Universität zu Berlin, INRIA.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,11 +59,13 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
  */
 @Component(name = "MergerComponent", factory = "PepperManipulatorComponentFactory")
 public class Merger extends PepperManipulatorImpl implements PepperManipulator {
-	private static final Logger logger = LoggerFactory.getLogger(Merger.class);
+	public static final String MODULE_NAME="Merger";
+	
+	private static final Logger logger = LoggerFactory.getLogger(MODULE_NAME);
 
 	public Merger() {
 		super();
-		setName("Merger");
+		setName(MODULE_NAME);
 		setProperties(new MergerProperties());
 	}
 
@@ -289,7 +291,8 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				if (noBase) {
 					if (isDoc) {
 						getBaseCorpusStructure().createSCorpus(URI.createURI(key).trimSegments(1));
-						getBaseCorpusStructure().createSDocument(URI.createURI(key));
+						SDocument doc= getBaseCorpusStructure().createSDocument(URI.createURI(key));
+						doc.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 					} else {
 						getBaseCorpusStructure().createSCorpus(URI.createURI(key));
 					}
@@ -314,9 +317,30 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		if (getSaltProject() == null) {
 			throw new PepperFWException("No salt project was set in module '" + getName() + ", " + getVersion() + "'.");
 		}
+		if (mappingTable== null){
+			//nothing to be done here
+			
+			logger.warn("[Merger] Cannot merge corpora or documents, since only one corpus structure is given. ");
+			
+			boolean isStart = true;
+			SElementId sElementId = null;
+			DocumentController documentController = null;
+			while ((isStart) || (sElementId != null)) {
+				isStart = false;
+				documentController = this.getModuleController().next();
+				if (documentController == null) {
+					break;
+				}
+				sElementId = documentController.getsDocumentId();
+				getModuleController().complete(documentController);
+			}
+			this.end();
+			
+			return;
+		}
 		enhanceBaseCorpusStructure();
-
-		if (logger.isDebugEnabled()) {
+		if (	(logger.isDebugEnabled())&&
+				(mappingTable!= null)){
 			StringBuilder mergerMapping = new StringBuilder();
 			mergerMapping.append("Computed mapping for merging:\n");
 			for (String key : mappingTable.keySet()) {
@@ -425,7 +449,9 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		for (SCorpus sCorpus : corpora) {
 			start(sCorpus.getSElementId());
 		}
-
+		
+		end();
+		
 		// only wait for controllers which have been added by end()
 		for (PepperMapperController controller : this.getMapperControllers().values()) {
 			if (!alreadyWaitedFor.contains(controller)) {
@@ -438,7 +464,28 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 			}
 		}
 	}
-
+	
+	/**
+	 * Removes all corpus-structures except the base corpus-structure
+	 */
+	@Override
+	public void end() throws PepperModuleException {
+		List<SCorpusGraph> removeCorpusStructures= new ArrayList<SCorpusGraph>();
+		for (SCorpusGraph graph: getSaltProject().getSCorpusGraphs()){
+			if (graph!= getBaseCorpusStructure()){
+				removeCorpusStructures.add(graph);
+			}
+		}
+		if (removeCorpusStructures.size()>0){
+			for (SCorpusGraph graph: removeCorpusStructures){
+				getSaltProject().getSCorpusGraphs().remove(graph);
+			}
+		}
+		if (removeCorpusStructures.size()!= 1){
+			logger.warn("Could not remove all corpus-structures from salt project which are not the base corpus-structure. Left structures are: '"+removeCorpusStructures+"'. ");
+		}
+	}
+	
 	/**
 	 * Creates a {@link PepperMapper} of type {@link MergerMapper}. Therefore
 	 * the table {@link #givenSlots} must contain an entry for the given
@@ -462,7 +509,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				mappingSubject.setSElementId(id);
 				mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
 				mapper.getMappingSubjects().add(mappingSubject);
-				if (getBaseCorpusStructure().equals(((SDocument) id.getSIdentifiableElement()).getSCorpusGraph())) {
+				if (getBaseCorpusStructure()== (((SDocument) id.getSIdentifiableElement()).getSCorpusGraph())) {
 					noBase = false;
 				}
 			}
