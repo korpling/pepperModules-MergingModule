@@ -52,7 +52,7 @@ A detailed description of the Pepper workflow can be found on the [Pepper projec
 
 ```xml
 <manipulator name="Merger">
-  <property key="PROPERTY_NAME">PROPERTY_VALUE</key>
+  <property key="PROPERTY_NAME">PROPERTY_VALUE</property>
 </manipulator>
 ```
 
@@ -96,13 +96,13 @@ The merging can be customized by using the properties listed in the following ta
 ### punctuations
 Determines the punctuation characters used to be ignored for detecting equal textual data. The value is a comma separated list, each entry must be surrounded by a quot: 'PUNCTUATION' (, 'PUNCTUATION')* . For instance:
 ```xml
-<property key="punctuations">'.',',',':',';','!','?','(',')','{','}','<','>'</key>
+<property key="punctuations">'.',',',':',';','!','?','(',')','{','}','<','>'</property>
 ```
 
 ### escapeMapping
 Determines the mapping used in normalization step, to map special characters like umlauts. This value is a comma separated list of mappings: "REPLACED_CHARACTER" : "REPLACEMENT" (, "REPLACED_CHARACTER" : "REPLACEMENT")*. For instance:
 ```xml
-<property key="escapeMapping">"ä":"ae","ö":"oe","ü":"ue","ß":"ss"</key>
+<property key="escapeMapping">"ä":"ae","ö":"oe","ü":"ue","ß":"ss"</property>
 ```
 
 ### copyNodes
@@ -115,7 +115,7 @@ span1(a=b)               |    spanA(d=c)
    |                     |       |
   tok1                   |      tokA
 ```
-For this example we assume, that *tok1* of *document structure 1* and *tokA* of *document structure 2*, as well as *span1* and *spanA* are merging partners. The next figure shows both results, first when setting *<property key="copyNodes">true</key>* and second when setting *<property key="copyNodes">false</key>*.
+For this example we assume, that *tok1* of *document structure 1* and *tokA* of *document structure 2*, as well as *span1* and *spanA* are merging partners. The next figure shows both results, first when setting *<property key="copyNodes">true</property>* and second when setting *<property key="copyNodes">false</property>*.
 
 ```
 true:                    |  false:
