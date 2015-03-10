@@ -81,6 +81,7 @@ This project has been funded by the [department of corpus linguistics and morpho
 
 # <a name="details1">Merger</a>
 The Merger allows to merge an unbound number of corpora to a single corpus with Pepper. The Merger can be integrated in a Pepper workflow as a step of the manipulation phase. 
+The merging is along the document structure, but before two or more document structures can be merged to a single one, two corresponding document structures have to be identified. The identification of merging partners is based on the name and the path of a document in the corpus structure. The merging of the content is based on the textual data. Only documents having an equal textual datasource or at least one is contained in the other are mergable. Basing on the textual alignment, the mergable tokens can be computed. In the last step these tokens are the base for the merging of the rest of the graph structure like SSpan or SStructure nodes and relations.
 
 ## Properties
 The merging can be customized by using the properties listed in the following table. 
@@ -93,7 +94,7 @@ The merging can be customized by using the properties listed in the following ta
 |firstAsBase	            |true, false			|false|
 
 ### punctuations
-Determines the punctuation characters used to be ignored for merging. The value is a comma separated list, each entry must be surrounded by a quot: 'PUNCTUATION' (, 'PUNCTUATION')* . For instance:
+Determines the punctuation characters used to be ignored for detecting equal textual data. The value is a comma separated list, each entry must be surrounded by a quot: 'PUNCTUATION' (, 'PUNCTUATION')* . For instance:
 ```xml
 <property key="punctuations">'.',',',':',';','!','?','(',')','{','}','<','>'</key>
 ```
@@ -105,17 +106,30 @@ Determines the mapping used in normalization step, to map special characters lik
 ```
 
 ### copyNodes
-If this property is set to 'true', the base document is always the one, which belongs to the first SCorpusGraph (the first importer in Pepper workflow description). The value either could be 'true' or 'false'. If this value is set to false, the base document is computed automically (normally the one with the largest primary text.
-		
+Determines if SSpan and SStructure nodes should be copied or merged. Merged means to move all annotations to the equivalent in base document. If value is true they will be copied.  To illustrate the behavior, imagine the following two document structures:
+
+```
+document structure 1:    |    document structure 2:
+                         |
+span1(a=b)               |    spanA(d=c)
+   |                     |       |
+  tok1                   |      tokA
+```
+For this example we assume, that *tok1* of *document structure 1* and *tokA* of *document structure 2*, as well as *span1* and *spanA* are merging partners. The next figure shows both results, first when setting *<property key="copyNodes">true</key>* and second when setting *<property key="copyNodes">false</key>*.
+
+```
+true:                    |  false:
+                         |
+span1(a=b)   span2(c=d)  |  span1(a=b, c=d)
+       \    /            |     |
+        tok1             |    tok1
+```
+
 ### firstAsBase
-Determines if SSpan and SStructure nodes should be copied or merged. Merged means to move all annotations to the equivalent in base document. If value is true they will be copied.
-
-
-## Description of the Merging process
-The merging is along the document structure, but before two or more document structures can be merged to a single one, two corresponding document structures have to be identified. The identification of merging partners is based on the name and the path of a document in the corpus structure. The merging of the content is based on the textual data. Only documents having an equal textual datasource or at least one is contained in the other are mergable. Basing on the textual alignment, the mergable tokens can be computed. In the last step these tokens are the base for the merging of the rest of the graph structure like SSpan or SStructure nodes and even relations.   
+If this property is set to 'true', the base document is always the one, which belongs to the first SCorpusGraph (the first importer in Pepper workflow description). The value either could be 'true' or 'false'. If this value is set to false, the base document is computed automically (normally the one with the largest primary text).
 
 ## Identification of mergable documents
-To give an example of the identification of merging partners for documents, imagine two corpus structures comming from different sources, one for instance from a TIGER XML document and the other one from a EXMARaLDA document. Since neither TIGER XML nor EXMARaLDA encode the corpus structure explicitly, it is taken from the folder structure, the corpus is organized in. For our example, the root folder, which is addressed by the importer is both times the folder 'myCorpus'. This folder contains two sub-folders 'subCorpus1' and 'subCorpus2'. Each folder further contains two documents, the TIGER XML or EXMARaLDA files.
+To give an example of the identification of merging partners for documents, imagine two corpus structures comming from different sources, one for instance from a TIGER XML corpus and the other one from a EXMARaLDA corpus. Since neither TIGER XML nor EXMARaLDA encode the corpus structure explicitly, it is taken from the folder structure, the corpus is organized in. For our example, the root folder, which is addressed by the importer is both times the folder 'myCorpus'. This folder contains two sub-folders 'subCorpus1' and 'subCorpus2'. Each folder further contains two documents, the TIGER XML or EXMARaLDA files.
 
 1. TIGER XML
 
@@ -124,15 +138,15 @@ To give an example of the identification of merging partners for documents, imag
    |
    +--subCorpus1
    |  |
-   |  +--document1
+   |  +--document1.xml
    |  |
-   |  +--document2
+   |  +--document2.xml
    |
    +--subCorpus2
       |
-      +--document3
+      +--document3.xml
       |
-      +--document4
+      +--document4.xml
    ```
 1. EXMARaLDA
 
@@ -141,23 +155,22 @@ To give an example of the identification of merging partners for documents, imag
    |
    +--subCorpus1
    |  |
-   |  +--document1
+   |  +--document1.exb
    |  |
-   |  +--document2
+   |  +--document2.exb
    |
    +--subCorpus2
       |
-      +--document3
+      +--document3.exb
       |
-      +--document4
+      +--document4.exb
    ```
 The merging partners in that example would be the documents:
-1. myCorpus/subCorpus1/document1 from the TIGER XML sample and myCorpus/subCorpus1/document1 from the EXMARaLDA corpus
-1. myCorpus/subCorpus1/document2 from the TIGER XML sample and myCorpus/subCorpus1/document2 from the EXMARaLDA corpus
-...
+1. myCorpus/subCorpus1/document1 from the TIGER XML sample and myCorpus/subCorpus1/document1 from the EXMARaLDA corpus and so on
+1. myCorpus/subCorpus1/document2 from the TIGER XML sample and myCorpus/subCorpus1/document2 from the EXMARaLDA corpus and so on
 
 ## Mergability of textual datasources
-Two find potentially mergable textual datasources, the Merger iterates over all textual datasources of both documents, normalizes and compares them. For instance imagine the two texts:
+To find potentially mergable textual datasources, the Merger iterates over all textual datasources of both documents, normalizes and compares them. For instance imagine the two texts:
 
 1. This is a sample text.
 1. This       IS  aSAMPLE
@@ -167,8 +180,23 @@ Both text do not differ in their content, but in their form. Therefore they are 
 1. thisisasampletext.
 1. thisisasample
 
-After normalizing, both texts are compared by String comparision. In our our case, the second text is a substring of the first text and therefore mergable (the same goes, if both texts are equal or text 1 is a subset of text 2). 
-When two mergable texts are found, an offset mapping is computed, which maps the normalized text to the original text. For the second text, this will result in the following map:
+After normalizing, both texts are compared by String comparision. In our case, the second text is a substring of the first text and therefore the texts are mergable (the same goes, if both texts are equal or text 1 is a subset of text 2). When two mergable texts are found, an offset mapping is computed, which maps the normalized text to the original text. For the first text, this will result in the following map:
+
+|character|normalized text |original text |
+|---------|----------------|--------------|
+| t | 1  | 1   |
+| h | 2  | 2   |
+| i | 3  | 3   |
+| s | 4  | 4   |
+| i | 5  | 6  |
+| s | 6  | 7  |
+| a | 7  | 9  |
+| s | 8  | 11  |
+| a | 9  | 12  |
+| m | 10 | 13  |
+| ... |... | ... |
+
+For the second text, this will result in the following map:
 
 |character|normalized text |original text |
 |---------|----------------|--------------|
@@ -184,10 +212,18 @@ When two mergable texts are found, an offset mapping is computed, which maps the
 | m | 10 | 18  |
 | ... |... | ... |
 
-With this map the offsets for tokens pointing to the textual datasource can be mapped between the two documents using the normalized text as base.
+With these maps the offsets for tokens pointing to the textual datasource can be mapped between the two documents using the normalized text as base.
 
-## Merging of tokens and other nodes and edges
-For each token it is now possible to detect if there is a merging partner in the other document or not with the use of the computed offsets. In case, there is no merging partner, the token is copied. In case there is a merging partner, all annotations on the token are copied. Since Salt is a graph based model, each linguistic annotation and structure is modeled as either a node an edge or a label. That means, basing on tokens, the graphs can be traversed in a bottom up like traversal to visit each node and each edge. To be more precise we give an example. Imagine the two following document structures:
+## Merging of tokens, other nodes and edges
+For each token it is now possible to detect if there is a merging partner in the other document or not with the use of the computed offsets. 
+In our example let the first text be tokenized as follows: *tok1*(this), *tok2*(is), *tok3*(a), ... . And let the second text be tokenized like this: *tokA*(this), *tokB*(is), *tokC*(a), ... . Regarding the offsets of the normalized columns of both tables we can align the tokens of both texts by their start and end position. A mapping would look like this:
+
+*tok1* --> *tokA*    : start: 1, end: 3
+*tok2* --> *tokB*    : start: 4, end: 5
+*tok3* --> *tokC*    : start: 6, end: 6
+...
+These pairs are the merging partners. When there is a merging partner, all annotations of that token are copied. In case, there is no merging partner, a token is copied from one document to the other. 
+Since Salt is a graph based model, each linguistic annotation and structure is modeled as either a node an edge or a label. That means, basing on tokens, the graphs can be traversed in a bottom up like traversal to visit each node and each edge. To be more precise we give an example. Imagine the two following document structures:
 
 1. document structure 1
 
