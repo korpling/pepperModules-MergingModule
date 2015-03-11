@@ -299,7 +299,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			initialSize = otherDoc.getSDocumentGraph().getSNodes().size();
 		}
 		node2NodeMap = new HashMap<SNode, SNode>(initialSize);
-
+		boolean alignedTexts = false;
 		if (otherDoc.getSDocumentGraph().getSTextualDSs() != null) {
 			// there should be texts
 			logger.trace("[Merger] " + "Aligning the texts of {} with text in base document. ", SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
@@ -309,27 +309,31 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			// align all texts and create the nonEquivalentTokenSets
 			// / base text -- < Other Document -- nonEquivalentTokens >
-			alignAllTexts(getBaseDocument(), otherDoc);
+			alignedTexts = alignAllTexts(getBaseDocument(), otherDoc);
 		} else {
 			// there are no texts. So, just copy everything into
 			// the base document graph
 			logger.warn("There is no text in document {} to be merged. Will not copy the tokens!", SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
 		}
 
-		SDocumentGraph otherGraph = otherDoc.getSDocumentGraph();
-		SDocumentGraph baseGraph = baseDoc.getSDocumentGraph();
-		MergeHandler handler = new MergeHandler(node2NodeMap, otherGraph, baseGraph, getContainer());
-		handler.setProperties((MergerProperties) getProperties());
+		if (alignedTexts) {
+			// if mergable texts have been found
+			
+			SDocumentGraph otherGraph = otherDoc.getSDocumentGraph();
+			SDocumentGraph baseGraph = baseDoc.getSDocumentGraph();
+			MergeHandler handler = new MergeHandler(node2NodeMap, otherGraph, baseGraph, getContainer());
+			handler.setProperties((MergerProperties) getProperties());
 
-		EList<SNode> roots = getRoots(otherGraph);
-		if ((roots == null) || (roots.size() == 0)) {
-			logger.warn("Cannot start the traversing for merging document-structure, since no tokens exist for document '" + SaltFactory.eINSTANCE.getGlobalId(otherGraph.getSDocument().getSElementId()) + "'.");
-		} else {
-			logger.trace("[Merger] Merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(baseDoc.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
-			otherGraph.traverse(roots, GRAPH_TRAVERSE_TYPE.TOP_DOWN_DEPTH_FIRST, "merger_" + SaltFactory.eINSTANCE.getGlobalId(baseDoc.getSElementId()), handler, false);
-			// finally merge pointing relations
-			handler.mergeSPointingRelations(otherGraph, baseGraph);
-			logger.trace("[Merger] Done with merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(baseDoc.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
+			EList<SNode> roots = getRoots(otherGraph);
+			if ((roots == null) || (roots.size() == 0)) {
+				logger.warn("Cannot start the traversing for merging document-structure, since no tokens exist for document '" + SaltFactory.eINSTANCE.getGlobalId(otherGraph.getSDocument().getSElementId()) + "'.");
+			} else {
+				logger.trace("[Merger] Merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(baseDoc.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
+				otherGraph.traverse(roots, GRAPH_TRAVERSE_TYPE.TOP_DOWN_DEPTH_FIRST, "merger_" + SaltFactory.eINSTANCE.getGlobalId(baseDoc.getSElementId()), handler, false);
+				// finally merge pointing relations
+				handler.mergeSPointingRelations(otherGraph, baseGraph);
+				logger.trace("[Merger] Done with merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(baseDoc.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
+			}
 		}
 	}
 
@@ -594,12 +598,12 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * This method tries to find matching texts in base document and other
 	 * document. A cross product is computed.
 	 */
-	private void alignAllTexts(SDocument baseDoc, SDocument otherDoc) {
+	private boolean alignAllTexts(SDocument baseDoc, SDocument otherDoc) {
 		// ignore the base document and align all other
 		if (otherDoc.getSDocumentGraph() == null) {
 			throw new PepperModuleDataException(this, "Cannot map document '" + SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()) + "', since it does not contain a document-structure.");
 		}
-
+		boolean retVal = false;
 		if ((otherDoc.getSDocumentGraph().getSTextualDSs() != null) && (otherDoc.getSDocumentGraph().getSTextualDSs().size() > 0)) {
 			// The other document has at least one text
 			HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
@@ -625,6 +629,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					boolean isAlignable = alignTexts(baseText, otherText, nonEquivalentTokenInOtherTexts, node2NodeMap);
 
 					if (isAlignable) {
+						retVal = true;
+						
 						matchingTexts.add(new ImmutablePair<STextualDS, STextualDS>(baseText, otherText));
 						noMatchingTexts.remove(otherText);
 						noMatchingTexts.remove(baseText);
@@ -669,6 +675,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				logger.trace(trace.toString());
 			}
 		} // The other document has at least one text
+		return (retVal);
 	}
 
 	/**
