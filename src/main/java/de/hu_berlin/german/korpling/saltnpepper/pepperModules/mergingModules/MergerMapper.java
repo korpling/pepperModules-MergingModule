@@ -322,9 +322,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 		
 		EList<SNode> roots= getRoots(otherGraph);
-//		EList<SNode> roots= otherGraph.getRootsBySRelation(STYPE_NAME.SDOMINANCE_RELATION);
-//		roots.addAll(otherGraph.getRootsBySRelation(STYPE_NAME.SSPANNING_RELATION));
-//		EList<SNode> roots = otherGraph.getSRoots();
 		if ((roots == null) || (roots.size() == 0)) {
 			logger.warn("Cannot start the traversing for merging document-structure, since no tokens exist for document '" + SaltFactory.eINSTANCE.getGlobalId(otherGraph.getSDocument().getSElementId()) + "'.");
 		} else {
