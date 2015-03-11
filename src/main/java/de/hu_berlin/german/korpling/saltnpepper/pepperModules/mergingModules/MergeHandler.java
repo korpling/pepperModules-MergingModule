@@ -250,7 +250,7 @@ class MergeHandler implements SGraphTraverseHandler {
 		
 		if (	(currNode instanceof SToken)||
 				(!getProperties().isCopyNodes())) {
-			// do not copy all nodes, merge isntead
+			// do not copy all nodes, merge instead
 			
 			// list all parents in base document sharing the children
 			List<SNode> sharedParents = new ArrayList<SNode>();

@@ -595,14 +595,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * document. A cross product is computed.
 	 */
 	private void alignAllTexts(SDocument baseDoc, SDocument otherDoc) {
-		boolean hasTexts = true;
 		// ignore the base document and align all other
 		if (otherDoc.getSDocumentGraph() == null) {
 			throw new PepperModuleDataException(this, "Cannot map document '" + SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()) + "', since it does not contain a document-structure.");
 		}
-		if ((otherDoc.getSDocumentGraph().getSTextualDSs() == null) || (otherDoc.getSDocumentGraph().getSTextualDSs().size() == 0)) {
-			hasTexts = false;
-		} else {
+		if ((otherDoc.getSDocumentGraph().getSTextualDSs() != null) && (otherDoc.getSDocumentGraph().getSTextualDSs().size() > 0)) {
 			// The other document has at least one text
 			HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 			for (STextualDS baseText : getBaseDocument().getSDocumentGraph().getSTextualDSs()) {
