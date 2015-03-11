@@ -28,6 +28,8 @@ import java.util.Set;
 
 import javax.print.attribute.standard.MediaSize.Other;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
 import org.slf4j.Logger;
@@ -215,12 +217,12 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			// set base document to completed and remove all the others
 			for (MappingSubject subj : getMappingSubjects()) {
 				SDocument sDoc = ((SDocument) subj.getSElementId().getSIdentifiableElement());
-				if (sDoc!= getBaseDocument()) {
+				if (sDoc != getBaseDocument()) {
 					subj.setMappingResult(DOCUMENT_STATUS.DELETED);
 					if (!isTestMode) {
 						getContainer().finishDocument((SDocument) baseSubject.getSElementId().getSIdentifiableElement());
 					}
-				} else{
+				} else {
 					subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
 					if (!isTestMode) {
 						getContainer().finishDocument(sDoc);
@@ -275,14 +277,13 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * the base {@link SDocument} and uses the set of {@link SToken} which are
 	 * contained in the other {@link SDocument} but not in the base
 	 * {@link SDocument} to determine which {@link SToken} has no equivalent in
-	 * the base {@link SDocument}.
-	 * <br/>
-	 * To merge the other graph into base graph, the other graph is traversed by 
-	 * top down depth first order. On backtracking (nodeLeft) for each node (current node)
-	 * all childs are computed. For these child mapping partners in base graph
-	 * are computed, if mapping childs have been found, their common parent (if 
-	 * there are more than one, the first one is taken) is the maaping partner 
-	 * for the current node. 
+	 * the base {@link SDocument}. <br/>
+	 * To merge the other graph into base graph, the other graph is traversed by
+	 * top down depth first order. On backtracking (nodeLeft) for each node
+	 * (current node) all childs are computed. For these child mapping partners
+	 * in base graph are computed, if mapping childs have been found, their
+	 * common parent (if there are more than one, the first one is taken) is the
+	 * maaping partner for the current node.
 	 * 
 	 * @param baseDoc
 	 * @param otherDoc
@@ -318,10 +319,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		SDocumentGraph otherGraph = otherDoc.getSDocumentGraph();
 		SDocumentGraph baseGraph = baseDoc.getSDocumentGraph();
 		MergeHandler handler = new MergeHandler(node2NodeMap, otherGraph, baseGraph, getContainer());
-		handler.setProperties((MergerProperties)getProperties());
+		handler.setProperties((MergerProperties) getProperties());
 
-		
-		EList<SNode> roots= getRoots(otherGraph);
+		EList<SNode> roots = getRoots(otherGraph);
 		if ((roots == null) || (roots.size() == 0)) {
 			logger.warn("Cannot start the traversing for merging document-structure, since no tokens exist for document '" + SaltFactory.eINSTANCE.getGlobalId(otherGraph.getSDocument().getSElementId()) + "'.");
 		} else {
@@ -332,49 +332,49 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			logger.trace("[Merger] Done with merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(baseDoc.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
 		}
 	}
-	
+
 	/**
-	 * Emits root nodes, which are roots for {@link SDominanceRelation} and {@link SSpanningRelation} only.
-	 * For instance for the sample:
-	 *<pre>
+	 * Emits root nodes, which are roots for {@link SDominanceRelation} and
+	 * {@link SSpanningRelation} only. For instance for the sample:
+	 *
+	 * <pre>
 	 *       struct1
 	 *     //      ||
 	 *   span1     ||   span2
 	 * 	/    \     ||    |
 	 * tok1	tok2  tok3  tok4
 	 * </pre>
+	 * 
 	 * the nodes:
 	 * 
-	 * struct1 and span2 are returned, even if a pointing relation connects struct1 and span2.
+	 * struct1 and span2 are returned, even if a pointing relation connects
+	 * struct1 and span2.
 	 * 
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	private EList<SNode> getRoots(SDocumentGraph other){
+	private EList<SNode> getRoots(SDocumentGraph other) {
 		HashSet<SNode> retSet = new LinkedHashSet<SNode>();
-		EList<SRelation> relations= new BasicEList<SRelation>();
+		EList<SRelation> relations = new BasicEList<SRelation>();
 		relations.addAll((EList<SRelation>) (EList<? extends SRelation>) other.getSSpanningRelations());
 		relations.addAll((EList<SRelation>) (EList<? extends SRelation>) other.getSDominanceRelations());
-		HashSet<SNode> notRootElements= new HashSet<SNode>();
-		for (SRelation relation: relations)
-		{
-			//mark destination as no root
+		HashSet<SNode> notRootElements = new HashSet<SNode>();
+		for (SRelation relation : relations) {
+			// mark destination as no root
 			if (!notRootElements.contains(relation.getSTarget()))
 				notRootElements.add(relation.getSTarget());
-			//if source is not also a destination
-			if (	(!notRootElements.contains(relation.getSSource())) &&
-					(!retSet.contains(relation.getSSource())))
+			// if source is not also a destination
+			if ((!notRootElements.contains(relation.getSSource())) && (!retSet.contains(relation.getSSource())))
 				retSet.add(relation.getSSource());
-			//remove wrong stored nodes in retList
+			// remove wrong stored nodes in retList
 			if (retSet.contains(relation.getSTarget()))
 				retSet.remove(relation.getSTarget());
 		}
-		EList<SNode> retVal= null;
-		if(!retSet.isEmpty())
-		{
-			retVal= new BasicEList<SNode>(retSet);
+		EList<SNode> retVal = null;
+		if (!retSet.isEmpty()) {
+			retVal = new BasicEList<SNode>(retSet);
 		}
-		return(retVal);
+		return (retVal);
 	}
 
 	/** the {@link TokenMergeContainer} instance **/
@@ -537,7 +537,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		String normalizedText = normalizedTextBuilder.toString();
 		return normalizedText;
 	}
-	
+
 	/**
 	 * This method creates a reverse mapping list for the given Text. If the
 	 * given text is normalized including the removal of whitespaces, the
@@ -599,10 +599,16 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		if (otherDoc.getSDocumentGraph() == null) {
 			throw new PepperModuleDataException(this, "Cannot map document '" + SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()) + "', since it does not contain a document-structure.");
 		}
+
 		if ((otherDoc.getSDocumentGraph().getSTextualDSs() != null) && (otherDoc.getSDocumentGraph().getSTextualDSs().size() > 0)) {
 			// The other document has at least one text
 			HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
+
+			List<Pair<STextualDS, STextualDS>> matchingTexts = new ArrayList<Pair<STextualDS, STextualDS>>();
+			Set<STextualDS> noMatchingTexts = new HashSet<STextualDS>();
+
 			for (STextualDS baseText : getBaseDocument().getSDocumentGraph().getSTextualDSs()) {
+				noMatchingTexts.add(baseText);
 				// for all texts of the base document
 				nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 				// initialize the set of nonEquivalent token.
@@ -613,31 +619,55 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					nonEquivalentTokenInOtherTexts.addAll(otherDoc.getSDocumentGraph().getSTokens());
 				}
 				for (STextualDS otherText : otherDoc.getSDocumentGraph().getSTextualDSs()) {
+					noMatchingTexts.add(otherText);
 					// align the current base text with all texts of
 					// the other document
 					boolean isAlignable = alignTexts(baseText, otherText, nonEquivalentTokenInOtherTexts, node2NodeMap);
 
 					if (isAlignable) {
+						matchingTexts.add(new ImmutablePair<STextualDS, STextualDS>(baseText, otherText));
+						noMatchingTexts.remove(otherText);
+						noMatchingTexts.remove(baseText);
+
 						// add matching texts to a list of all matching nodes
 						node2NodeMap.put(otherText, baseText);
-						
-						if (logger.isTraceEnabled()) {
-							String baseId = SaltFactory.eINSTANCE.getGlobalId(baseText.getSElementId());
-							String otherId = SaltFactory.eINSTANCE.getGlobalId(otherText.getSElementId());
-							String format = "\t%-" + (baseId.length() > otherId.length() ? baseId.length() : otherId.length()) + "s: ";
-							StringBuilder trace = new StringBuilder();
-							trace.append("[Merger] merging texts:\n");
-							trace.append(String.format(format, baseId));
-							trace.append(baseText.getSText());
-							trace.append("\n");
-							trace.append(String.format(format, otherId));
-							trace.append(otherText.getSText());
-							logger.trace(trace.toString());
-						}
+						mergeTokens(baseText, otherText, node2NodeMap);
 					}
-					mergeTokens(baseText, otherText, node2NodeMap);
 				}
 			} // for all texts of the base document
+			if (logger.isDebugEnabled()) {
+				StringBuilder trace = new StringBuilder();
+
+				if (matchingTexts.size() > 0) {
+					trace.append("[Merger] mergable texts:\n");
+					int i = 1;
+					for (Pair<STextualDS, STextualDS> pair : matchingTexts) {
+						if (i > 1) {
+							trace.append("\n");
+						}
+						i++;
+						String baseId = SaltFactory.eINSTANCE.getGlobalId(pair.getLeft().getSElementId());
+						String otherId = SaltFactory.eINSTANCE.getGlobalId(pair.getRight().getSElementId());
+						String format = "\t%-" + (baseId.length() > otherId.length() ? baseId.length() : otherId.length()) + "s: ";
+						trace.append(String.format(format, baseId));
+						trace.append(pair.getLeft().getSText());
+						trace.append("\n");
+						trace.append(String.format(format, otherId));
+						trace.append(pair.getRight().getSText());
+						trace.append("\n");
+					}
+				}
+				if (noMatchingTexts.size() > 0) {
+					trace.append("[Merger] NOT mergable texts:\n");
+					for (STextualDS text : noMatchingTexts) {
+						trace.append(SaltFactory.eINSTANCE.getGlobalId(text.getSElementId()));
+						trace.append("\t");
+						trace.append(text.getSText());
+						trace.append("\n");
+					}
+				}
+				logger.trace(trace.toString());
+			}
 		} // The other document has at least one text
 	}
 
@@ -667,7 +697,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		if (otherText == null) {
 			throw new PepperModuleException(this, "Cannot align the Text of the documents since the other SDocument reference is NULL");
 		}
-		
+
 		// TODO REVISE THIS CODE
 		boolean returnVal = false;
 		// first we need the two normalized texts
