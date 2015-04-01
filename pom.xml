@@ -41,7 +41,7 @@
 	</ciManagement>
 	<inceptionYear>2012</inceptionYear>
 	<organization>
-		<name>Humboldt Univerity of Berlin, INRIA</name>
+		<name>Humboldt-Universität zu Berlin</name>
 	</organization>
 	<!-- <scm> <developerConnection></developerConnection> <url></url> </scm> -->
 	<dependencies>
