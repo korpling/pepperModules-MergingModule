@@ -52,48 +52,4 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-
-	<build>
-		<plugins>
-			<!-- start: Plugin for automatic releasing -->
-			<!-- <plugin> <artifactId>maven-release-plugin</artifactId> <version>${maven-release-plugin.version}</version> 
-				<configuration> <tagBase> https://korpling.german.hu-berlin.de/svn/saltnpepper/PepperModules/GenericXMLModules/tags/ 
-				</tagBase> <releaseProfiles>release</releaseProfiles> <goals>package assembly:single 
-				deploy</goals> </configuration> </plugin> -->
-			<!-- start: creation of bundle jar This plugIn creates a META-INF folder 
-				if not present and adds the entries into the MANIFEST.MF file required for 
-				OSGi. It also creates an OSGI-INF folder necessary for using service-components 
-				in OSGi. -->
-				<!-- 
-			<plugin>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-bundle-plugin</artifactId>
-				<version>${maven-bundle-plugin.version}</version>
-				<extensions>true</extensions>
-				<executions>
-					<execution>
-						<phase>process-classes</phase>
-						<goals>
-							<goal>bundle</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<manifestLocation>${META-INF}</manifestLocation>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
-					<instructions>
-						<Bundle-Name>${project.artifactId}</Bundle-Name>
-						<Bundle-SymbolicName>${project.groupId}.${project.artifactId};singleton:=true</Bundle-SymbolicName>
-						<Bundle-Version>${project.version}</Bundle-Version>
-						<Bundle-RequiredExecutionEnvironment>JavaSE-${java.version}</Bundle-RequiredExecutionEnvironment>
-						<Service-Component>${allServiceComponents}</Service-Component>
-						<Include-Resource>{maven-resources}, LICENSE, NOTICE</Include-Resource>
-					</instructions>
-				</configuration>
-			</plugin>
-			 -->
-			<!-- end: creation of bundle jar -->
-		</plugins>
-	</build>
 </project>
