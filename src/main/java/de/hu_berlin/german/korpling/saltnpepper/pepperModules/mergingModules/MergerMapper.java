@@ -47,7 +47,9 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDocumentGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDominanceRelation;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SSpan;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SSpanningRelation;
+import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SStructure;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
@@ -266,6 +268,40 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				// merge the document content
 				mergeDocumentStructures((SDocument) baseSubject.getSElementId().getSIdentifiableElement(), otherDoc);
 			}
+		}
+		
+		if (logger.isDebugEnabled()) {
+			StringBuilder debug = new StringBuilder();
+
+			if (matchingTexts.size() > 0) {
+				debug.append("[Merger] mergable texts:\n");
+				int i = 1;
+				for (Pair<STextualDS, STextualDS> pair : matchingTexts) {
+					if (i > 1) {
+						debug.append("\n");
+					}
+					i++;
+					String baseId = SaltFactory.eINSTANCE.getGlobalId(pair.getLeft().getSElementId());
+					String otherId = SaltFactory.eINSTANCE.getGlobalId(pair.getRight().getSElementId());
+					String format = "\t%-" + (baseId.length() > otherId.length() ? baseId.length() : otherId.length()) + "s: ";
+					debug.append(String.format(format, baseId));
+					debug.append(pair.getLeft().getSText());
+					debug.append("\n");
+					debug.append(String.format(format, otherId));
+					debug.append(pair.getRight().getSText());
+					debug.append("\n");
+				}
+			}
+			if (noMatchingTexts.size() > 0) {
+				debug.append("[Merger] NOT mergable texts:\n");
+				for (STextualDS text : noMatchingTexts) {
+					debug.append(SaltFactory.eINSTANCE.getGlobalId(text.getSElementId()));
+					debug.append("\t");
+					debug.append(text.getSText());
+					debug.append("\n");
+				}
+			}
+			logger.debug(debug.toString());
 		}
 	}
 
@@ -505,6 +541,12 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * @return
 	 */
 	private String createOriginalToNormalizedMapping(STextualDS sTextualDS, List<Integer> originalToNormalizedMapping) {
+		SDocumentGraph docGraph= getSDocument().getSDocumentGraph();
+		
+		
+		SStructure np_1= SaltFactory.eINSTANCE.createSStructure();
+		docGraph.addSNode(np_1);
+		
 		StringBuilder normalizedTextBuilder = new StringBuilder();
 		int start = 0;
 		char[] chr = sTextualDS.getSText().toCharArray();
@@ -536,7 +578,20 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		originalToNormalizedMapping.add(start++);
 
 		String normalizedText = normalizedTextBuilder.toString();
+		
+		SToken tok_is;
+		
+		SSpan contrast_focus= SaltFactory.eINSTANCE.createSSpan();
+		docGraph.addSNode(contrast_focus);
+		SSpanningRelation spanRel= SaltFactory.eINSTANCE.createSSpanningRelation();
+		spanRel.setSSource(contrast_focus);
+		spanRel.setSTarget(tok_is);
+		docGraph.addSRelation(spanRel);
+		
 		return normalizedText;
+		
+		
+		
 	}
 
 	/**
@@ -590,6 +645,12 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		normalizedToOriginalMapping.add(start++);
 		return normalizedToOriginalMapping;
 	}
+	/** A list of all pairs of matching texts to be reported. **/
+	private List<Pair<STextualDS, STextualDS>> matchingTexts = new ArrayList<Pair<STextualDS, STextualDS>>();
+	/** A list of all texts, for which no matching partners have been found to be reported. **/
+	private Set<STextualDS> noMatchingTexts = new HashSet<STextualDS>();
+	/** A list to store all texts, for which matching partners have been found. This is used to compute the correct list of {@link #noMatchingTexts}.**/
+	private Set<STextualDS> matchingTextsIdx = new HashSet<STextualDS>();
 
 	/**
 	 * This method tries to find matching texts in base document and other
@@ -605,11 +666,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			// The other document has at least one text
 			HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 
-			List<Pair<STextualDS, STextualDS>> matchingTexts = new ArrayList<Pair<STextualDS, STextualDS>>();
-			Set<STextualDS> noMatchingTexts = new HashSet<STextualDS>();
-
 			for (STextualDS baseText : getBaseDocument().getSDocumentGraph().getSTextualDSs()) {
-				noMatchingTexts.add(baseText);
+				if (!matchingTextsIdx.contains(baseText)){
+					noMatchingTexts.add(baseText);
+				}
 				// for all texts of the base document
 				nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 				// initialize the set of nonEquivalent token.
@@ -620,7 +680,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					nonEquivalentTokenInOtherTexts.addAll(otherDoc.getSDocumentGraph().getSTokens());
 				}
 				for (STextualDS otherText : otherDoc.getSDocumentGraph().getSTextualDSs()) {
-					noMatchingTexts.add(otherText);
+					if (!matchingTextsIdx.contains(baseText)){
+						noMatchingTexts.add(otherText);
+					}
 					// align the current base text with all texts of
 					// the other document
 					boolean isAlignable = alignTexts(baseText, otherText, nonEquivalentTokenInOtherTexts, node2NodeMap);
@@ -629,6 +691,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 						retVal = true;
 						
 						matchingTexts.add(new ImmutablePair<STextualDS, STextualDS>(baseText, otherText));
+						matchingTextsIdx.add(otherText);
+						matchingTextsIdx.add(baseText);
 						noMatchingTexts.remove(otherText);
 						noMatchingTexts.remove(baseText);
 
@@ -638,39 +702,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					}
 				}
 			} // for all texts of the base document
-			if (logger.isDebugEnabled()) {
-				StringBuilder trace = new StringBuilder();
-
-				if (matchingTexts.size() > 0) {
-					trace.append("[Merger] mergable texts:\n");
-					int i = 1;
-					for (Pair<STextualDS, STextualDS> pair : matchingTexts) {
-						if (i > 1) {
-							trace.append("\n");
-						}
-						i++;
-						String baseId = SaltFactory.eINSTANCE.getGlobalId(pair.getLeft().getSElementId());
-						String otherId = SaltFactory.eINSTANCE.getGlobalId(pair.getRight().getSElementId());
-						String format = "\t%-" + (baseId.length() > otherId.length() ? baseId.length() : otherId.length()) + "s: ";
-						trace.append(String.format(format, baseId));
-						trace.append(pair.getLeft().getSText());
-						trace.append("\n");
-						trace.append(String.format(format, otherId));
-						trace.append(pair.getRight().getSText());
-						trace.append("\n");
-					}
-				}
-				if (noMatchingTexts.size() > 0) {
-					trace.append("[Merger] NOT mergable texts:\n");
-					for (STextualDS text : noMatchingTexts) {
-						trace.append(SaltFactory.eINSTANCE.getGlobalId(text.getSElementId()));
-						trace.append("\t");
-						trace.append(text.getSText());
-						trace.append("\n");
-					}
-				}
-				logger.trace(trace.toString());
-			}
 		} // The other document has at least one text
 		return (retVal);
 	}
