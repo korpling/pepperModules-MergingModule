@@ -578,20 +578,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		originalToNormalizedMapping.add(start++);
 
 		String normalizedText = normalizedTextBuilder.toString();
-		
-		SToken tok_is;
-		
-		SSpan contrast_focus= SaltFactory.eINSTANCE.createSSpan();
-		docGraph.addSNode(contrast_focus);
-		SSpanningRelation spanRel= SaltFactory.eINSTANCE.createSSpanningRelation();
-		spanRel.setSSource(contrast_focus);
-		spanRel.setSTarget(tok_is);
-		docGraph.addSRelation(spanRel);
-		
 		return normalizedText;
-		
-		
-		
 	}
 
 	/**
