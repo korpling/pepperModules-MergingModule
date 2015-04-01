@@ -541,12 +541,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * @return
 	 */
 	private String createOriginalToNormalizedMapping(STextualDS sTextualDS, List<Integer> originalToNormalizedMapping) {
-		SDocumentGraph docGraph= getSDocument().getSDocumentGraph();
-		
-		
-		SStructure np_1= SaltFactory.eINSTANCE.createSStructure();
-		docGraph.addSNode(np_1);
-		
 		StringBuilder normalizedTextBuilder = new StringBuilder();
 		int start = 0;
 		char[] chr = sTextualDS.getSText().toCharArray();
@@ -578,20 +572,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		originalToNormalizedMapping.add(start++);
 
 		String normalizedText = normalizedTextBuilder.toString();
-		
-		SToken tok_is;
-		
-		SSpan contrast_focus= SaltFactory.eINSTANCE.createSSpan();
-		docGraph.addSNode(contrast_focus);
-		SSpanningRelation spanRel= SaltFactory.eINSTANCE.createSSpanningRelation();
-		spanRel.setSSource(contrast_focus);
-		spanRel.setSTarget(tok_is);
-		docGraph.addSRelation(spanRel);
-		
 		return normalizedText;
-		
-		
-		
 	}
 
 	/**
