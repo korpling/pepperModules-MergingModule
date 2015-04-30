@@ -227,7 +227,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					}
 				}
 			}
-			logger.debug("[Merger] " + "merged documents {}. ", getMappingSubjects());
+//			System.out.println("------> merged documents: "+ getMappingSubjects());
+			//logger.debug("[Merger] " + "merged documents {}. ", getMappingSubjects());
 		}
 		return (DOCUMENT_STATUS.COMPLETED);
 	}
@@ -294,6 +295,13 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			if (noMatchingTexts.size() > 0) {
 				debug.append("[Merger] NOT mergable texts:\n");
 				for (STextualDS text : noMatchingTexts) {
+					if (getBaseDocument().equals(text.getSDocumentGraph().getSDocument())){
+						debug.append("<base> ");
+						debug.append("\t");
+					}else{
+						debug.append("<other>");
+						debug.append("\t");
+					}
 					debug.append(SaltFactory.eINSTANCE.getGlobalId(text.getSElementId()));
 					debug.append("\t");
 					debug.append(text.getSText());
@@ -647,9 +655,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 
 			for (STextualDS baseText : getBaseDocument().getSDocumentGraph().getSTextualDSs()) {
-				if (!matchingTextsIdx.contains(baseText)){
-					noMatchingTexts.add(baseText);
-				}
 				// for all texts of the base document
 				nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 				// initialize the set of nonEquivalent token.
@@ -660,9 +665,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					nonEquivalentTokenInOtherTexts.addAll(otherDoc.getSDocumentGraph().getSTokens());
 				}
 				for (STextualDS otherText : otherDoc.getSDocumentGraph().getSTextualDSs()) {
-					if (!matchingTextsIdx.contains(baseText)){
-						noMatchingTexts.add(otherText);
-					}
 					// align the current base text with all texts of
 					// the other document
 					boolean isAlignable = alignTexts(baseText, otherText, nonEquivalentTokenInOtherTexts, node2NodeMap);
@@ -680,6 +682,12 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 						node2NodeMap.put(otherText, baseText);
 						mergeTokens(baseText, otherText, node2NodeMap);
 					}
+					if (!matchingTextsIdx.contains(otherText)){
+						noMatchingTexts.add(otherText);
+					}
+				}
+				if (!matchingTextsIdx.contains(baseText)){
+					noMatchingTexts.add(baseText);
 				}
 			} // for all texts of the base document
 		} // The other document has at least one text
