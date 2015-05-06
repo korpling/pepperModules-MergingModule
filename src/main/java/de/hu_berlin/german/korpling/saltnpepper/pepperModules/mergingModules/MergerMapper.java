@@ -227,8 +227,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					}
 				}
 			}
-//			System.out.println("------> merged documents: "+ getMappingSubjects());
-			//logger.debug("[Merger] " + "merged documents {}. ", getMappingSubjects());
 		}
 		return (DOCUMENT_STATUS.COMPLETED);
 	}
@@ -284,9 +282,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					String baseId = SaltFactory.eINSTANCE.getGlobalId(pair.getLeft().getSElementId());
 					String otherId = SaltFactory.eINSTANCE.getGlobalId(pair.getRight().getSElementId());
 					String format = "\t%-" + (baseId.length() > otherId.length() ? baseId.length() : otherId.length()) + "s: ";
+					debug.append("<base> \t");
 					debug.append(String.format(format, baseId));
 					debug.append(pair.getLeft().getSText());
 					debug.append("\n");
+					debug.append("<other>\t");
 					debug.append(String.format(format, otherId));
 					debug.append(pair.getRight().getSText());
 					debug.append("\n");
@@ -668,10 +668,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					// align the current base text with all texts of
 					// the other document
 					boolean isAlignable = alignTexts(baseText, otherText, nonEquivalentTokenInOtherTexts, node2NodeMap);
-
 					if (isAlignable) {
 						retVal = true;
-						
 						matchingTexts.add(new ImmutablePair<STextualDS, STextualDS>(baseText, otherText));
 						matchingTextsIdx.add(otherText);
 						matchingTextsIdx.add(baseText);
@@ -726,7 +724,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		// first we need the two normalized texts
 		String normalizedBaseText = getContainer().getNormalizedText(baseText);
 		String normalizedOtherText = getContainer().getNormalizedText(otherText);
-
 		// set the mapping of the normalized base text to the original base text
 		if (getContainer().getBaseTextPositionByNormalizedTextPosition(baseText, 0) == -1) {
 			getContainer().setBaseTextPositionByNormalizedTextPosition(baseText, this.createBaseTextNormOriginalMapping(baseText));
@@ -751,7 +748,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		if (offset != -1) {
 			// if the normalized smaller text is contained in the normalized
 			// bigger text
-
 			returnVal = true;
 			// get the tokens of the other text.
 			List<SToken> textTokens = new ArrayList<SToken>();
