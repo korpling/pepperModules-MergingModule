@@ -26,7 +26,7 @@
 	<parent>
 		<groupId>de.hu_berlin.german.korpling.saltnpepper</groupId>
 		<artifactId>pepper-parentModule</artifactId>
-		<version>2.0.1-SNAPSHOT</version>
+		<version>2.1.0</version>
 	</parent>
 	<description>This project provides a Pepper module for the merging of data on several possible levels.</description>
 	<url>https://korpling.german.hu-berlin.de/p/projects/peppermodules-mergingmodules</url>
@@ -38,6 +38,11 @@
 		<system>Jenkins</system>
 		<url>https://korpling.german.hu-berlin.de/jenkins/</url>
 	</ciManagement>
+	<scm>
+		<connection>scm:git:git://github.com/korpling/pepperModules-MergingModule.git</connection>
+		<developerConnection>scm:git:git@github.com:korpling/pepperModules-MergingModule.git</developerConnection>
+		<url>https://github.com/korpling/pepperModules-MergingModule</url>
+    </scm>
 	<inceptionYear>2014</inceptionYear>
 	<organization>
 		<name>Humboldt-Universität zu Berlin</name>
