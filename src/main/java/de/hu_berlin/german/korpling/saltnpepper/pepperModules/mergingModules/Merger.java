@@ -66,6 +66,9 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 	public Merger() {
 		super();
 		setName(MODULE_NAME);
+	    setSupplierContact(URI.createURI("saltnpepper@lists.hu-berlin.de"));
+		setSupplierHomepage(URI.createURI("https://github.com/korpling/pepperModules-MergingModule"));
+		setDesc("The Merger allows to merge an unbound number of corpora to a single corpus. ");
 		setProperties(new MergerProperties());
 	}
 
