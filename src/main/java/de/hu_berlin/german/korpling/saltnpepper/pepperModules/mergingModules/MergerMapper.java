@@ -218,7 +218,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				if (sDoc != getBaseDocument()) {
 					subj.setMappingResult(DOCUMENT_STATUS.DELETED);
 					if (!isTestMode) {
-						getContainer().finishDocument((SDocument) baseSubject.getSElementId().getSIdentifiableElement());
+						getContainer().finishDocument((SDocument) subj.getSElementId().getSIdentifiableElement());
 					}
 				} else {
 					subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);

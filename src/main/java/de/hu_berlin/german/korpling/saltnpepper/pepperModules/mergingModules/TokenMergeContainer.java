@@ -294,7 +294,7 @@ public class TokenMergeContainer {
 	 */
 	public SToken getAlignedTokenByStart(STextualDS sTextualDS, int start) {
 		SToken tok = null;
-		if (sTextualDS!= null){
+		if (sTextualDS != null) {
 			if (this.alignedTextsMap.containsKey(sTextualDS)) {
 				tok = this.alignedTextsMap.get(sTextualDS).getTokenByStart(start);
 			}
@@ -341,7 +341,7 @@ public class TokenMergeContainer {
 	 */
 	public int getAlignedTokenLength(STextualDS sTextualDS, SToken sToken) {
 		int returnVal = -1;
-		if (sTextualDS!= null){
+		if (sTextualDS != null) {
 			if (this.alignedTextsMap.containsKey(sTextualDS)) {
 				AlignedTokensMap map = this.alignedTextsMap.get(sTextualDS);
 				returnVal = map.getLength(sToken);
@@ -463,8 +463,6 @@ public class TokenMergeContainer {
 
 	/**
 	 * This method frees the memory used by the specified {@SDocument
-	 * 
-	 * 
 	 * } in the {@link TokenMergeContainer}.
 	 * 
 	 * @param sDocument
