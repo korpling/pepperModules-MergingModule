@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>pepperModules-MergingModules</artifactId>
 	<name>${project.groupId}.${project.artifactId}</name>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.0.1</version>
 	<packaging>bundle</packaging>
 	<distributionManagement>
 		<repository>
@@ -41,7 +41,7 @@
     </scm>
 	<inceptionYear>2014</inceptionYear>
 	<organization>
-		<name>Humboldt-Universit&#228;t zu Berlin</name>
+		<name>Humboldt-Universität zu Berlin</name>
 	</organization>
 	<dependencies>
 		<dependency>
