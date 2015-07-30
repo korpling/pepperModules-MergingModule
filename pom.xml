@@ -22,7 +22,7 @@
 	<parent>
 		<groupId>de.hu_berlin.german.korpling.saltnpepper</groupId>
 		<artifactId>pepper-parentModule</artifactId>
-		<version>2.1.2-SNAPSHOT</version>
+		<version>2.1.2</version>
 	</parent>
 	<description>This project provides a Pepper module for the merging of data on several possible levels.</description>
 	<url>https://korpling.german.hu-berlin.de/p/projects/peppermodules-mergingmodules</url>
