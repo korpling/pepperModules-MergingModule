@@ -501,6 +501,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 	 **/
 	@Override
 	public PepperMapper createPepperMapper(SElementId sElementId) {
+		System.out.println("--------------___> LOS");
 		MergerMapper mapper = new MergerMapper();
 		if (sElementId.getSIdentifiableElement() instanceof SDocument) {
 			if ((givenSlots == null) || (givenSlots.size() == 0)) {
@@ -517,7 +518,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
 				
 				if (sElementId.getSIdentifiableElement() instanceof SDocument){
-					DocumentController documentController = getDocumentId2DC().get(SaltFactory.eINSTANCE.getGlobalId(sElementId));
+					DocumentController documentController = getDocumentId2DC().get(SaltFactory.eINSTANCE.getGlobalId(id));
 					mappingSubject.setDocumentController(documentController);
 				}
 				mapper.getMappingSubjects().add(mappingSubject);

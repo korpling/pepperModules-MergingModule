@@ -198,6 +198,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			setBaseDocument(baseDocument);
 
 			if ((baseSubject.getDocumentController() != null) && (getPepperMapperController() != null)) {
+				logger.trace("[Merger] Try to wake up base document {}. ", baseSubject.getDocumentController().getGlobalId());
 				// awake document
 				getPepperMapperController().getPermissionForProcessDoument(baseSubject.getDocumentController());
 				baseSubject.getDocumentController().awake();
@@ -268,9 +269,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			SDocument otherDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
 			if (otherDoc != getBaseDocument()) {
 				if ((subj.getDocumentController() != null) && (getPepperMapperController() != null)) {
+					logger.trace("[Merger] Try to wake up document {}. ", subj.getDocumentController().getGlobalId());
 					// awake document
 					getPepperMapperController().getPermissionForProcessDoument(subj.getDocumentController());
 					subj.getDocumentController().awake();
+					logger.trace("[Merger] Successfully woke up document {}. ", subj.getDocumentController().getGlobalId());
 				}
 				// merge the document content
 				mergeDocumentStructures((SDocument) baseSubject.getSElementId().getSIdentifiableElement(), otherDoc);
