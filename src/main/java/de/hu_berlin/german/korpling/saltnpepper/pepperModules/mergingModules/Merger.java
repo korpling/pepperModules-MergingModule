@@ -196,16 +196,19 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 					}
 				}
 			}
+			// compute import order
+			// for each corpus graph create an empty list in listOfLists
 			List<List<List<SNode>>> listOfLists = new ArrayList<List<List<SNode>>>(getSaltProject().getSCorpusGraphs().size());
 			for (int i = 0; i < getSaltProject().getSCorpusGraphs().size(); i++) {
 				listOfLists.add(new ArrayList<List<SNode>>());
 			}
-
+			// for each id in mappingTable add their nodes to mappingTable
 			for (String key : mappingTable.keySet()) {
 				List<SNode> nodes = mappingTable.get(key);
 				listOfLists.get(nodes.size() - 1).add(nodes);
 			}
-
+			
+			//create import order in descending order of listOfLists
 			for (int i = getSaltProject().getSCorpusGraphs().size(); i > 0; i--) {
 				List<List<SNode>> list = listOfLists.get(i - 1);
 				for (List<SNode> nodes : list) {
@@ -406,12 +409,12 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 						if (docController == null) {
 							throw new PepperModuleException(this, "Cannot find a document controller for document '" + SaltFactory.eINSTANCE.getGlobalId(sDocumentId) + "' in list: " + getDocumentId2DC() + ". ");
 						}
-						logger.trace("[Merger] Try to wake up document {}. {} documents are currently active. ", docController.getGlobalId(), getModuleController().getJob().getNumOfActiveDocuments());
-						// ask for loading a document into main memory and wait
-						// if necessary
-						getModuleController().getJob().getPermissionForProcessDoument(docController);
-						docController.awake();
-						logger.trace("[Merger] Successfully woke up document {}. ", docController.getGlobalId());
+//						logger.trace("[Merger] Try to wake up document {}. {} documents are currently active. ", docController.getGlobalId(), getModuleController().getJob().getNumOfActiveDocuments());
+//						// ask for loading a document into main memory and wait
+//						// if necessary
+//						getModuleController().getJob().getPermissionForProcessDoument(docController);
+//						docController.awake();
+//						logger.trace("[Merger] Successfully woke up document {}. ", docController.getGlobalId());
 						documentsToMerge.remove(docController.getGlobalId());
 					}
 					if (logger.isTraceEnabled()) {
@@ -431,8 +434,9 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				} catch (Exception e) {
 					throw new PepperModuleException("Any exception occured while merging documents corresponding to '" + sElementId + "'. ", e);
 				}
-			} else
+			} else{
 				throw new PepperModuleException(this, "This should not have beeen happend and is a bug of module. The problem is, 'givenSlot.size()' is higher than 'mappableSlot.size()'.");
+			}
 		}
 
 		Collection<PepperMapperController> controllers = null;
@@ -511,6 +515,11 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				MappingSubject mappingSubject = new MappingSubject();
 				mappingSubject.setSElementId(id);
 				mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
+				
+				if (sElementId.getSIdentifiableElement() instanceof SDocument){
+					DocumentController documentController = getDocumentId2DC().get(SaltFactory.eINSTANCE.getGlobalId(sElementId));
+					mappingSubject.setDocumentController(documentController);
+				}
 				mapper.getMappingSubjects().add(mappingSubject);
 				if (getBaseCorpusStructure()== (((SDocument) id.getSIdentifiableElement()).getSCorpusGraph())) {
 					noBase = false;

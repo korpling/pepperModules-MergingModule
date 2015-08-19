@@ -46,9 +46,7 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDocumentGraph;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SDominanceRelation;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SSpan;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SSpanningRelation;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SStructure;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualRelation;
 import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
@@ -196,8 +194,13 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				throw new PepperModuleException(this, "This might be a bug, no base document could have been computed.");
 			}
 			// base document
-			setBaseDocument((SDocument) baseSubject.getSElementId().getSIdentifiableElement());
+			SDocument baseDocument= (SDocument) baseSubject.getSElementId().getSIdentifiableElement();
+			setBaseDocument(baseDocument);
 
+			//awake document
+			getPepperMapperController().getPermissionForProcessDoument(baseSubject.getDocumentController());
+			baseSubject.getDocumentController().awake();
+			
 			// copy all annotations of document
 			for (MappingSubject subj : getMappingSubjects()) {
 				if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
@@ -212,21 +215,26 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			mergeDocumentStructures(baseSubject);
 
-			// set base document to completed and remove all the others
-			for (MappingSubject subj : getMappingSubjects()) {
-				SDocument sDoc = ((SDocument) subj.getSElementId().getSIdentifiableElement());
-				if (sDoc != getBaseDocument()) {
-					subj.setMappingResult(DOCUMENT_STATUS.DELETED);
-					if (!isTestMode) {
-						getContainer().finishDocument((SDocument) subj.getSElementId().getSIdentifiableElement());
-					}
-				} else {
-					subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
-					if (!isTestMode) {
-						getContainer().finishDocument(sDoc);
-					}
-				}
-			}
+		
+			getMappingSubjects().clear();
+			baseSubject.setMappingResult(DOCUMENT_STATUS.COMPLETED);
+			getMappingSubjects().add(baseSubject);
+			
+//			// set base document to completed and remove all the others
+//			for (MappingSubject subj : getMappingSubjects()) {
+//				SDocument sDoc = ((SDocument) subj.getSElementId().getSIdentifiableElement());
+//				if (sDoc != getBaseDocument()) {
+//					subj.setMappingResult(DOCUMENT_STATUS.DELETED);
+//					if (!isTestMode) {
+//						getContainer().finishDocument((SDocument) subj.getSElementId().getSIdentifiableElement());
+//					}
+//				} else {
+//					subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
+//					if (!isTestMode) {
+//						getContainer().finishDocument(sDoc);
+//					}
+//				}
+//			}
 		}
 		return (DOCUMENT_STATUS.COMPLETED);
 	}
@@ -260,12 +268,18 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 		// merge two document-structures pairwise
 		for (MappingSubject subj : this.getMappingSubjects()) {
+			//awake document
+			getPepperMapperController().getPermissionForProcessDoument(subj.getDocumentController());
+			subj.getDocumentController().awake();
 			// for all documents
 			SDocument otherDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
 			if (otherDoc != getBaseDocument()) {
 				// merge the document content
 				mergeDocumentStructures((SDocument) baseSubject.getSElementId().getSIdentifiableElement(), otherDoc);
 			}
+			//mark other document to delete it
+			System.out.println("----------------> Call done for '"+otherDoc.getSElementId()+"': "+ subj.getMappingResult());
+			getPepperMapperController().done(otherDoc.getSElementId(), DOCUMENT_STATUS.DELETED);
 		}
 		
 		if (logger.isDebugEnabled()) {
@@ -456,14 +470,22 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				// check if document and document structure is given
 				if (sDoc == null) {
 					throw new PepperModuleException(this, "A MappingSubject does not contain a document object. This seems to be a bug. ");
-				} else if (sDoc.getSDocumentGraph() == null) {
-					logger.warn("The document '" + SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()) + "' does not contain a document structure. Therefore it was ignored. ");
-					continue;
-				}
+				} 
+//				else if (sDoc.getSDocumentGraph() == null) {
+//					logger.warn("The document '" + SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()) + "' does not contain a document structure. Therefore it was ignored. ");
+//					continue;
+//				}
 				if (getBaseCorpusStructure() == null) {
 					// current number of SNodes and SRelations contained in
 					// document structure
-					int currNumOfElements = (sDoc.getSDocumentGraph().getSNodes().size() + sDoc.getSDocumentGraph().getSRelations().size());
+					int currNumOfElements = 0;
+					if (sDoc.getSDocumentGraph()!= null){
+						currNumOfElements = (sDoc.getSDocumentGraph().getSNodes().size() + sDoc.getSDocumentGraph().getSRelations().size());
+					}else{
+						currNumOfElements = subj.getDocumentController().getSize_nodes() + subj.getDocumentController().getSize_relations();
+					}
+					
+//					int currNumOfElements = (sDoc.getSDocumentGraph().getSNodes().size() + sDoc.getSDocumentGraph().getSRelations().size());
 					if (maxNumOfElements < currNumOfElements) {
 						// numOfElements is less than current sum of nodes and
 						// relations, current document structure is the bigger
