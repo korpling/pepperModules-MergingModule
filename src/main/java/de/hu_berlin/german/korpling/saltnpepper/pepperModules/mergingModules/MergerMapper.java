@@ -194,13 +194,15 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				throw new PepperModuleException(this, "This might be a bug, no base document could have been computed.");
 			}
 			// base document
-			SDocument baseDocument= (SDocument) baseSubject.getSElementId().getSIdentifiableElement();
+			SDocument baseDocument = (SDocument) baseSubject.getSElementId().getSIdentifiableElement();
 			setBaseDocument(baseDocument);
 
-			//awake document
-			getPepperMapperController().getPermissionForProcessDoument(baseSubject.getDocumentController());
-			baseSubject.getDocumentController().awake();
-			
+			if ((baseSubject.getDocumentController() != null) && (getPepperMapperController() != null)) {
+				// awake document
+				getPepperMapperController().getPermissionForProcessDoument(baseSubject.getDocumentController());
+				baseSubject.getDocumentController().awake();
+			}
+
 			// copy all annotations of document
 			for (MappingSubject subj : getMappingSubjects()) {
 				if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
@@ -215,26 +217,22 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			mergeDocumentStructures(baseSubject);
 
-		
-			getMappingSubjects().clear();
-			baseSubject.setMappingResult(DOCUMENT_STATUS.COMPLETED);
-			getMappingSubjects().add(baseSubject);
-			
-//			// set base document to completed and remove all the others
-//			for (MappingSubject subj : getMappingSubjects()) {
-//				SDocument sDoc = ((SDocument) subj.getSElementId().getSIdentifiableElement());
-//				if (sDoc != getBaseDocument()) {
-//					subj.setMappingResult(DOCUMENT_STATUS.DELETED);
-//					if (!isTestMode) {
-//						getContainer().finishDocument((SDocument) subj.getSElementId().getSIdentifiableElement());
-//					}
-//				} else {
-//					subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
-//					if (!isTestMode) {
-//						getContainer().finishDocument(sDoc);
-//					}
-//				}
-//			}
+			// set base document to completed and remove all the others
+			for (MappingSubject subj : getMappingSubjects()) {
+				SDocument sDoc = ((SDocument) subj.getSElementId().getSIdentifiableElement());
+				if (sDoc != getBaseDocument()) {
+					subj.setMappingResult(DOCUMENT_STATUS.DELETED);
+					if (!isTestMode) {
+						getContainer().finishDocument((SDocument) subj.getSElementId().getSIdentifiableElement());
+					}
+				} else {
+					subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
+					if (!isTestMode) {
+						getContainer().finishDocument(sDoc);
+					}
+				}
+				System.out.println(subj);
+			}
 		}
 		return (DOCUMENT_STATUS.COMPLETED);
 	}
@@ -259,7 +257,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 		if (baseSubject != null) {
 			// This is only for the JUnit tests
-
 			if (getBaseDocument() == null) {
 				setBaseDocument((SDocument) baseSubject.getSElementId().getSIdentifiableElement());
 			}
@@ -268,20 +265,22 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 		// merge two document-structures pairwise
 		for (MappingSubject subj : this.getMappingSubjects()) {
-			//awake document
-			getPepperMapperController().getPermissionForProcessDoument(subj.getDocumentController());
-			subj.getDocumentController().awake();
 			// for all documents
 			SDocument otherDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
 			if (otherDoc != getBaseDocument()) {
+				if ((subj.getDocumentController() != null) && (getPepperMapperController() != null)) {
+					// awake document
+					getPepperMapperController().getPermissionForProcessDoument(subj.getDocumentController());
+					subj.getDocumentController().awake();
+				}
 				// merge the document content
 				mergeDocumentStructures((SDocument) baseSubject.getSElementId().getSIdentifiableElement(), otherDoc);
+				if (subj.getDocumentController() != null) {
+					subj.getDocumentController().sendToSleep_FORCE();
+				}
 			}
-			//mark other document to delete it
-			System.out.println("----------------> Call done for '"+otherDoc.getSElementId()+"': "+ subj.getMappingResult());
-			getPepperMapperController().done(otherDoc.getSElementId(), DOCUMENT_STATUS.DELETED);
 		}
-		
+
 		if (logger.isDebugEnabled()) {
 			StringBuilder debug = new StringBuilder();
 
@@ -309,10 +308,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			if (noMatchingTexts.size() > 0) {
 				debug.append("[Merger] NOT mergable texts:\n");
 				for (STextualDS text : noMatchingTexts) {
-					if (getBaseDocument().equals(text.getSDocumentGraph().getSDocument())){
+					if (getBaseDocument().equals(text.getSDocumentGraph().getSDocument())) {
 						debug.append("<base> ");
 						debug.append("\t");
-					}else{
+					} else {
 						debug.append("<other>");
 						debug.append("\t");
 					}
@@ -337,56 +336,57 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * (current node) all childs are computed. For these child mapping partners
 	 * in base graph are computed, if mapping childs have been found, their
 	 * common parent (if there are more than one, the first one is taken) is the
-	 * maaping partner for the current node.
+	 * mapping partner for the current node.
 	 * 
 	 * @param baseDoc
+	 *            {@link SDocument} in which all elements from otherDoc are
+	 *            inserted
 	 * @param otherDoc
-	 * @param nonEquivalentTokenInOtherTexts
-	 * @param equivalenceMap
-	 *            Map with tokens of the other document as key and their
-	 *            equivalent tokens in the base
-	 * @return
+	 *            {@link SDocument} to be mapped into baseDoc
 	 */
 	private void mergeDocumentStructures(SDocument baseDoc, SDocument otherDoc) {
-		int initialSize = getBaseDocument().getSDocumentGraph().getSNodes().size();
-		if (otherDoc.getSDocumentGraph().getSNodes().size() > initialSize) {
-			initialSize = otherDoc.getSDocumentGraph().getSNodes().size();
-		}
-		node2NodeMap = new HashMap<SNode, SNode>(initialSize);
-		boolean alignedTexts = false;
-		if (otherDoc.getSDocumentGraph().getSTextualDSs() != null) {
-			// there should be texts
-			logger.trace("[Merger] " + "Aligning the texts of {} with text in base document. ", SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
+		if ((baseDoc.getSDocumentGraph() != null) && (otherDoc.getSDocumentGraph() != null)) {
+			int initialSize = getBaseDocument().getSDocumentGraph().getSNodes().size();
+			if (otherDoc.getSDocumentGraph().getSNodes().size() > initialSize) {
+				initialSize = otherDoc.getSDocumentGraph().getSNodes().size();
+			}
 
-			Set<SToken> nonEquivalentTokensOfOtherText = new HashSet<SToken>();
-			nonEquivalentTokensOfOtherText.addAll(otherDoc.getSDocumentGraph().getSTokens());
+			node2NodeMap = new HashMap<SNode, SNode>(initialSize);
+			boolean alignedTexts = false;
+			if (otherDoc.getSDocumentGraph().getSTextualDSs() != null) {
+				// there should be texts
+				logger.trace("[Merger] " + "Aligning the texts of {} with text in base document. ", SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
 
-			// align all texts and create the nonEquivalentTokenSets
-			// / base text -- < Other Document -- nonEquivalentTokens >
-			alignedTexts = alignAllTexts(getBaseDocument(), otherDoc);
-		} else {
-			// there are no texts. So, just copy everything into
-			// the base document graph
-			logger.warn("There is no text in document {} to be merged. Will not copy the tokens!", SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
-		}
+				Set<SToken> nonEquivalentTokensOfOtherText = new HashSet<SToken>();
+				nonEquivalentTokensOfOtherText.addAll(otherDoc.getSDocumentGraph().getSTokens());
 
-		if (alignedTexts) {
-			// if mergable texts have been found
-			
-			SDocumentGraph otherGraph = otherDoc.getSDocumentGraph();
-			SDocumentGraph baseGraph = baseDoc.getSDocumentGraph();
-			MergeHandler handler = new MergeHandler(node2NodeMap, otherGraph, baseGraph, getContainer());
-			handler.setProperties((MergerProperties) getProperties());
-
-			EList<SNode> roots = getRoots(otherGraph);
-			if ((roots == null) || (roots.size() == 0)) {
-				logger.warn("Cannot start the traversing for merging document-structure, since no tokens exist for document '" + SaltFactory.eINSTANCE.getGlobalId(otherGraph.getSDocument().getSElementId()) + "'.");
+				// align all texts and create the nonEquivalentTokenSets
+				// / base text -- < Other Document -- nonEquivalentTokens >
+				alignedTexts = alignAllTexts(getBaseDocument(), otherDoc);
 			} else {
-				logger.trace("[Merger] Merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(baseDoc.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
-				otherGraph.traverse(roots, GRAPH_TRAVERSE_TYPE.TOP_DOWN_DEPTH_FIRST, "merger_" + SaltFactory.eINSTANCE.getGlobalId(baseDoc.getSElementId()), handler, false);
-				// finally merge pointing relations
-				handler.mergeSPointingRelations(otherGraph, baseGraph);
-				logger.trace("[Merger] Done with merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(baseDoc.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
+				// there are no texts. So, just copy everything into
+				// the base document graph
+				logger.warn("There is no text in document {} to be merged. Will not copy the tokens!", SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
+			}
+
+			if (alignedTexts) {
+				// if mergable texts have been found
+
+				SDocumentGraph otherGraph = otherDoc.getSDocumentGraph();
+				SDocumentGraph baseGraph = baseDoc.getSDocumentGraph();
+				MergeHandler handler = new MergeHandler(node2NodeMap, otherGraph, baseGraph, getContainer());
+				handler.setProperties((MergerProperties) getProperties());
+
+				EList<SNode> roots = getRoots(otherGraph);
+				if ((roots == null) || (roots.size() == 0)) {
+					logger.warn("Cannot start the traversing for merging document-structure, since no tokens exist for document '" + SaltFactory.eINSTANCE.getGlobalId(otherGraph.getSDocument().getSElementId()) + "'.");
+				} else {
+					logger.trace("[Merger] Merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(baseDoc.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
+					otherGraph.traverse(roots, GRAPH_TRAVERSE_TYPE.TOP_DOWN_DEPTH_FIRST, "merger_" + SaltFactory.eINSTANCE.getGlobalId(baseDoc.getSElementId()), handler, false);
+					// finally merge pointing relations
+					handler.mergeSPointingRelations(otherGraph, baseGraph);
+					logger.trace("[Merger] Done with merging higher document-structure for [{}, {}]", SaltFactory.eINSTANCE.getGlobalId(baseDoc.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(otherDoc.getSElementId()));
+				}
 			}
 		}
 	}
@@ -470,22 +470,26 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				// check if document and document structure is given
 				if (sDoc == null) {
 					throw new PepperModuleException(this, "A MappingSubject does not contain a document object. This seems to be a bug. ");
-				} 
-//				else if (sDoc.getSDocumentGraph() == null) {
-//					logger.warn("The document '" + SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()) + "' does not contain a document structure. Therefore it was ignored. ");
-//					continue;
-//				}
+				}
+				// else if (sDoc.getSDocumentGraph() == null) {
+				// logger.warn("The document '" +
+				// SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()) +
+				// "' does not contain a document structure. Therefore it was ignored. ");
+				// continue;
+				// }
 				if (getBaseCorpusStructure() == null) {
 					// current number of SNodes and SRelations contained in
 					// document structure
 					int currNumOfElements = 0;
-					if (sDoc.getSDocumentGraph()!= null){
+					if (sDoc.getSDocumentGraph() != null) {
 						currNumOfElements = (sDoc.getSDocumentGraph().getSNodes().size() + sDoc.getSDocumentGraph().getSRelations().size());
-					}else{
+					} else {
 						currNumOfElements = subj.getDocumentController().getSize_nodes() + subj.getDocumentController().getSize_relations();
 					}
-					
-//					int currNumOfElements = (sDoc.getSDocumentGraph().getSNodes().size() + sDoc.getSDocumentGraph().getSRelations().size());
+
+					// int currNumOfElements =
+					// (sDoc.getSDocumentGraph().getSNodes().size() +
+					// sDoc.getSDocumentGraph().getSRelations().size());
 					if (maxNumOfElements < currNumOfElements) {
 						// numOfElements is less than current sum of nodes and
 						// relations, current document structure is the bigger
@@ -655,11 +659,18 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		normalizedToOriginalMapping.add(start++);
 		return normalizedToOriginalMapping;
 	}
+
 	/** A list of all pairs of matching texts to be reported. **/
 	private List<Pair<STextualDS, STextualDS>> matchingTexts = new ArrayList<Pair<STextualDS, STextualDS>>();
-	/** A list of all texts, for which no matching partners have been found to be reported. **/
+	/**
+	 * A list of all texts, for which no matching partners have been found to be
+	 * reported.
+	 **/
 	private Set<STextualDS> noMatchingTexts = new HashSet<STextualDS>();
-	/** A list to store all texts, for which matching partners have been found. This is used to compute the correct list of {@link #noMatchingTexts}.**/
+	/**
+	 * A list to store all texts, for which matching partners have been found.
+	 * This is used to compute the correct list of {@link #noMatchingTexts}.
+	 **/
 	private Set<STextualDS> matchingTextsIdx = new HashSet<STextualDS>();
 
 	/**
@@ -702,11 +713,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 						node2NodeMap.put(otherText, baseText);
 						mergeTokens(baseText, otherText, node2NodeMap);
 					}
-					if (!matchingTextsIdx.contains(otherText)){
+					if (!matchingTextsIdx.contains(otherText)) {
 						noMatchingTexts.add(otherText);
 					}
 				}
-				if (!matchingTextsIdx.contains(baseText)){
+				if (!matchingTextsIdx.contains(baseText)) {
 					noMatchingTexts.add(baseText);
 				}
 			} // for all texts of the base document
