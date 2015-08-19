@@ -164,12 +164,12 @@ public class MergerTest extends PepperManipulatorTest {
 		 * d1 d2 d3
 		 * </pre>
 		 */
-		assertEquals(4, graph1.getSCorpora().size());
+		assertEquals(3, graph1.getSCorpora().size());
 		assertEquals(3, graph1.getSDocuments().size());
 		assertEquals(2, graph1.getSCorpusRelations().size());
 		assertEquals(3, graph1.getSCorpusDocumentRelations().size());
 
-		assertEquals(2, graph1.getSRoots().size());
+		assertEquals(1, graph1.getSRoots().size());
 		assertEquals(2, graph1.getOutEdges(c1_test.getSId()).size());
 	}
 
@@ -273,10 +273,15 @@ public class MergerTest extends PepperManipulatorTest {
 		this.start();
 
 		/**
-		 * c1 / \ c2 c3 / \ | d1 d2 d3
+		 * <pre>
+		 *     c1 
+		 *    / \ 
+		 *   c2 c3 
+		 *  / \ | 
+		 * d1 d2 d3
+		 * </pre>
 		 */
-		// TODO: Why is there a Corpus named "pepperModuleTest" in here?
-		assertEquals(4, graph1.getSCorpora().size());
+		assertEquals(3, graph1.getSCorpora().size());
 		assertEquals(3, graph1.getSDocuments().size());
 		assertEquals(2, graph1.getSCorpusRelations().size());
 		assertEquals(3, graph1.getSCorpusDocumentRelations().size());
@@ -288,76 +293,4 @@ public class MergerTest extends PepperManipulatorTest {
 		assertEquals("all meta-annotations: " + d2_1.getSMetaAnnotations(), 2, d2_1.getSMetaAnnotations().size());
 		assertEquals("all meta-annotations: " + d3_1.getSMetaAnnotations(), 2, d3_1.getSMetaAnnotations().size());
 	}
-
-	// /**
-	// * Tests the merging of three corpus graphs having some document content
-	// *
-	// * c1 | c1 | c1
-	// * / \ | | | / \
-	// * d1 d2 | d1 | d1 d2
-	// */
-	// @Test
-	// public void testMerge3CorpusGraphsWithDocumentStructure(){
-	//
-	// //graph 1
-	// SCorpusGraph g1 = SaltFactory.eINSTANCE.createSCorpusGraph();
-	// SCorpus c1_1 = SaltFactory.eINSTANCE.createSCorpus();
-	// c1_1.setSName("c1");
-	// g1.addSNode(c1_1);
-	// SDocument d1_1= g1.createSDocument(c1_1, "d1");
-	// SDocument d2_1= g1.createSDocument(c1_1, "d2");
-	// d1_1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-	// d2_1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-	//
-	// SaltSample.createPrimaryData(d1_1);
-	// SaltSample.createTokens(d1_1);
-	// SaltSample.createMorphologyAnnotations(d1_1);
-	// SaltSample.createPrimaryData(d2_1);
-	// getFixture().getSaltProject().getSCorpusGraphs().add(g1);
-	//
-	// //graph 2
-	// SCorpusGraph g2 = SaltFactory.eINSTANCE.createSCorpusGraph();
-	// SCorpus c1_2 = SaltFactory.eINSTANCE.createSCorpus();
-	// c1_2.setSName("c1");
-	// g2.addSNode(c1_2);
-	// SDocument d1_2 = g2.createSDocument(c1_2, "d1");
-	// d1_2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-	//
-	// SaltSample.createPrimaryData(d1_2);
-	// SaltSample.createTokens(d1_2);
-	// SaltSample.createSyntaxStructure(d1_2);
-	// SaltSample.createSyntaxAnnotations(d1_2);
-	// getFixture().getSaltProject().getSCorpusGraphs().add(g2);
-	//
-	// //graph 3
-	// SCorpusGraph g3 = SaltFactory.eINSTANCE.createSCorpusGraph();
-	// SCorpus c1_3 = SaltFactory.eINSTANCE.createSCorpus();
-	// c1_3.setSName("c1");
-	// g3.addSNode(c1_3);
-	// SDocument d1_3 = g3.createSDocument(c1_3, "d1");
-	// SDocument d2_3 = g3.createSDocument(c1_3, "d2");
-	// d1_3.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-	// d2_3.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-	//
-	// SaltSample.createPrimaryData(d1_3);
-	// SaltSample.createPrimaryData(d2_3);
-	// SaltSample.createTokens(d1_3);
-	// SaltSample.createTokens(d2_3);
-	// SaltSample.createInformationStructureSpan(d1_3);
-	// SaltSample.createInformationStructureAnnotations(d1_3);
-	//
-	// getFixture().getSaltProject().getSCorpusGraphs().add(g3);
-	//
-	// this.start();
-	// // TODO: Why is there a Corpus named "pepperModuleTest" in here?
-	// assertEquals(2,
-	// getFixture().getSaltProject().getSCorpusGraphs().get(0).getSCorpora().size());
-	// assertEquals(2,
-	// getFixture().getSaltProject().getSCorpusGraphs().get(0).getSDocuments().size());
-	//
-	// assertEquals(2,
-	// getFixture().getSaltProject().getSCorpusGraphs().get(0).getSDocuments().get(0).getSDocumentGraph().getSNodes().size());
-	// assertEquals(2,
-	// getFixture().getSaltProject().getSCorpusGraphs().get(0).getSDocuments().get(0).getSDocumentGraph().getSRelations().size());
-	// }
 }

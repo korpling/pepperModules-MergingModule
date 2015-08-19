@@ -231,7 +231,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 						getContainer().finishDocument(sDoc);
 					}
 				}
-				System.out.println(subj);
 			}
 		}
 		return (DOCUMENT_STATUS.COMPLETED);
