@@ -501,7 +501,6 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 	 **/
 	@Override
 	public PepperMapper createPepperMapper(SElementId sElementId) {
-		System.out.println("--------------___> LOS");
 		MergerMapper mapper = new MergerMapper();
 		if (sElementId.getSIdentifiableElement() instanceof SDocument) {
 			if ((givenSlots == null) || (givenSlots.size() == 0)) {
