@@ -27,6 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.eclipse.emf.common.util.URI;
 import org.osgi.service.component.annotations.Component;
@@ -34,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.hu_berlin.german.korpling.saltnpepper.pepper.common.DOCUMENT_STATUS;
+import de.hu_berlin.german.korpling.saltnpepper.pepper.common.PepperConfiguration;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.exceptions.PepperFWException;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.DocumentController;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.MappingSubject;
@@ -59,19 +63,27 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
  */
 @Component(name = "MergerComponent", factory = "PepperManipulatorComponentFactory")
 public class Merger extends PepperManipulatorImpl implements PepperManipulator {
-	public static final String MODULE_NAME="Merger";
-	
+	public static final String MODULE_NAME = "Merger";
+
 	private static final Logger logger = LoggerFactory.getLogger(MODULE_NAME);
 
 	public Merger() {
 		super();
 		setName(MODULE_NAME);
-	    setSupplierContact(URI.createURI("saltnpepper@lists.hu-berlin.de"));
+		setSupplierContact(URI.createURI("saltnpepper@lists.hu-berlin.de"));
 		setSupplierHomepage(URI.createURI("https://github.com/korpling/pepperModules-MergingModule"));
 		setDesc("The Merger allows to merge an unbound number of corpora to a single corpus. ");
 		setProperties(new MergerProperties());
 	}
 
+	@Override
+	public boolean isReadyToStart(){
+		if (getModuleController().getJob().getMaxNumberOfDocuments()< 2){
+			throw new PepperModuleException(this, "The merger cannot work with less than 2 documents in main memory in parallel. Please check the property '"+PepperConfiguration.PROP_MAX_AMOUNT_OF_SDOCUMENTS+"' in the Pepper configuration. ");
+		}
+		return(true);
+	};
+	
 	/**
 	 * A table containing the import order for {@link SElementId} corresponding
 	 * to {@link SDocument} and {@link SCorpus} nodes corresponding to the
@@ -207,8 +219,8 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				List<SNode> nodes = mappingTable.get(key);
 				listOfLists.get(nodes.size() - 1).add(nodes);
 			}
-			
-			//create import order in descending order of listOfLists
+
+			// create import order in descending order of listOfLists
 			for (int i = getSaltProject().getSCorpusGraphs().size(); i > 0; i--) {
 				List<List<SNode>> list = listOfLists.get(i - 1);
 				for (List<SNode> nodes : list) {
@@ -297,7 +309,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				if (noBase) {
 					if (isDoc) {
 						getBaseCorpusStructure().createSCorpus(URI.createURI(key).trimSegments(1));
-						SDocument doc= getBaseCorpusStructure().createSDocument(URI.createURI(key));
+						SDocument doc = getBaseCorpusStructure().createSDocument(URI.createURI(key));
 						doc.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
 					} else {
 						getBaseCorpusStructure().createSCorpus(URI.createURI(key));
@@ -307,6 +319,59 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		}
 	}
 
+	// ===========================================> synchronization to avoid
+	// deadlocks in mapper
+	private volatile Lock mergerMappersLock = new ReentrantLock();
+	private volatile Condition mergerMappersCondition = mergerMappersLock.newCondition();
+	private volatile int numberOfMergerMappers = 0;
+
+	// private final int maxNumOfMergerMappers =
+	// Double.valueOf(Math.floor(getModuleController().getJob().getMaxNumberOfDocuments()
+	// / 2)).intValue();
+
+	/**
+	 * waits until less or equal merger-mappers are active than the half of the
+	 * maximal amount of documents are this behavior should prevent from
+	 * possible deadlocks in merger mapper, when a base document is blocked and
+	 * the mapper waits for a permission to load the 'other' document in main
+	 * memory. For instance when 2 mappers are active and only 2 documents are
+	 * allowed to be loaded: when both mappers have loaded the base document no
+	 * place is left for the 'other document', so they will block each other.
+	 */
+	private void waitForMergerMapper() {
+		mergerMappersLock.lock();
+		try {
+			if (getModuleController() != null && getModuleController().getJob() != null) {
+				System.out.println("----------------> "+ numberOfMergerMappers +" >= "+Double.valueOf(Math.floor(getModuleController().getJob().getMaxNumberOfDocuments() / 2)).intValue());
+				while (numberOfMergerMappers >= Double.valueOf(Math.floor(getModuleController().getJob().getMaxNumberOfDocuments() / 2)).intValue()) {
+					mergerMappersCondition.await();
+				}
+			}
+			numberOfMergerMappers++;
+		} catch (InterruptedException e) {
+			throw new PepperModuleException(this, "A problem occured in deadlock permission for merger mapper processes. ", e);
+		} finally {
+			mergerMappersLock.unlock();
+		}
+	}
+
+	/**
+	 * Reduces the internal count of active mappers by one.
+	 * 
+	 * @see #waitForMergerMapper()
+	 */
+	public void releaseMergerMapper() {
+		mergerMappersLock.lock();
+		try {
+			numberOfMergerMappers--;
+			mergerMappersCondition.signal();
+		} finally {
+			mergerMappersLock.unlock();
+		}
+	}
+
+	// ===========================================< synchronization to avoid
+	// deadlocks in mapper
 	/**
 	 * a set of {@link SElementId} corresponding to documents for which the
 	 * merging have not been started
@@ -323,11 +388,11 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		if (getSaltProject() == null) {
 			throw new PepperFWException("No salt project was set in module '" + getName() + ", " + getVersion() + "'.");
 		}
-		if (mappingTable== null){
-			//nothing to be done here
-			
+		if (mappingTable == null) {
+			// nothing to be done here
+
 			logger.warn("[Merger] Cannot merge corpora or documents, since only one corpus structure is given. ");
-			
+
 			boolean isStart = true;
 			SElementId sElementId = null;
 			DocumentController documentController = null;
@@ -341,12 +406,11 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				getModuleController().complete(documentController);
 			}
 			this.end();
-			
+
 			return;
 		}
 		enhanceBaseCorpusStructure();
-		if (	(logger.isDebugEnabled())&&
-				(mappingTable!= null)){
+		if ((logger.isDebugEnabled()) && (mappingTable != null)) {
 			StringBuilder mergerMapping = new StringBuilder();
 			mergerMapping.append("Computed mapping for merging:\n");
 			for (String key : mappingTable.keySet()) {
@@ -409,32 +473,46 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 						if (docController == null) {
 							throw new PepperModuleException(this, "Cannot find a document controller for document '" + SaltFactory.eINSTANCE.getGlobalId(sDocumentId) + "' in list: " + getDocumentId2DC() + ". ");
 						}
-//						logger.trace("[Merger] Try to wake up document {}. {} documents are currently active. ", docController.getGlobalId(), getModuleController().getJob().getNumOfActiveDocuments());
-//						// ask for loading a document into main memory and wait
-//						// if necessary
-//						getModuleController().getJob().getPermissionForProcessDoument(docController);
-//						docController.awake();
-//						logger.trace("[Merger] Successfully woke up document {}. ", docController.getGlobalId());
+						// logger.trace("[Merger] Try to wake up document {}. {} documents are currently active. ",
+						// docController.getGlobalId(),
+						// getModuleController().getJob().getNumOfActiveDocuments());
+						// // ask for loading a document into main memory and
+						// wait
+						// // if necessary
+						// getModuleController().getJob().getPermissionForProcessDoument(docController);
+						// docController.awake();
+						// logger.trace("[Merger] Successfully woke up document {}. ",
+						// docController.getGlobalId());
 						documentsToMerge.remove(docController.getGlobalId());
 					}
-					if (logger.isTraceEnabled()) {
-						String docs = "";
-						int i = 0;
-						for (SElementId sDocumentId : givenSlot) {
-							if (i == 0) {
-								docs = sDocumentId.getSId();
-							} else {
-								docs = docs + ", " + SaltFactory.eINSTANCE.getGlobalId(sDocumentId);
-							}
-							i++;
-						}
-						logger.trace("[Merger] " + "Wake up all documents corresponding to id '{}': {}", sElementId.getSId(), docs);
-					}
+					// if (logger.isTraceEnabled()) {
+					// String docs = "";
+					// int i = 0;
+					// for (SElementId sDocumentId : givenSlot) {
+					// if (i == 0) {
+					// docs = sDocumentId.getSId();
+					// } else {
+					// docs = docs + ", " +
+					// SaltFactory.eINSTANCE.getGlobalId(sDocumentId);
+					// }
+					// i++;
+					// }
+					// logger.trace("[Merger] " +
+					// "Wake up all documents corresponding to id '{}': {}",
+					// sElementId.getSId(), docs);
+					// }
+
+					System.out.println("--------------------__> wait for merger");
+					// waits until enough spaces for documents is available to
+					// start mapper
+					waitForMergerMapper();
+					System.out.println("--------------------__> ended waiting for merger");
+					
 					start(sElementId);
 				} catch (Exception e) {
 					throw new PepperModuleException("Any exception occured while merging documents corresponding to '" + sElementId + "'. ", e);
 				}
-			} else{
+			} else {
 				throw new PepperModuleException(this, "This should not have beeen happend and is a bug of module. The problem is, 'givenSlot.size()' is higher than 'mappableSlot.size()'.");
 			}
 		}
@@ -456,9 +534,9 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		for (SCorpus sCorpus : corpora) {
 			start(sCorpus.getSElementId());
 		}
-		
+
 		end();
-		
+
 		// only wait for controllers which have been added by end()
 		for (PepperMapperController controller : this.getMapperControllers().values()) {
 			if (!alreadyWaitedFor.contains(controller)) {
@@ -471,28 +549,28 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 			}
 		}
 	}
-	
+
 	/**
 	 * Removes all corpus-structures except the base corpus-structure
 	 */
 	@Override
 	public void end() throws PepperModuleException {
-		List<SCorpusGraph> removeCorpusStructures= new ArrayList<SCorpusGraph>();
-		for (SCorpusGraph graph: getSaltProject().getSCorpusGraphs()){
-			if (graph!= getBaseCorpusStructure()){
+		List<SCorpusGraph> removeCorpusStructures = new ArrayList<SCorpusGraph>();
+		for (SCorpusGraph graph : getSaltProject().getSCorpusGraphs()) {
+			if (graph != getBaseCorpusStructure()) {
 				removeCorpusStructures.add(graph);
 			}
 		}
-		if (removeCorpusStructures.size()>0){
-			for (SCorpusGraph graph: removeCorpusStructures){
+		if (removeCorpusStructures.size() > 0) {
+			for (SCorpusGraph graph : removeCorpusStructures) {
 				getSaltProject().getSCorpusGraphs().remove(graph);
 			}
 		}
-		if (removeCorpusStructures.size()!= 1){
-			logger.warn("Could not remove all corpus-structures from salt project which are not the base corpus-structure. Left structures are: '"+removeCorpusStructures+"'. ");
+		if (removeCorpusStructures.size() != 1) {
+			logger.warn("Could not remove all corpus-structures from salt project which are not the base corpus-structure. Left structures are: '" + removeCorpusStructures + "'. ");
 		}
 	}
-	
+
 	/**
 	 * Creates a {@link PepperMapper} of type {@link MergerMapper}. Therefore
 	 * the table {@link #givenSlots} must contain an entry for the given
@@ -503,6 +581,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 	public PepperMapper createPepperMapper(SElementId sElementId) {
 		MergerMapper mapper = new MergerMapper();
 		if (sElementId.getSIdentifiableElement() instanceof SDocument) {
+			mapper.setMerger(this);
 			if ((givenSlots == null) || (givenSlots.size() == 0)) {
 				throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that 'givenSlots' is null or empty in method 'createPepperMapper()'");
 			}
@@ -515,13 +594,13 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				MappingSubject mappingSubject = new MappingSubject();
 				mappingSubject.setSElementId(id);
 				mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
-				
-				if (sElementId.getSIdentifiableElement() instanceof SDocument){
+
+				if (sElementId.getSIdentifiableElement() instanceof SDocument) {
 					DocumentController documentController = getDocumentId2DC().get(SaltFactory.eINSTANCE.getGlobalId(id));
 					mappingSubject.setDocumentController(documentController);
 				}
 				mapper.getMappingSubjects().add(mappingSubject);
-				if (getBaseCorpusStructure()== (((SDocument) id.getSIdentifiableElement()).getSCorpusGraph())) {
+				if (getBaseCorpusStructure() == (((SDocument) id.getSIdentifiableElement()).getSCorpusGraph())) {
 					noBase = false;
 				}
 			}

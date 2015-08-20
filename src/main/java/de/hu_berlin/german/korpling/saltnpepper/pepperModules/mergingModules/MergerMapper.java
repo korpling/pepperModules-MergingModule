@@ -62,10 +62,23 @@ import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SRelation;
  * @author Florian Zipser
  */
 public class MergerMapper extends PepperMapperImpl implements PepperMapper {
-
 	private static final Logger logger = LoggerFactory.getLogger(Merger.MODULE_NAME);
 
 	protected boolean isTestMode = false;
+	/** A reference to the {@link Merger} object which has invoked this mapper. **/
+	private Merger merger= null;
+	/**
+	 * @return A reference to the {@link Merger} object which has invoked this mapper.
+	 */
+	public Merger getMerger() {
+		return merger;
+	}
+	/**
+	 * @param merger A reference to the {@link Merger} object which has invoked this mapper.
+	 */
+	public void setMerger(Merger merger) {
+		this.merger = merger;
+	}
 
 	/**
 	 * Determines which {@link SCorpusGraph} is the base corpus graph, in which
@@ -197,19 +210,12 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			SDocument baseDocument = (SDocument) baseSubject.getSElementId().getSIdentifiableElement();
 			setBaseDocument(baseDocument);
 
-			if ((baseSubject.getDocumentController() != null) && (getPepperMapperController() != null)) {
-				logger.trace("[Merger] Try to wake up base document {}. ", baseSubject.getDocumentController().getGlobalId());
-				// awake document
-				getPepperMapperController().getPermissionForProcessDoument(baseSubject.getDocumentController());
-				baseSubject.getDocumentController().awake();
-			}
-
 			// copy all annotations of document
 			for (MappingSubject subj : getMappingSubjects()) {
 				if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
 					SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
-					if (sDoc != getBaseDocument()) {// document is not base
-													// corpus
+					if (sDoc != getBaseDocument()) {
+						// document is not base corpus
 						SaltFactory.eINSTANCE.moveSAnnotations(sDoc, baseDocument);
 						SaltFactory.eINSTANCE.moveSMetaAnnotations(sDoc, baseDocument);
 					}
@@ -233,6 +239,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 //					}
 				}
 			}
+		}
+		if (getMerger()!= null){
+			getMerger().releaseMergerMapper();
 		}
 		return (DOCUMENT_STATUS.COMPLETED);
 	}
@@ -266,6 +275,14 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		SDocument baseDocument= (SDocument) baseSubject.getSElementId().getSIdentifiableElement();
 		normalizePrimaryTexts(baseDocument);
 		
+		if ((baseSubject.getDocumentController() != null) && (getPepperMapperController() != null)) {
+			logger.trace("[Merger] Try to wake up base document {}. ", baseSubject.getDocumentController().getGlobalId());
+			// awake document
+			getPepperMapperController().getPermissionForProcessDoument(baseSubject.getDocumentController());
+			baseSubject.getDocumentController().awake();
+			logger.trace("[Merger] Successfully woke up document {}. ", baseSubject.getDocumentController().getGlobalId());
+		}
+		
 		// merge two document-structures pairwise
 		for (MappingSubject subj : this.getMappingSubjects()) {
 			// for all documents
@@ -278,7 +295,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					subj.getDocumentController().awake();
 					logger.trace("[Merger] Successfully woke up document {}. ", subj.getDocumentController().getGlobalId());
 				}
-				this.normalizePrimaryTexts(otherDoc);
+				if (baseSubject.getDocumentController()!= null && subj.getDocumentController()!= null)
+					System.out.println("------------------_____> LOS GEHTS: "+baseSubject.getDocumentController().getGlobalId()+" <--> "+subj.getDocumentController().getGlobalId());
+				normalizePrimaryTexts(otherDoc);
 				// merge the document content
 				mergeDocumentStructures(baseDocument, otherDoc);
 				
@@ -288,6 +307,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				}
 				if (subj.getDocumentController() != null) {
 					subj.getDocumentController().sendToSleep_FORCE();
+					getMerger().getModuleController().getJob().releaseDocument(subj.getDocumentController());
 				}
 			}
 		}
