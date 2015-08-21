@@ -225,6 +225,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 			mergeDocumentStructures(baseSubject);
 
+			//store base subject to delete others from list, since they already have been deleted
+			MappingSubject baseSubj= null;
 			// set base document to completed and remove all the others
 			for (MappingSubject subj : getMappingSubjects()) {
 				SDocument sDoc = ((SDocument) subj.getSElementId().getSIdentifiableElement());
@@ -232,8 +234,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					subj.setMappingResult(DOCUMENT_STATUS.DELETED);
 				} else {
 					subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
+					baseSubj= subj;
 				}
 			}
+			getMappingSubjects().clear();
+			getMappingSubjects().add(baseSubj);
 		}
 		if (getMerger()!= null){
 			getMerger().releaseMergerMapper();
@@ -295,9 +300,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					getContainer().finishDocument(otherDocument);
 				}
 				if (subj.getDocumentController() != null) {
-					//TODO sending the document to sleep makes no sense, remove it immediately
-					subj.getDocumentController().sendToSleep_FORCE();
-					getMerger().getModuleController().getJob().releaseDocument(subj.getDocumentController());
+					getMerger().done(otherDocument.getSElementId(), DOCUMENT_STATUS.DELETED);
 				}
 			}
 		}
