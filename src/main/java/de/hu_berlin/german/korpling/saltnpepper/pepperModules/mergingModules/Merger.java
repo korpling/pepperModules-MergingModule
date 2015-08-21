@@ -439,7 +439,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		DocumentController documentController = null;
 		while ((isStart) || (sElementId != null)) {
 			isStart = false;
-			documentController = this.getModuleController().next();
+			documentController = getModuleController().next();
 			if (documentController == null) {
 				break;
 			}
@@ -456,17 +456,34 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 			logger.trace("[Merger] New document has arrived {}. ", SaltFactory.eINSTANCE.getGlobalId(sElementId));
 			documentsToMerge.add(SaltFactory.eINSTANCE.getGlobalId(sElementId));
 
-			if (givenSlot.size() < mappableSlot.size()) {
-				if (logger.isTraceEnabled()) {
-					logger.trace("[Merger] " + "Waiting for further documents, {} documents are in queue. ", documentsToMerge.size());
-				}
-				documentController.sendToSleep_FORCE();
-				// this is a bit hacky, but necessary
-				if (documentController.isAsleep()) {
-					getModuleController().getJob().releaseDocument(documentController);
-				}
-				logger.trace("[Merger] " + "Sent document '{}' to sleep, until matching partner(s) was processed. ", documentController.getGlobalId());
-			} else if (givenSlot.size() == mappableSlot.size()) {
+			//send all documents to sleep 
+			if (logger.isTraceEnabled()) {
+				logger.trace("[Merger] " + "Waiting for further documents, {} documents are in queue. ", documentsToMerge.size());
+			}
+			documentController.sendToSleep_FORCE();
+			// this is a bit hacky, but necessary
+			if (documentController.isAsleep()) {
+				getModuleController().getJob().releaseDocument(documentController);
+				logger.trace("[Merger] " + "Sent document '{}' to sleep. ", documentController.getGlobalId());
+			}else{
+				logger.warn("Was not able to send document '{}' to sleep. ", documentController.getGlobalId());
+			}
+			
+//			if (givenSlot.size() < mappableSlot.size()) {
+//				if (logger.isTraceEnabled()) {
+//					logger.trace("[Merger] " + "Waiting for further documents, {} documents are in queue. ", documentsToMerge.size());
+//				}
+//				documentController.sendToSleep_FORCE();
+//				// this is a bit hacky, but necessary
+//				if (documentController.isAsleep()) {
+//					getModuleController().getJob().releaseDocument(documentController);
+//					logger.trace("[Merger] " + "Sent document '{}' to sleep. ", documentController.getGlobalId());
+//				}else{
+//					logger.warn("Was not able to send document '{}' to sleep. ", documentController.getGlobalId());
+//				}
+//			} 
+//				else if (givenSlot.size() == mappableSlot.size()) {
+			if (givenSlot.size() == mappableSlot.size()) {
 				try {
 					for (SElementId sDocumentId : givenSlot) {
 						DocumentController docController = getDocumentId2DC().get(SaltFactory.eINSTANCE.getGlobalId(sDocumentId));
@@ -502,7 +519,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 					// sElementId.getSId(), docs);
 					// }
 
-					System.out.println("--------------------__> wait for merger");
+					System.out.println("--------------------__> wait for merger: "+ SaltFactory.eINSTANCE.getGlobalId(sElementId));
 					// waits until enough spaces for documents is available to
 					// start mapper
 					waitForMergerMapper();
@@ -512,9 +529,10 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				} catch (Exception e) {
 					throw new PepperModuleException("Any exception occured while merging documents corresponding to '" + sElementId + "'. ", e);
 				}
-			} else {
-				throw new PepperModuleException(this, "This should not have beeen happend and is a bug of module. The problem is, 'givenSlot.size()' is higher than 'mappableSlot.size()'.");
-			}
+			} 
+//			else {
+//				throw new PepperModuleException(this, "This should not have beeen happend and is a bug of module. The problem is, 'givenSlot.size()' is higher than 'mappableSlot.size()'.");
+//			}
 		}
 
 		Collection<PepperMapperController> controllers = null;

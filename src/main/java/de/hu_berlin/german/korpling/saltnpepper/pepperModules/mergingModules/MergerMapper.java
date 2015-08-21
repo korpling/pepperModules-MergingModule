@@ -37,6 +37,7 @@ import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.MappingSubject;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperMapper;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.exceptions.PepperModuleDataException;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.exceptions.PepperModuleException;
+import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.exceptions.PepperModuleInternalException;
 import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.impl.PepperMapperImpl;
 import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
 import de.hu_berlin.german.korpling.saltnpepper.salt.graph.Edge;
@@ -204,7 +205,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			// base subject containing the base document
 			MappingSubject baseSubject = chooseBaseDocument();
 			if (baseSubject == null) {
-				throw new PepperModuleException(this, "This might be a bug, no base document could have been computed.");
+				throw new PepperModuleInternalException(this, "No base document could have been computed. ");
 			}
 			// base document
 			SDocument baseDocument = (SDocument) baseSubject.getSElementId().getSIdentifiableElement();
@@ -271,23 +272,24 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			}
 			getContainer().setBaseDocument(getBaseDocument());
 		}
-		//normalize all texts of base document
 		SDocument baseDocument= (SDocument) baseSubject.getSElementId().getSIdentifiableElement();
-		normalizePrimaryTexts(baseDocument);
 		
 		if ((baseSubject.getDocumentController() != null) && (getPepperMapperController() != null)) {
 			logger.trace("[Merger] Try to wake up base document {}. ", baseSubject.getDocumentController().getGlobalId());
 			// awake document
 			getPepperMapperController().getPermissionForProcessDoument(baseSubject.getDocumentController());
 			baseSubject.getDocumentController().awake();
-			logger.trace("[Merger] Successfully woke up document {}. ", baseSubject.getDocumentController().getGlobalId());
+			logger.trace("[Merger] Successfully woke up base document {}. ", baseSubject.getDocumentController().getGlobalId());
 		}
+		
+		//normalize all texts of base document, therefore the base document needs to be woken up
+		normalizePrimaryTexts(baseDocument);
 		
 		// merge two document-structures pairwise
 		for (MappingSubject subj : this.getMappingSubjects()) {
 			// for all documents
-			SDocument otherDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
-			if (otherDoc != getBaseDocument()) {
+			SDocument otherDocument = (SDocument) subj.getSElementId().getSIdentifiableElement();
+			if (otherDocument != getBaseDocument()) {
 				if ((subj.getDocumentController() != null) && (getPepperMapperController() != null)) {
 					logger.trace("[Merger] Try to wake up document {}. ", subj.getDocumentController().getGlobalId());
 					// awake document
@@ -295,17 +297,19 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					subj.getDocumentController().awake();
 					logger.trace("[Merger] Successfully woke up document {}. ", subj.getDocumentController().getGlobalId());
 				}
-				if (baseSubject.getDocumentController()!= null && subj.getDocumentController()!= null)
-					System.out.println("------------------_____> LOS GEHTS: "+baseSubject.getDocumentController().getGlobalId()+" <--> "+subj.getDocumentController().getGlobalId());
-				normalizePrimaryTexts(otherDoc);
+				
+				normalizePrimaryTexts(otherDocument);
+				
+				logger.debug("[Merger] Start merging of base document '{}' with {}. ", SaltFactory.eINSTANCE.getGlobalId(baseDocument.getSElementId()), SaltFactory.eINSTANCE.getGlobalId(subj.getSElementId()));
 				// merge the document content
-				mergeDocumentStructures(baseDocument, otherDoc);
+				mergeDocumentStructures(baseDocument, otherDocument);
 				
 				//frees memory from other document
 				if (!isTestMode) {
-					getContainer().finishDocument(otherDoc);
+					getContainer().finishDocument(otherDocument);
 				}
 				if (subj.getDocumentController() != null) {
+					//TODO sending the document to sleep makes no sense, remove it immediately
 					subj.getDocumentController().sendToSleep_FORCE();
 					getMerger().getModuleController().getJob().releaseDocument(subj.getDocumentController());
 				}
@@ -333,7 +337,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					String format = "\t%-" + (baseId.length() > otherId.length() ? baseId.length() : otherId.length()) + "s: ";
 					debug.append("<base> \t");
 					debug.append(String.format(format, baseId));
-					debug.append(pair.getLeft().getRight());
+					debug.append(pair.getLeft().getRight().substring("<base>".length()));
 					debug.append("\n");
 					debug.append("<other>\t");
 					debug.append(String.format(format, otherId));
@@ -565,8 +569,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 *            normalized.
 	 */
 	protected void normalizePrimaryTexts(SDocument sDocument) {
-		if (sDocument == null)
+		if (sDocument == null){
 			throw new PepperModuleException(this, "Cannot normalize Text of the document since the SDocument reference is NULL");
+		}
 		if (sDocument.getSDocumentGraph() != null) {
 			// check whether the document has any STextualDS
 			List<STextualDS> sTextualDSs = sDocument.getSDocumentGraph().getSTextualDSs();
@@ -579,7 +584,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					if (textRel.getSTextualDS().equals(sTextualDS)) {
 						SToken sToken = textRel.getSToken();
 						if (textRel.getSStart() >= originalToNormalizedMapping.size()) {
-							throw new PepperModuleException(this, "Cannot find token " + SaltFactory.eINSTANCE.getGlobalId(textRel.getSToken().getSElementId()) + " in  'originalToNormalizedMapping' list. This might be a bug. ");
+							throw new PepperModuleInternalException(this, "Cannot find token " + SaltFactory.eINSTANCE.getGlobalId(textRel.getSToken().getSElementId()) + " in  'originalToNormalizedMapping' list. ");
 						}
 						// the start position of current token in normalized
 						// text
@@ -588,7 +593,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 						int normalizedTokenEnd = 0;
 						if (textRel.getSEnd() >= (originalToNormalizedMapping.size())) {
 							if (textRel.getSEnd() >= (originalToNormalizedMapping.size() + 1)) {
-								throw new PepperModuleException(this, "This might be a bug of MergerMapper: textRel.getSEnd() >= (originalToNormalizedMapping.size()+1).");
+								throw new PepperModuleInternalException(this, "textRel.getSEnd() >= (originalToNormalizedMapping.size()+1). ");
 							} else {
 								normalizedTokenEnd = originalToNormalizedMapping.get(originalToNormalizedMapping.size() - 1) + 1;
 							}
@@ -600,6 +605,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				}
 				getContainer().addNormalizedText(sDocument, sTextualDS, normalizedText);
 			}
+		}else{
+			throw new PepperModuleInternalException(this, "Could not compute the normalized text for document '"+SaltFactory.eINSTANCE.getGlobalId(sDocument.getSElementId())+"', because the document contains no document graph. May be it has not been woken up. ");
 		}
 	}
 
@@ -799,11 +806,11 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		// first we need the two normalized texts
 		String normalizedBaseText = getContainer().getNormalizedText(baseText);
 		if (normalizedBaseText== null){
-			throw new PepperModuleDataException(this, "Caould not align texts, because a normalized text for base text was not computed. This might be an internal bug. ");
+			throw new PepperModuleInternalException(this, "Could not align text '"+SaltFactory.eINSTANCE.getGlobalId(baseText.getSElementId())+"', because a normalized text for base text was not computed. ");
 		}
 		String normalizedOtherText = getContainer().getNormalizedText(otherText);
 		if (normalizedOtherText== null){
-			throw new PepperModuleDataException(this, "Caould not align texts, because a normalized text for other text '"+SaltFactory.eINSTANCE.getGlobalId(otherText.getSElementId())+"' was not computed. This might be an internal bug. ");
+			throw new PepperModuleInternalException(this, "Could not align texts, because a normalized text for other text '"+SaltFactory.eINSTANCE.getGlobalId(otherText.getSElementId())+"' was not computed. ");
 		}
 		// set the mapping of the normalized base text to the original base text
 		if (getContainer().getBaseTextPositionByNormalizedTextPosition(baseText, 0) == -1) {
