@@ -230,14 +230,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				SDocument sDoc = ((SDocument) subj.getSElementId().getSIdentifiableElement());
 				if (sDoc != getBaseDocument()) {
 					subj.setMappingResult(DOCUMENT_STATUS.DELETED);
-//					if (!isTestMode) {
-//						getContainer().finishDocument((SDocument) subj.getSElementId().getSIdentifiableElement());
-//					}
 				} else {
 					subj.setMappingResult(DOCUMENT_STATUS.COMPLETED);
-//					if (!isTestMode) {
-//						getContainer().finishDocument(sDoc);
-//					}
 				}
 			}
 		}
@@ -257,14 +251,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * {@link #mergeDocumentStructures(SDocument, SDocument)}.
 	 */
 	public void mergeDocumentStructures(MappingSubject baseSubject) {
-//		// normalize all texts
-//		for (MappingSubject subj : this.getMappingSubjects()) {
-//			if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
-//				SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
-//				this.normalizePrimaryTexts(sDoc);
-//			}
-//		}
-
 		if (baseSubject != null) {
 			// This is only for the JUnit tests
 			if (getBaseDocument() == null) {
@@ -515,12 +501,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				if (sDoc == null) {
 					throw new PepperModuleException(this, "A MappingSubject does not contain a document object. This seems to be a bug. ");
 				}
-				// else if (sDoc.getSDocumentGraph() == null) {
-				// logger.warn("The document '" +
-				// SaltFactory.eINSTANCE.getGlobalId(sDoc.getSElementId()) +
-				// "' does not contain a document structure. Therefore it was ignored. ");
-				// continue;
-				// }
 				if (getBaseCorpusStructure() == null) {
 					// current number of SNodes and SRelations contained in
 					// document structure
@@ -531,9 +511,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 						currNumOfElements = subj.getDocumentController().getSize_nodes() + subj.getDocumentController().getSize_relations();
 					}
 
-					// int currNumOfElements =
-					// (sDoc.getSDocumentGraph().getSNodes().size() +
-					// sDoc.getSDocumentGraph().getSRelations().size());
 					if (maxNumOfElements < currNumOfElements) {
 						// numOfElements is less than current sum of nodes and
 						// relations, current document structure is the bigger
@@ -639,8 +616,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 						start += 1;
 					}
 					normalizedTextBuilder.append(stringToEscape);
-				} else { // one char is mapped to the empty string.
-							// TODO: TALK ABOUT THIS!
+				} else { 
+					// one char is mapped to the empty string.
 					originalToNormalizedMapping.add(start);
 				}
 			}
@@ -801,7 +778,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			throw new PepperModuleException(this, "Cannot align the Text of the documents since the other SDocument reference is NULL");
 		}
 
-		// TODO REVISE THIS CODE
 		boolean returnVal = false;
 		// first we need the two normalized texts
 		String normalizedBaseText = getContainer().getNormalizedText(baseText);
@@ -871,7 +847,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 
 								nonEquivalentTokenInOtherTexts.remove(smallerTextToken);
 							} // if the base text is the bigger text
-							else { // if the base text is the smaller text
+							else { 
+								// if the base text is the smaller text: 
 									// smallerText = baseText
 									// smallerTextToken = baseTextToken
 								getContainer().addTokenMapping(smallerTextToken, biggerTextToken, biggerText);
@@ -883,8 +860,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 							// anequivalence class
 					}
 
-				} else { // the other token has either no start or no length ->
-							// ERROR
+				} else { 
+					// the other token has either no start or no length ->ERROR
 					throw new PepperModuleException(this, "The SToken " + smallerText.getSId() + " of the STextualDS " + smallerText.getSId() + " has no proper start or length. It was probably not aligned correctly.");
 				} // the other token has either no start or no length -> ERROR
 			}

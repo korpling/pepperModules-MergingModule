@@ -77,13 +77,13 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 	}
 
 	@Override
-	public boolean isReadyToStart(){
-		if (getModuleController().getJob().getMaxNumberOfDocuments()< 2){
-			throw new PepperModuleException(this, "The merger cannot work with less than 2 documents in main memory in parallel. Please check the property '"+PepperConfiguration.PROP_MAX_AMOUNT_OF_SDOCUMENTS+"' in the Pepper configuration. ");
+	public boolean isReadyToStart() {
+		if (getModuleController().getJob().getMaxNumberOfDocuments() < 2) {
+			throw new PepperModuleException(this, "The merger cannot work with less than 2 documents in main memory in parallel. Please check the property '" + PepperConfiguration.PROP_MAX_AMOUNT_OF_SDOCUMENTS + "' in the Pepper configuration. ");
 		}
-		return(true);
+		return (true);
 	};
-	
+
 	/**
 	 * A table containing the import order for {@link SElementId} corresponding
 	 * to {@link SDocument} and {@link SCorpus} nodes corresponding to the
@@ -319,15 +319,10 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		}
 	}
 
-	// ===========================================> synchronization to avoid
-	// deadlocks in mapper
+	// =========================> synchronization to avoid deadlocks in mapper
 	private volatile Lock mergerMappersLock = new ReentrantLock();
 	private volatile Condition mergerMappersCondition = mergerMappersLock.newCondition();
 	private volatile int numberOfMergerMappers = 0;
-
-	// private final int maxNumOfMergerMappers =
-	// Double.valueOf(Math.floor(getModuleController().getJob().getMaxNumberOfDocuments()
-	// / 2)).intValue();
 
 	/**
 	 * waits until less or equal merger-mappers are active than the half of the
@@ -342,7 +337,6 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		mergerMappersLock.lock();
 		try {
 			if (getModuleController() != null && getModuleController().getJob() != null) {
-				System.out.println("----------------> "+ numberOfMergerMappers +" >= "+Double.valueOf(Math.floor(getModuleController().getJob().getMaxNumberOfDocuments() / 2)).intValue());
 				while (numberOfMergerMappers >= Double.valueOf(Math.floor(getModuleController().getJob().getMaxNumberOfDocuments() / 2)).intValue()) {
 					mergerMappersCondition.await();
 				}
@@ -370,8 +364,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		}
 	}
 
-	// ===========================================< synchronization to avoid
-	// deadlocks in mapper
+	// ===========================< synchronization to avoid deadlocks in mapper
 	/**
 	 * a set of {@link SElementId} corresponding to documents for which the
 	 * merging have not been started
@@ -456,7 +449,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 			logger.trace("[Merger] New document has arrived {}. ", SaltFactory.eINSTANCE.getGlobalId(sElementId));
 			documentsToMerge.add(SaltFactory.eINSTANCE.getGlobalId(sElementId));
 
-			//send all documents to sleep 
+			// send all documents to sleep
 			if (logger.isTraceEnabled()) {
 				logger.trace("[Merger] " + "Waiting for further documents, {} documents are in queue. ", documentsToMerge.size());
 			}
@@ -465,24 +458,9 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 			if (documentController.isAsleep()) {
 				getModuleController().getJob().releaseDocument(documentController);
 				logger.trace("[Merger] " + "Sent document '{}' to sleep. ", documentController.getGlobalId());
-			}else{
+			} else {
 				logger.warn("Was not able to send document '{}' to sleep. ", documentController.getGlobalId());
 			}
-			
-//			if (givenSlot.size() < mappableSlot.size()) {
-//				if (logger.isTraceEnabled()) {
-//					logger.trace("[Merger] " + "Waiting for further documents, {} documents are in queue. ", documentsToMerge.size());
-//				}
-//				documentController.sendToSleep_FORCE();
-//				// this is a bit hacky, but necessary
-//				if (documentController.isAsleep()) {
-//					getModuleController().getJob().releaseDocument(documentController);
-//					logger.trace("[Merger] " + "Sent document '{}' to sleep. ", documentController.getGlobalId());
-//				}else{
-//					logger.warn("Was not able to send document '{}' to sleep. ", documentController.getGlobalId());
-//				}
-//			} 
-//				else if (givenSlot.size() == mappableSlot.size()) {
 			if (givenSlot.size() == mappableSlot.size()) {
 				try {
 					for (SElementId sDocumentId : givenSlot) {
@@ -490,49 +468,17 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 						if (docController == null) {
 							throw new PepperModuleException(this, "Cannot find a document controller for document '" + SaltFactory.eINSTANCE.getGlobalId(sDocumentId) + "' in list: " + getDocumentId2DC() + ". ");
 						}
-						// logger.trace("[Merger] Try to wake up document {}. {} documents are currently active. ",
-						// docController.getGlobalId(),
-						// getModuleController().getJob().getNumOfActiveDocuments());
-						// // ask for loading a document into main memory and
-						// wait
-						// // if necessary
-						// getModuleController().getJob().getPermissionForProcessDoument(docController);
-						// docController.awake();
-						// logger.trace("[Merger] Successfully woke up document {}. ",
-						// docController.getGlobalId());
 						documentsToMerge.remove(docController.getGlobalId());
 					}
-					// if (logger.isTraceEnabled()) {
-					// String docs = "";
-					// int i = 0;
-					// for (SElementId sDocumentId : givenSlot) {
-					// if (i == 0) {
-					// docs = sDocumentId.getSId();
-					// } else {
-					// docs = docs + ", " +
-					// SaltFactory.eINSTANCE.getGlobalId(sDocumentId);
-					// }
-					// i++;
-					// }
-					// logger.trace("[Merger] " +
-					// "Wake up all documents corresponding to id '{}': {}",
-					// sElementId.getSId(), docs);
-					// }
-
-					System.out.println("--------------------__> wait for merger: "+ SaltFactory.eINSTANCE.getGlobalId(sElementId));
 					// waits until enough spaces for documents is available to
 					// start mapper
 					waitForMergerMapper();
-					System.out.println("--------------------__> ended waiting for merger");
-					
+
 					start(sElementId);
 				} catch (Exception e) {
 					throw new PepperModuleException("Any exception occured while merging documents corresponding to '" + sElementId + "'. ", e);
 				}
-			} 
-//			else {
-//				throw new PepperModuleException(this, "This should not have beeen happend and is a bug of module. The problem is, 'givenSlot.size()' is higher than 'mappableSlot.size()'.");
-//			}
+			}
 		}
 
 		Collection<PepperMapperController> controllers = null;
