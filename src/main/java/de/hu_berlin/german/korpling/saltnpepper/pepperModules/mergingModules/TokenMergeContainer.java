@@ -463,27 +463,40 @@ public class TokenMergeContainer {
 
 	/**
 	 * This method frees the memory used by the specified {@SDocument
+	 * 
+	 * 
 	 * } in the {@link TokenMergeContainer}.
 	 * 
-	 * @param sDocument
-	 *            The {@SDocument}
+	 * @param document
+	 *            document whose elements should be removed from internal
+	 *            indexes
 	 */
-	public void finishDocument(SDocument sDocument) {
-		logger.debug("[Merger] " + "Finishing document: {}.", SaltFactory.eINSTANCE.getGlobalId(sDocument.getSElementId()));
-		if (this.alignedTextsMap.containsKey(sDocument)) {
-			this.alignedTextsMap.remove(sDocument);
-		}
-		if (this.normalizedTexts.containsKey(sDocument)) {
-			this.normalizedTexts.remove(sDocument);
-		}
-		if (sDocument == this.baseDocument) {
-			this.normalizedBaseTextToOriginalBaseText.clear();
-		}
-		for (SToken tok : this.equivalentToken.keySet()) {
-			Map<STextualDS, SToken> map = this.equivalentToken.get(tok);
-			if (map != null && map.containsKey(sDocument)) {
-				this.equivalentToken.get(tok).remove(sDocument);
+	public void finishDocument(SDocument document) {
+		logger.debug("[Merger] " + "Finishing document: {}.", SaltFactory.eINSTANCE.getGlobalId(document.getSElementId()));
+		if (document != null && document.getSDocumentGraph() != null) {
+			if (document.getSDocumentGraph().getSTextualDSs() != null) {
+				for (STextualDS text : document.getSDocumentGraph().getSTextualDSs()) {
+					alignedTextsMap.remove(text);
+					normalizedTexts.remove(text);
+					normalizedBaseTextToOriginalBaseText.remove(text);
+				}
 			}
+			this.equivalentToken = new HashMap<>();
 		}
+		// if (this.alignedTextsMap.containsKey(document)) {
+		// this.alignedTextsMap.remove(document);
+		// }
+		// if (this.normalizedTexts.containsKey(document)) {
+		// this.normalizedTexts.remove(document);
+		// }
+		// if (document == this.baseDocument) {
+		// this.normalizedBaseTextToOriginalBaseText.clear();
+		// }
+		// for (SToken tok : this.equivalentToken.keySet()) {
+		// Map<STextualDS, SToken> map = this.equivalentToken.get(tok);
+		// if (map != null && map.containsKey(document)) {
+		// this.equivalentToken.get(tok).remove(document);
+		// }
+		// }
 	}
 }
