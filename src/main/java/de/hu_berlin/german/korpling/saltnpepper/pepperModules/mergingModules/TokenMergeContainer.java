@@ -465,6 +465,7 @@ public class TokenMergeContainer {
 	 * This method frees the memory used by the specified {@SDocument
 	 * 
 	 * 
+	 * 
 	 * } in the {@link TokenMergeContainer}.
 	 * 
 	 * @param document

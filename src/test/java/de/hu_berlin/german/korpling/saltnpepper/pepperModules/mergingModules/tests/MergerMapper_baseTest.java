@@ -61,7 +61,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 		this.setProperties(new MergerProperties());
 		this.initialize();
 	}
-	
+
 	/**
 	 * Tests the normalization function with different texts.
 	 * <ol>
@@ -158,7 +158,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 		template.add(8);
 		assertEquals(template, this.createBaseTextNormOriginalMapping(doc1.getSDocumentGraph().getSTextualDSs().get(0)));
 	}
-	
+
 	/**
 	 * Tests the method
 	 * {@link #alignTexts(de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS, de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS)}
@@ -331,74 +331,74 @@ public class MergerMapper_baseTest extends MergerMapper {
 	 * Checks if three documents containing 2 texts each, are mergebale (each
 	 * text of a document has a matching one in the other documents).
 	 * <ol>
-	 * 	<li>document 1:
-	 *   <ol>
-	 *    <li>This is the first text.</li>
-	 *    <li>This is the second text.</li>
-	 *   </ol>
-	 *  </li>
-	 *  <li>document 2:
-	 *   <ol>
-	 *    <li>Thisisthefirsttext.</li>
-	 *    <li>Thisisthesecondtext.</li>
-	 *   </ol>
-	 *  </li>
-	 *  <li>document 3:
-	 *   <ol>
-	 *    <li>This   is   the   first    text.</li>
-	 *    <li>This   is   the   second   text.</li>
-	 *   </ol>
-	 *  </li>
+	 * <li>document 1:
+	 * <ol>
+	 * <li>This is the first text.</li>
+	 * <li>This is the second text.</li>
+	 * </ol>
+	 * </li>
+	 * <li>document 2:
+	 * <ol>
+	 * <li>Thisisthefirsttext.</li>
+	 * <li>Thisisthesecondtext.</li>
+	 * </ol>
+	 * </li>
+	 * <li>document 3:
+	 * <ol>
+	 * <li>This is the first text.</li>
+	 * <li>This is the second text.</li>
+	 * </ol>
+	 * </li>
 	 * </ol>
 	 */
 	@Test
 	public void testAlignTexts_n2m() {
-		//create document 1
-		SDocument doc1= SaltFactory.eINSTANCE.createSDocument();
+		// create document 1
+		SDocument doc1 = SaltFactory.eINSTANCE.createSDocument();
 		doc1.setSId("doc1");
 		doc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		STextualDS text11= doc1.getSDocumentGraph().createSTextualDS("This is the first text.");
+		STextualDS text11 = doc1.getSDocumentGraph().createSTextualDS("This is the first text.");
 		doc1.getSDocumentGraph().createSToken(text11, 0, 4);
 		doc1.getSDocumentGraph().createSToken(text11, 5, 7);
-		STextualDS text12= doc1.getSDocumentGraph().createSTextualDS("This is the second text.");
+		STextualDS text12 = doc1.getSDocumentGraph().createSTextualDS("This is the second text.");
 		doc1.getSDocumentGraph().createSToken(text12, 0, 4);
 		doc1.getSDocumentGraph().createSToken(text12, 5, 7);
-		
-		//create document 2
-		SDocument doc2= SaltFactory.eINSTANCE.createSDocument();
+
+		// create document 2
+		SDocument doc2 = SaltFactory.eINSTANCE.createSDocument();
 		doc2.setSId("doc2");
 		doc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		STextualDS text21= doc2.getSDocumentGraph().createSTextualDS("Thisisthefirsttext.");
+		STextualDS text21 = doc2.getSDocumentGraph().createSTextualDS("Thisisthefirsttext.");
 		doc2.getSDocumentGraph().createSToken(text21, 6, 9);
 		doc2.getSDocumentGraph().createSToken(text21, 9, 14);
-		STextualDS text22= doc2.getSDocumentGraph().createSTextualDS("Thisisthesecondtext.");
+		STextualDS text22 = doc2.getSDocumentGraph().createSTextualDS("Thisisthesecondtext.");
 		doc2.getSDocumentGraph().createSToken(text22, 6, 9);
 		doc2.getSDocumentGraph().createSToken(text22, 9, 15);
-		
-		//create document 3
-		SDocument doc3= SaltFactory.eINSTANCE.createSDocument();
+
+		// create document 3
+		SDocument doc3 = SaltFactory.eINSTANCE.createSDocument();
 		doc3.setSId("doc3");
 		doc3.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		STextualDS text31= doc3.getSDocumentGraph().createSTextualDS("This   is   the   first    text.");
+		STextualDS text31 = doc3.getSDocumentGraph().createSTextualDS("This   is   the   first    text.");
 		doc3.getSDocumentGraph().createSToken(text31, 27, 31);
 		doc3.getSDocumentGraph().createSToken(text31, 31, 32);
-		STextualDS text32= doc3.getSDocumentGraph().createSTextualDS("This   is   the   second   text.");
+		STextualDS text32 = doc3.getSDocumentGraph().createSTextualDS("This   is   the   second   text.");
 		doc3.getSDocumentGraph().createSToken(text32, 27, 31);
 		doc3.getSDocumentGraph().createSToken(text32, 31, 32);
-		
-		//create mapping subjects for documents
+
+		// create mapping subjects for documents
 		MappingSubject sub1 = new MappingSubject();
 		sub1.setSElementId(doc1.getSElementId());
 		getFixture().getMappingSubjects().add(sub1);
-		
+
 		MappingSubject sub2 = new MappingSubject();
 		sub2.setSElementId(doc2.getSElementId());
 		getFixture().getMappingSubjects().add(sub2);
-		
+
 		MappingSubject sub3 = new MappingSubject();
 		sub3.setSElementId(doc3.getSElementId());
 		getFixture().getMappingSubjects().add(sub3);
-		
+
 		this.mergeDocumentStructures(chooseBaseDocument());
 
 		assertEquals(2, doc1.getSDocumentGraph().getSTextualDSs().size());

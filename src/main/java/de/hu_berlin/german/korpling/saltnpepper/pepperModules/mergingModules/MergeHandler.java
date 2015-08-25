@@ -98,8 +98,8 @@ class MergeHandler implements SGraphTraverseHandler {
 	public void setBaseGraph(SDocumentGraph baseGraph) {
 		this.baseGraph = baseGraph;
 	}
-	
-	private MergerProperties properties= null;
+
+	private MergerProperties properties = null;
 
 	public MergerProperties getProperties() {
 		return properties;
@@ -192,21 +192,22 @@ class MergeHandler implements SGraphTraverseHandler {
 	 */
 	@Override
 	public boolean checkConstraint(GRAPH_TRAVERSE_TYPE traversalType, String traversalId, SRelation sRelation, SNode currNode, long order) {
-		boolean retVal= true;
+		boolean retVal = true;
 		if (sRelation != null) {
-			if (sRelation instanceof SPointingRelation){
-				//in case of relation is pointing relation, ignore it, it will be processed later
-		
-				retVal= false;
-			}else{
+			if (sRelation instanceof SPointingRelation) {
+				// in case of relation is pointing relation, ignore it, it will
+				// be processed later
+
+				retVal = false;
+			} else {
 				if (visitedRelations.contains(sRelation)) {
-					retVal= false;
+					retVal = false;
 				} else {
 					visitedRelations.add(sRelation);
 				}
 			}
 		}
-		return(retVal);
+		return (retVal);
 	}
 
 	/**
@@ -244,14 +245,13 @@ class MergeHandler implements SGraphTraverseHandler {
 	 */
 	private void mergeNode(SNode currNode, STYPE_NAME sTypeRelations, STYPE_NAME sTypeNode) {
 		SNode baseNode = null;
-		
-		//list of all equivalents to children of current node in base document
+
+		// list of all equivalents to children of current node in base document
 		List<SNode> childrens = getChildren(currNode, sTypeRelations);
-		
-		if (	(currNode instanceof SToken)||
-				(!getProperties().isCopyNodes())) {
+
+		if ((currNode instanceof SToken) || (!getProperties().isCopyNodes())) {
 			// do not copy all nodes, merge instead
-			
+
 			// list all parents in base document sharing the children
 			List<SNode> sharedParents = new ArrayList<SNode>();
 			if (childrens.size() > 0) {
@@ -263,9 +263,9 @@ class MergeHandler implements SGraphTraverseHandler {
 				baseNode = sharedParents.get(0);
 			}
 		}
-		if (baseNode== null){
-			//no equivalent to currNode in base document was found
-			
+		if (baseNode == null) {
+			// no equivalent to currNode in base document was found
+
 			switch (sTypeNode) {
 			case STOKEN: {
 				baseNode = node2NodeMap.get(currNode);
@@ -411,8 +411,8 @@ class MergeHandler implements SGraphTraverseHandler {
 	}
 
 	/**
-	 * Returns a list of nodes in base document. The returned nodes are equivalents to the
-	 * direct children of the passed parent node. The
+	 * Returns a list of nodes in base document. The returned nodes are
+	 * equivalents to the direct children of the passed parent node. The
 	 * children are retrieved via traversing of relations of the passed
 	 * {@link STYPE_NAME}.
 	 * 
