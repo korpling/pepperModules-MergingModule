@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -520,7 +521,9 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 	@Override
 	public void end() throws PepperModuleException {
 		List<SCorpusGraph> removeCorpusStructures = new ArrayList<SCorpusGraph>();
-		for (SCorpusGraph graph : getSaltProject().getSCorpusGraphs()) {
+		Iterator<SCorpusGraph> it = getSaltProject().getSCorpusGraphs().iterator();
+		while (it.hasNext()) {
+			SCorpusGraph graph = it.next();
 			if (graph != getBaseCorpusStructure()) {
 				removeCorpusStructures.add(graph);
 			}
@@ -530,7 +533,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				getSaltProject().getSCorpusGraphs().remove(graph);
 			}
 		}
-		if (removeCorpusStructures.size() != 1) {
+		if (getSaltProject().getSCorpusGraphs().size() != 1) {
 			logger.warn("Could not remove all corpus-structures from salt project which are not the base corpus-structure. Left structures are: '" + removeCorpusStructures + "'. ");
 		}
 	}
