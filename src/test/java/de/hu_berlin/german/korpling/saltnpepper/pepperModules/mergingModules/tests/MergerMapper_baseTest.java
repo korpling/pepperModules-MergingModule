@@ -25,23 +25,22 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
 
-import org.eclipse.emf.common.util.EList;
+import org.corpus_tools.pepper.modules.MappingSubject;
+import org.corpus_tools.pepper.modules.PepperModuleProperty;
+import org.corpus_tools.salt.SaltFactory;
+import org.corpus_tools.salt.common.SCorpusGraph;
+import org.corpus_tools.salt.common.SDocument;
+import org.corpus_tools.salt.common.STextualDS;
+import org.corpus_tools.salt.common.SToken;
+import org.corpus_tools.salt.common.SaltProject;
+import org.corpus_tools.salt.core.SNode;
+import org.corpus_tools.salt.samples.SampleGenerator;
 import org.eclipse.emf.common.util.URI;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.MappingSubject;
-import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperModuleProperty;
 import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.MergerMapper;
 import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.MergerProperties;
-import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.SaltProject;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpusGraph;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
-import de.hu_berlin.german.korpling.saltnpepper.salt.samples.SampleGenerator;
 
 public class MergerMapper_baseTest extends MergerMapper {
 
@@ -76,32 +75,32 @@ public class MergerMapper_baseTest extends MergerMapper {
 		String normText = "";
 
 		// test 1
-		SDocument doc1 = SaltFactory.eINSTANCE.createSDocument();
-		doc1.setSId("doc1");
-		doc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		doc1.getSDocumentGraph().createSTextualDS(origText);
+		SDocument doc1 = SaltFactory.createSDocument();
+		doc1.setId("doc1");
+		doc1.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		doc1.getDocumentGraph().createTextualDS(origText);
 		this.normalizePrimaryTexts(doc1);
 
-		assertEquals(normText, this.container.getNormalizedText(doc1.getSDocumentGraph().getSTextualDSs().get(0)));
+		assertEquals(normText, this.container.getNormalizedText(doc1.getDocumentGraph().getTextualDSs().get(0)));
 		this.container.finishDocument(doc1);
 
 		// test2
 		origText = "Is this sample more complicated, than it appears to be?";
 		normText = "Isthissamplemorecomplicated,thanitappearstobe?";
-		doc1.getSDocumentGraph().getSTextualDSs().get(0).setSText(origText);
+		doc1.getDocumentGraph().getTextualDSs().get(0).setText(origText);
 		this.normalizePrimaryTexts(doc1);
 
-		assertEquals(normText, this.container.getNormalizedText(doc1.getSDocumentGraph().getSTextualDSs().get(0)));
+		assertEquals(normText, this.container.getNormalizedText(doc1.getDocumentGraph().getTextualDSs().get(0)));
 		this.container.finishDocument(doc1);
 
 		// test3
 		origText = "Das wäre überaus schön";
 		normText = "Daswaereueberausschoen";
 
-		doc1.getSDocumentGraph().getSTextualDSs().get(0).setSText(origText);
+		doc1.getDocumentGraph().getTextualDSs().get(0).setText(origText);
 		this.normalizePrimaryTexts(doc1);
 
-		assertEquals(normText, this.container.getNormalizedText(doc1.getSDocumentGraph().getSTextualDSs().get(0)));
+		assertEquals(normText, this.container.getNormalizedText(doc1.getDocumentGraph().getTextualDSs().get(0)));
 		this.container.finishDocument(doc1);
 	}
 
@@ -136,10 +135,10 @@ public class MergerMapper_baseTest extends MergerMapper {
 		String origText = " thäs is";
 
 		// test 1
-		SDocument doc1 = SaltFactory.eINSTANCE.createSDocument();
-		doc1.setSId("doc1");
-		doc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		doc1.getSDocumentGraph().createSTextualDS(origText);
+		SDocument doc1 = SaltFactory.createSDocument();
+		doc1.setId("doc1");
+		doc1.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		doc1.getDocumentGraph().createTextualDS(origText);
 		this.normalizePrimaryTexts(doc1);
 
 		List<Integer> template = new Vector<Integer>();
@@ -156,7 +155,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 		template.add(6);
 		template.add(7);
 		template.add(8);
-		assertEquals(template, this.createBaseTextNormOriginalMapping(doc1.getSDocumentGraph().getSTextualDSs().get(0)));
+		assertEquals(template, this.createBaseTextNormOriginalMapping(doc1.getDocumentGraph().getTextualDSs().get(0)));
 	}
 
 	/**
@@ -173,20 +172,20 @@ public class MergerMapper_baseTest extends MergerMapper {
 	 */
 	@Test
 	public void testAlignTexts_case1() {
-		SDocument sDoc1 = SaltFactory.eINSTANCE.createSDocument();
-		sDoc1.setSId("doc1");
-		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		SDocument sDoc1 = SaltFactory.createSDocument();
+		sDoc1.setId("doc1");
+		sDoc1.setDocumentGraph(SaltFactory.createSDocumentGraph());
 		SampleGenerator.createPrimaryData(sDoc1);
 		SampleGenerator.createTokens(sDoc1);
 
-		SDocument sDoc2 = SaltFactory.eINSTANCE.createSDocument();
-		sDoc2.setSId("doc2");
-		sDoc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		sDoc2.getSDocumentGraph().createSTextualDS("Well. " + SampleGenerator.PRIMARY_TEXT_EN + " I am not sure!");
-		sDoc2.getSDocumentGraph().tokenize();
+		SDocument sDoc2 = SaltFactory.createSDocument();
+		sDoc2.setId("doc2");
+		sDoc2.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		sDoc2.getDocumentGraph().createTextualDS("Well. " + SampleGenerator.PRIMARY_TEXT_EN + " I am not sure!");
+		sDoc2.getDocumentGraph().tokenize();
 
-		EList<SToken> baseTextToken = sDoc2.getSDocumentGraph().getSortedSTokenByText();
-		EList<SToken> otherTextToken = sDoc1.getSDocumentGraph().getSortedSTokenByText();
+		List<SToken> baseTextToken = sDoc2.getDocumentGraph().getSortedTokenByText();
+		List<SToken> otherTextToken = sDoc1.getDocumentGraph().getSortedTokenByText();
 
 		// TODO check alignTests
 		this.normalizePrimaryTexts(sDoc1);
@@ -198,7 +197,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 		// test 2 : align must return true
 		HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 		Hashtable<SNode, SNode> equivalenceMap = new Hashtable<SNode, SNode>();
-		assertTrue(this.alignTexts(sDoc2.getSDocumentGraph().getSTextualDSs().get(0), sDoc1.getSDocumentGraph().getSTextualDSs().get(0), nonEquivalentTokenInOtherTexts, equivalenceMap));
+		assertTrue(this.alignTexts(sDoc2.getDocumentGraph().getTextualDSs().get(0), sDoc1.getDocumentGraph().getTextualDSs().get(0), nonEquivalentTokenInOtherTexts, equivalenceMap));
 
 		// test 3 : the token alignment is correct : the equivalence classes are
 		// correct
@@ -206,8 +205,8 @@ public class MergerMapper_baseTest extends MergerMapper {
 		for (int i = 2; i < 11; i++) {
 			SToken base = baseTextToken.get(i);
 			SToken otherToken = otherTextToken.get(j);
-			STextualDS otherText = sDoc1.getSDocumentGraph().getSTextualDSs().get(0);
-			assertEquals("Base Token " + base.getSName() + " and other token " + otherToken.getSName() + " (start: " + this.container.getAlignedTokenStart(otherText, otherToken) + ") should be equal.", this.container.getTokenMapping(base, otherText), otherToken);
+			STextualDS otherText = sDoc1.getDocumentGraph().getTextualDSs().get(0);
+			assertEquals("Base Token " + base.getName() + " and other token " + otherToken.getName() + " (start: " + this.container.getAlignedTokenStart(otherText, otherToken) + ") should be equal.", this.container.getTokenMapping(base, otherText), otherToken);
 			j++;
 		}
 	}
@@ -225,98 +224,98 @@ public class MergerMapper_baseTest extends MergerMapper {
 	@Test
 	public void testAlignTexts_caseRidges1() {
 		// create document 1
-		SDocument sDoc1 = SaltFactory.eINSTANCE.createSDocument();
-		sDoc1.setSId("doc1");
-		sDoc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		SDocument sDoc1 = SaltFactory.createSDocument();
+		sDoc1.setId("doc1");
+		sDoc1.setDocumentGraph(SaltFactory.createSDocumentGraph());
 		String norm = "Die deutschen Namen, die dann oft daneben stehen, tragen meist ein solches Gepräge der Unklarheit, dass sie jeden zurückschrecken müssen, der sie statt der lateinischen einführen möchte.";
 		String dipl = "Die deutſchen Namen, die dann oft daneben ſtehen, tragen meiſt ein ſolches Gepräge der Unklarheit, daſz ſie jeden zurückſchrecken müſſen, der ſie ſtatt der lateiniſchen einführen möchte.";
-		STextualDS sTextDS1 = sDoc1.getSDocumentGraph().createSTextualDS(norm);
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 0, 3); // Die
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 4, 13); // deutschen
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 14, 19); // Namen
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 19, 20); // ,
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 21, 24); // die
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 25, 29); // dann
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 30, 33); // oft
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 34, 41); // daneben
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 42, 48); // stehen
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 48, 49); // ,
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 50, 56); // tragen
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 57, 62); // meist
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 63, 66); // ein
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 67, 74); // solches
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 75, 82); // Gepräge
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 83, 86); // der
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 87, 97); // Unklarheit
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 97, 98); // ,
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 99, 103); // dass
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 104, 107); // sie
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 108, 113); // jeden
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 114, 129); // zurückschrecken
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 130, 136); // müssen
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 136, 137); // ,
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 138, 141); // der
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 142, 145); // sie
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 146, 151); // statt
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 152, 155); // der
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 156, 168); // lateinischen
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 169, 178); // einführen
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 179, 185); // möchte
-		sDoc1.getSDocumentGraph().createSToken(sTextDS1, 185, 186); // .
+		STextualDS sTextDS1 = sDoc1.getDocumentGraph().createTextualDS(norm);
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 0, 3); // Die
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 4, 13); // deutschen
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 14, 19); // Namen
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 19, 20); // ,
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 21, 24); // die
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 25, 29); // dann
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 30, 33); // oft
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 34, 41); // daneben
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 42, 48); // stehen
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 48, 49); // ,
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 50, 56); // tragen
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 57, 62); // meist
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 63, 66); // ein
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 67, 74); // solches
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 75, 82); // Gepräge
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 83, 86); // der
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 87, 97); // Unklarheit
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 97, 98); // ,
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 99, 103); // dass
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 104, 107); // sie
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 108, 113); // jeden
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 114, 129); // zurückschrecken
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 130, 136); // müssen
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 136, 137); // ,
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 138, 141); // der
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 142, 145); // sie
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 146, 151); // statt
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 152, 155); // der
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 156, 168); // lateinischen
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 169, 178); // einführen
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 179, 185); // möchte
+		sDoc1.getDocumentGraph().createToken(sTextDS1, 185, 186); // .
 
-		STextualDS sTextDS2 = sDoc1.getSDocumentGraph().createSTextualDS(dipl);
+		STextualDS sTextDS2 = sDoc1.getDocumentGraph().createTextualDS(dipl);
 		// tokenize : Die Deutschen Unklarheit möchte
-		sDoc1.getSDocumentGraph().createSToken(sTextDS2, 0, 3); // Die
-		sDoc1.getSDocumentGraph().createSToken(sTextDS2, 4, 13); // deutschen
-		sDoc1.getSDocumentGraph().createSToken(sTextDS2, 87, 97); // Unklarheit
-		sDoc1.getSDocumentGraph().createSToken(sTextDS2, 179, 185); // möchte
+		sDoc1.getDocumentGraph().createToken(sTextDS2, 0, 3); // Die
+		sDoc1.getDocumentGraph().createToken(sTextDS2, 4, 13); // deutschen
+		sDoc1.getDocumentGraph().createToken(sTextDS2, 87, 97); // Unklarheit
+		sDoc1.getDocumentGraph().createToken(sTextDS2, 179, 185); // möchte
 
 		// create document2
-		SDocument sDoc2 = SaltFactory.eINSTANCE.createSDocument();
-		sDoc2.setSId("doc2");
-		sDoc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+		SDocument sDoc2 = SaltFactory.createSDocument();
+		sDoc2.setId("doc2");
+		sDoc2.setDocumentGraph(SaltFactory.createSDocumentGraph());
 		String tokenizer = "DiedeutschenNamen,diedannoftdanebenstehen,tragenmeisteinsolchesGeprägederUnklarheit,dasssiejedenzurückschreckenmüssen,dersiestattderlateinischeneinführenmöchte.";
-		STextualDS sTextDS3 = sDoc2.getSDocumentGraph().createSTextualDS(tokenizer);
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 0, 3); // Die
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 3, 12); // deutschen
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 12, 17); // Namen
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 17, 18); // ,
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 18, 21); // die
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 21, 25); // dann
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 25, 28); // oft
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 28, 35); // daneben
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 35, 41); // stehen
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 41, 42); // ,
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 42, 48); // tragen
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 48, 53); // meist
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 53, 56); // ein
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 56, 63); // solches
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 63, 70); // Gepräge
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 70, 73); // der
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 73, 83); // Unklarheit
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 83, 84); // s
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 84, 88); // dass
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 88, 91); // sie
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 91, 96); // jeden
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 96, 111); // zurückschrecken
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 111, 117); // müssen
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 117, 118); // ,
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 118, 121); // der
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 121, 124); // sie
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 124, 129); // statt
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 129, 132); // der
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 132, 144); // lateinischen
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 144, 153); // einführen
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 153, 159); // möchte
-		sDoc2.getSDocumentGraph().createSToken(sTextDS3, 159, 160); // .
+		STextualDS sTextDS3 = sDoc2.getDocumentGraph().createTextualDS(tokenizer);
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 0, 3); // Die
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 3, 12); // deutschen
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 12, 17); // Namen
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 17, 18); // ,
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 18, 21); // die
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 21, 25); // dann
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 25, 28); // oft
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 28, 35); // daneben
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 35, 41); // stehen
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 41, 42); // ,
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 42, 48); // tragen
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 48, 53); // meist
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 53, 56); // ein
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 56, 63); // solches
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 63, 70); // Gepräge
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 70, 73); // der
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 73, 83); // Unklarheit
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 83, 84); // s
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 84, 88); // dass
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 88, 91); // sie
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 91, 96); // jeden
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 96, 111); // zurückschrecken
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 111, 117); // müssen
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 117, 118); // ,
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 118, 121); // der
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 121, 124); // sie
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 124, 129); // statt
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 129, 132); // der
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 132, 144); // lateinischen
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 144, 153); // einführen
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 153, 159); // möchte
+		sDoc2.getDocumentGraph().createToken(sTextDS3, 159, 160); // .
 
 		// TODO call align method (or whatever)
 		// MergerMapper mm = new MergerMapper();
 		MappingSubject sub1 = new MappingSubject();
 		MappingSubject sub2 = new MappingSubject();
 
-		sub1.setSElementId(sDoc1.getSElementId());
-		sub2.setSElementId(sDoc2.getSElementId());
+		sub1.setIdentifier(sDoc1.getIdentifier());
+		sub2.setIdentifier(sDoc2.getIdentifier());
 
 		getFixture().getMappingSubjects().add(sub1);
 		getFixture().getMappingSubjects().add(sub2);
@@ -354,56 +353,56 @@ public class MergerMapper_baseTest extends MergerMapper {
 	@Test
 	public void testAlignTexts_n2m() {
 		// create document 1
-		SDocument doc1 = SaltFactory.eINSTANCE.createSDocument();
-		doc1.setSId("doc1");
-		doc1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		STextualDS text11 = doc1.getSDocumentGraph().createSTextualDS("This is the first text.");
-		doc1.getSDocumentGraph().createSToken(text11, 0, 4);
-		doc1.getSDocumentGraph().createSToken(text11, 5, 7);
-		STextualDS text12 = doc1.getSDocumentGraph().createSTextualDS("This is the second text.");
-		doc1.getSDocumentGraph().createSToken(text12, 0, 4);
-		doc1.getSDocumentGraph().createSToken(text12, 5, 7);
+		SDocument doc1 = SaltFactory.createSDocument();
+		doc1.setId("doc1");
+		doc1.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		STextualDS text11 = doc1.getDocumentGraph().createTextualDS("This is the first text.");
+		doc1.getDocumentGraph().createToken(text11, 0, 4);
+		doc1.getDocumentGraph().createToken(text11, 5, 7);
+		STextualDS text12 = doc1.getDocumentGraph().createTextualDS("This is the second text.");
+		doc1.getDocumentGraph().createToken(text12, 0, 4);
+		doc1.getDocumentGraph().createToken(text12, 5, 7);
 
 		// create document 2
-		SDocument doc2 = SaltFactory.eINSTANCE.createSDocument();
-		doc2.setSId("doc2");
-		doc2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		STextualDS text21 = doc2.getSDocumentGraph().createSTextualDS("Thisisthefirsttext.");
-		doc2.getSDocumentGraph().createSToken(text21, 6, 9);
-		doc2.getSDocumentGraph().createSToken(text21, 9, 14);
-		STextualDS text22 = doc2.getSDocumentGraph().createSTextualDS("Thisisthesecondtext.");
-		doc2.getSDocumentGraph().createSToken(text22, 6, 9);
-		doc2.getSDocumentGraph().createSToken(text22, 9, 15);
+		SDocument doc2 = SaltFactory.createSDocument();
+		doc2.setId("doc2");
+		doc2.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		STextualDS text21 = doc2.getDocumentGraph().createTextualDS("Thisisthefirsttext.");
+		doc2.getDocumentGraph().createToken(text21, 6, 9);
+		doc2.getDocumentGraph().createToken(text21, 9, 14);
+		STextualDS text22 = doc2.getDocumentGraph().createTextualDS("Thisisthesecondtext.");
+		doc2.getDocumentGraph().createToken(text22, 6, 9);
+		doc2.getDocumentGraph().createToken(text22, 9, 15);
 
 		// create document 3
-		SDocument doc3 = SaltFactory.eINSTANCE.createSDocument();
-		doc3.setSId("doc3");
-		doc3.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		STextualDS text31 = doc3.getSDocumentGraph().createSTextualDS("This   is   the   first    text.");
-		doc3.getSDocumentGraph().createSToken(text31, 27, 31);
-		doc3.getSDocumentGraph().createSToken(text31, 31, 32);
-		STextualDS text32 = doc3.getSDocumentGraph().createSTextualDS("This   is   the   second   text.");
-		doc3.getSDocumentGraph().createSToken(text32, 27, 31);
-		doc3.getSDocumentGraph().createSToken(text32, 31, 32);
+		SDocument doc3 = SaltFactory.createSDocument();
+		doc3.setId("doc3");
+		doc3.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		STextualDS text31 = doc3.getDocumentGraph().createTextualDS("This   is   the   first    text.");
+		doc3.getDocumentGraph().createToken(text31, 27, 31);
+		doc3.getDocumentGraph().createToken(text31, 31, 32);
+		STextualDS text32 = doc3.getDocumentGraph().createTextualDS("This   is   the   second   text.");
+		doc3.getDocumentGraph().createToken(text32, 27, 31);
+		doc3.getDocumentGraph().createToken(text32, 31, 32);
 
 		// create mapping subjects for documents
 		MappingSubject sub1 = new MappingSubject();
-		sub1.setSElementId(doc1.getSElementId());
+		sub1.setIdentifier(doc1.getIdentifier());
 		getFixture().getMappingSubjects().add(sub1);
 
 		MappingSubject sub2 = new MappingSubject();
-		sub2.setSElementId(doc2.getSElementId());
+		sub2.setIdentifier(doc2.getIdentifier());
 		getFixture().getMappingSubjects().add(sub2);
 
 		MappingSubject sub3 = new MappingSubject();
-		sub3.setSElementId(doc3.getSElementId());
+		sub3.setIdentifier(doc3.getIdentifier());
 		getFixture().getMappingSubjects().add(sub3);
 
 		this.mergeDocumentStructures(chooseBaseDocument());
 
-		assertEquals(2, doc1.getSDocumentGraph().getSTextualDSs().size());
-		assertEquals(12, doc1.getSDocumentGraph().getSTokens().size());
-		assertEquals(12, doc1.getSDocumentGraph().getSTextualRelations().size());
+		assertEquals(2, doc1.getDocumentGraph().getTextualDSs().size());
+		assertEquals(12, doc1.getDocumentGraph().getTokens().size());
+		assertEquals(12, doc1.getDocumentGraph().getTextualRelations().size());
 	}
 
 	/**
@@ -412,43 +411,43 @@ public class MergerMapper_baseTest extends MergerMapper {
 	 */
 	@Test
 	public void testChooseBaseDocument() {
-		SaltProject project = SaltFactory.eINSTANCE.createSaltProject();
+		SaltProject project = SaltFactory.createSaltProject();
 
-		SCorpusGraph g1 = SaltFactory.eINSTANCE.createSCorpusGraph();
-		project.getSCorpusGraphs().add(g1);
-		SDocument d1_1 = g1.createSDocument(URI.createURI("/c1/d1"));
-		d1_1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		d1_1.getSDocumentGraph().createSTextualDS("a sample text");
-		d1_1.getSDocumentGraph().tokenize();
+		SCorpusGraph g1 = SaltFactory.createSCorpusGraph();
+		project.addCorpusGraph(g1);
+		SDocument d1_1 = g1.createDocument(URI.createURI("/c1/d1"));
+		d1_1.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		d1_1.getDocumentGraph().createTextualDS("a sample text");
+		d1_1.getDocumentGraph().tokenize();
 		MappingSubject subj_1 = new MappingSubject();
-		subj_1.setSElementId(d1_1.getSElementId());
+		subj_1.setIdentifier(d1_1.getIdentifier());
 		getFixture().getMappingSubjects().add(subj_1);
 
-		SCorpusGraph g2 = SaltFactory.eINSTANCE.createSCorpusGraph();
-		project.getSCorpusGraphs().add(g2);
-		SDocument d1_2 = g2.createSDocument(URI.createURI("/c1/d1"));
-		d1_2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		d1_2.getSDocumentGraph().createSTextualDS("This is a sample text.");
-		d1_2.getSDocumentGraph().tokenize();
+		SCorpusGraph g2 = SaltFactory.createSCorpusGraph();
+		project.addCorpusGraph(g2);
+		SDocument d1_2 = g2.createDocument(URI.createURI("/c1/d1"));
+		d1_2.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		d1_2.getDocumentGraph().createTextualDS("This is a sample text.");
+		d1_2.getDocumentGraph().tokenize();
 		MappingSubject subj_2 = new MappingSubject();
-		subj_2.setSElementId(d1_2.getSElementId());
+		subj_2.setIdentifier(d1_2.getIdentifier());
 		getFixture().getMappingSubjects().add(subj_2);
 
-		SCorpusGraph g3 = SaltFactory.eINSTANCE.createSCorpusGraph();
-		project.getSCorpusGraphs().add(g3);
-		SDocument d1_3 = g3.createSDocument(URI.createURI("/c1/d1"));
-		d1_3.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		d1_3.getSDocumentGraph().createSTextualDS("a sample");
-		d1_3.getSDocumentGraph().tokenize();
+		SCorpusGraph g3 = SaltFactory.createSCorpusGraph();
+		project.addCorpusGraph(g3);
+		SDocument d1_3 = g3.createDocument(URI.createURI("/c1/d1"));
+		d1_3.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		d1_3.getDocumentGraph().createTextualDS("a sample");
+		d1_3.getDocumentGraph().tokenize();
 		MappingSubject subj_3 = new MappingSubject();
-		subj_3.setSElementId(d1_3.getSElementId());
+		subj_3.setIdentifier(d1_3.getIdentifier());
 		getFixture().getMappingSubjects().add(subj_3);
 
 		this.initialize();
 		// normalize all texts
 		for (MappingSubject subj : getFixture().getMappingSubjects()) {
-			if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
-				SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
+			if (subj.getIdentifier().getIdentifiableElement() instanceof SDocument) {
+				SDocument sDoc = (SDocument) subj.getIdentifier().getIdentifiableElement();
 				this.normalizePrimaryTexts(sDoc);
 			}
 		}
@@ -464,38 +463,38 @@ public class MergerMapper_baseTest extends MergerMapper {
 	 */
 	@Test
 	public void testChooseBaseDocument_manual() {
-		SCorpusGraph g1 = SaltFactory.eINSTANCE.createSCorpusGraph();
-		SDocument d1_1 = g1.createSDocument(URI.createURI("/c1/d1"));
-		d1_1.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		d1_1.getSDocumentGraph().createSTextualDS("a sample text");
+		SCorpusGraph g1 = SaltFactory.createSCorpusGraph();
+		SDocument d1_1 = g1.createDocument(URI.createURI("/c1/d1"));
+		d1_1.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		d1_1.getDocumentGraph().createTextualDS("a sample text");
 		MappingSubject subj_1 = new MappingSubject();
-		subj_1.setSElementId(d1_1.getSElementId());
+		subj_1.setIdentifier(d1_1.getIdentifier());
 		getFixture().getMappingSubjects().add(subj_1);
 
-		SCorpusGraph g2 = SaltFactory.eINSTANCE.createSCorpusGraph();
-		SDocument d1_2 = g2.createSDocument(URI.createURI("/c1/d1"));
-		d1_2.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		d1_2.getSDocumentGraph().createSTextualDS("This is a sample text.");
+		SCorpusGraph g2 = SaltFactory.createSCorpusGraph();
+		SDocument d1_2 = g2.createDocument(URI.createURI("/c1/d1"));
+		d1_2.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		d1_2.getDocumentGraph().createTextualDS("This is a sample text.");
 		MappingSubject subj_2 = new MappingSubject();
-		subj_2.setSElementId(d1_2.getSElementId());
+		subj_2.setIdentifier(d1_2.getIdentifier());
 		getFixture().getMappingSubjects().add(subj_2);
 
-		SCorpusGraph g3 = SaltFactory.eINSTANCE.createSCorpusGraph();
-		SDocument d1_3 = g3.createSDocument(URI.createURI("/c1/d1"));
-		d1_3.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
-		d1_3.getSDocumentGraph().createSTextualDS("a sample");
+		SCorpusGraph g3 = SaltFactory.createSCorpusGraph();
+		SDocument d1_3 = g3.createDocument(URI.createURI("/c1/d1"));
+		d1_3.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		d1_3.getDocumentGraph().createTextualDS("a sample");
 		MappingSubject subj_3 = new MappingSubject();
-		subj_3.setSElementId(d1_3.getSElementId());
+		subj_3.setIdentifier(d1_3.getIdentifier());
 		getFixture().getMappingSubjects().add(subj_3);
 
-		PepperModuleProperty prop = this.getFixture().getProperties().getProperty(MergerProperties.PROP_FIRST_AS_BASE);
+		PepperModuleProperty prop = getFixture().getProperties().getProperty(MergerProperties.PROP_FIRST_AS_BASE);
 		prop.setValue(Boolean.TRUE);
 
 		this.initialize();
 		// normalize all texts
 		for (MappingSubject subj : getFixture().getMappingSubjects()) {
-			if (subj.getSElementId().getSIdentifiableElement() instanceof SDocument) {
-				SDocument sDoc = (SDocument) subj.getSElementId().getSIdentifiableElement();
+			if (subj.getIdentifier().getIdentifiableElement() instanceof SDocument) {
+				SDocument sDoc = (SDocument) subj.getIdentifier().getIdentifiableElement();
 				this.normalizePrimaryTexts(sDoc);
 			}
 		}
@@ -504,7 +503,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 
 		MappingSubject result = this.chooseBaseDocument();
 
-		assertEquals(subj_3.getSElementId(), result.getSElementId());
+		assertEquals(subj_3.getIdentifier(), result.getIdentifier());
 		assertEquals(d1_3, this.container.getBaseDocument());
 	}
 }

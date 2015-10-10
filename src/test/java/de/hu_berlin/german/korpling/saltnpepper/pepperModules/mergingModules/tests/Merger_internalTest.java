@@ -22,16 +22,15 @@ import static org.junit.Assert.assertNotNull;
 
 import java.util.List;
 
+import org.corpus_tools.salt.SaltFactory;
+import org.corpus_tools.salt.common.SCorpus;
+import org.corpus_tools.salt.common.SCorpusGraph;
+import org.corpus_tools.salt.common.SDocument;
+import org.corpus_tools.salt.graph.Identifier;
 import org.junit.Before;
 import org.junit.Test;
 
 import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.Merger;
-import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpus;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpusGraph;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SElementId;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SMetaAnnotatableElement;
 
 /**
  * 
@@ -53,33 +52,7 @@ public class Merger_internalTest extends Merger {
 	@Before
 	public void setUp() {
 		setFixture(this);
-		getFixture().setSaltProject(SaltFactory.eINSTANCE.createSaltProject());
-	}
-
-	/**
-	 * Tests method
-	 * {@link #moveSMetaAnnotations(de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SMetaAnnotatableElement, de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SMetaAnnotatableElement)}
-	 */
-	@Test
-	public void testMoveSMetaAnnotations() {
-		SMetaAnnotatableElement source = SaltFactory.eINSTANCE.createSMetaAnnotatableElement();
-		source.createSMetaAnnotation("ns", "meta1", "whatever");
-		source.createSMetaAnnotation(null, "meta2", "whatever");
-
-		SMetaAnnotatableElement target = SaltFactory.eINSTANCE.createSMetaAnnotatableElement();
-		target.createSMetaAnnotation("ns", "meta3", "whatever");
-
-		moveSMetaAnnotations(source, target);
-
-		assertEquals(3, target.getSMetaAnnotations().size());
-		assertNotNull(target.getSMetaAnnotation("ns::meta1"));
-		assertNotNull(target.getSMetaAnnotation("meta2"));
-		assertNotNull(target.getSMetaAnnotation("ns::meta3"));
-
-		source = SaltFactory.eINSTANCE.createSMetaAnnotatableElement();
-		source.createSMetaAnnotation("ns", "meta1", "whatever");
-		moveSMetaAnnotations(source, target);
-		assertEquals(3, target.getSMetaAnnotations().size());
+		getFixture().setSaltProject(SaltFactory.createSaltProject());
 	}
 
 	/**
@@ -95,76 +68,76 @@ public class Merger_internalTest extends Merger {
 	 */
 	@Test
 	public void testProposeImportOrder() {
-		SCorpusGraph graph1 = SaltFactory.eINSTANCE.createSCorpusGraph();
-		SCorpus c1 = SaltFactory.eINSTANCE.createSCorpus();
-		c1.setSName("c1");
-		graph1.addSNode(c1);
-		SDocument d1 = SaltFactory.eINSTANCE.createSDocument();
-		d1.setSName("d1");
-		graph1.addSDocument(c1, d1);
+		SCorpusGraph graph1 = SaltFactory.createSCorpusGraph();
+		SCorpus c1 = SaltFactory.createSCorpus();
+		c1.setName("c1");
+		graph1.addNode(c1);
+		SDocument d1 = SaltFactory.createSDocument();
+		d1.setName("d1");
+		graph1.addDocument(c1, d1);
 
-		SCorpusGraph graph2 = SaltFactory.eINSTANCE.createSCorpusGraph();
-		SCorpus c1_2 = SaltFactory.eINSTANCE.createSCorpus();
-		c1_2.setSName("c1");
-		graph2.addSNode(c1_2);
-		SCorpus c2_2 = SaltFactory.eINSTANCE.createSCorpus();
-		c2_2.setSName("c2");
-		graph2.addSSubCorpus(c1_2, c2_2);
-		SDocument d1_2 = SaltFactory.eINSTANCE.createSDocument();
-		d1_2.setSName("d1");
-		graph2.addSDocument(c2_2, d1_2);
-		SDocument d2_2 = SaltFactory.eINSTANCE.createSDocument();
-		d2_2.setSName("d2");
-		graph2.addSDocument(c2_2, d2_2);
-		SCorpus c3_2 = SaltFactory.eINSTANCE.createSCorpus();
-		c3_2.setSName("c3");
-		graph2.addSSubCorpus(c1_2, c3_2);
-		SDocument d3_2 = SaltFactory.eINSTANCE.createSDocument();
-		d3_2.setSName("d3");
-		graph2.addSDocument(c3_2, d3_2);
+		SCorpusGraph graph2 = SaltFactory.createSCorpusGraph();
+		SCorpus c1_2 = SaltFactory.createSCorpus();
+		c1_2.setName("c1");
+		graph2.addNode(c1_2);
+		SCorpus c2_2 = SaltFactory.createSCorpus();
+		c2_2.setName("c2");
+		graph2.addSubCorpus(c1_2, c2_2);
+		SDocument d1_2 = SaltFactory.createSDocument();
+		d1_2.setName("d1");
+		graph2.addDocument(c2_2, d1_2);
+		SDocument d2_2 = SaltFactory.createSDocument();
+		d2_2.setName("d2");
+		graph2.addDocument(c2_2, d2_2);
+		SCorpus c3_2 = SaltFactory.createSCorpus();
+		c3_2.setName("c3");
+		graph2.addSubCorpus(c1_2, c3_2);
+		SDocument d3_2 = SaltFactory.createSDocument();
+		d3_2.setName("d3");
+		graph2.addDocument(c3_2, d3_2);
 
-		SCorpusGraph graph3 = SaltFactory.eINSTANCE.createSCorpusGraph();
-		SCorpus c1_3 = SaltFactory.eINSTANCE.createSCorpus();
-		c1_3.setSName("c1");
-		graph3.addSNode(c1_3);
-		SCorpus c2_3 = SaltFactory.eINSTANCE.createSCorpus();
-		c2_3.setSName("c2");
-		graph3.addSSubCorpus(c1_3, c2_3);
-		SDocument d1_3 = SaltFactory.eINSTANCE.createSDocument();
-		d1_3.setSName("d1");
-		graph3.addSDocument(c2_3, d1_3);
-		SDocument d2_3 = SaltFactory.eINSTANCE.createSDocument();
-		d2_3.setSName("d2");
-		graph3.addSDocument(c2_3, d2_3);
-		SCorpus c3_3 = SaltFactory.eINSTANCE.createSCorpus();
-		c3_3.setSName("c3");
-		graph3.addSSubCorpus(c1_3, c3_3);
-		SDocument d3_3 = SaltFactory.eINSTANCE.createSDocument();
-		d3_3.setSName("d3");
-		graph3.addSDocument(c3_3, d3_3);
+		SCorpusGraph graph3 = SaltFactory.createSCorpusGraph();
+		SCorpus c1_3 = SaltFactory.createSCorpus();
+		c1_3.setName("c1");
+		graph3.addNode(c1_3);
+		SCorpus c2_3 = SaltFactory.createSCorpus();
+		c2_3.setName("c2");
+		graph3.addSubCorpus(c1_3, c2_3);
+		SDocument d1_3 = SaltFactory.createSDocument();
+		d1_3.setName("d1");
+		graph3.addDocument(c2_3, d1_3);
+		SDocument d2_3 = SaltFactory.createSDocument();
+		d2_3.setName("d2");
+		graph3.addDocument(c2_3, d2_3);
+		SCorpus c3_3 = SaltFactory.createSCorpus();
+		c3_3.setName("c3");
+		graph3.addSubCorpus(c1_3, c3_3);
+		SDocument d3_3 = SaltFactory.createSDocument();
+		d3_3.setName("d3");
+		graph3.addDocument(c3_3, d3_3);
 
-		getFixture().getSaltProject().getSCorpusGraphs().add(graph1);
-		getFixture().getSaltProject().getSCorpusGraphs().add(graph2);
-		getFixture().getSaltProject().getSCorpusGraphs().add(graph3);
+		getFixture().getSaltProject().addCorpusGraph(graph1);
+		getFixture().getSaltProject().addCorpusGraph(graph2);
+		getFixture().getSaltProject().addCorpusGraph(graph3);
 
-		List<SElementId> importOrder;
+		List<Identifier> importOrder;
 
 		importOrder = this.proposeImportOrder(graph1);
 		assertNotNull(importOrder);
 		assertEquals(1, importOrder.size());
-		assertEquals(d1.getSElementId(), importOrder.get(0));
+		assertEquals(d1.getIdentifier(), importOrder.get(0));
 
 		importOrder = this.proposeImportOrder(graph2);
 		assertNotNull(importOrder);
 		assertEquals(3, importOrder.size());
-		assertEquals(d1_2.getSElementId(), importOrder.get(2));
-		assertEquals(d2_2.getSElementId(), importOrder.get(1));
-		assertEquals(d3_2.getSElementId(), importOrder.get(0));
+		assertEquals(d1_2.getIdentifier(), importOrder.get(2));
+		assertEquals(d2_2.getIdentifier(), importOrder.get(1));
+		assertEquals(d3_2.getIdentifier(), importOrder.get(0));
 
 		importOrder = this.proposeImportOrder(graph3);
 		assertNotNull(importOrder);
-		assertEquals(d1_3.getSElementId(), importOrder.get(2));
-		assertEquals(d2_3.getSElementId(), importOrder.get(1));
-		assertEquals(d3_3.getSElementId(), importOrder.get(0));
+		assertEquals(d1_3.getIdentifier(), importOrder.get(2));
+		assertEquals(d2_3.getIdentifier(), importOrder.get(1));
+		assertEquals(d3_3.getIdentifier(), importOrder.get(0));
 	}
 }

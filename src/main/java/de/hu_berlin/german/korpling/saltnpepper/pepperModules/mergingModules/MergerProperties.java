@@ -22,8 +22,8 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
-import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperModuleProperties;
-import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperModuleProperty;
+import org.corpus_tools.pepper.modules.PepperModuleProperties;
+import org.corpus_tools.pepper.modules.PepperModuleProperty;
 
 public class MergerProperties extends PepperModuleProperties {
 
