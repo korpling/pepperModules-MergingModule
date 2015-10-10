@@ -15,7 +15,7 @@
  *
  *
  */
-package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
+package org.corpus_tools.peppermodules.mergingModules;
 
 import java.util.ArrayList;
 import java.util.Collection;

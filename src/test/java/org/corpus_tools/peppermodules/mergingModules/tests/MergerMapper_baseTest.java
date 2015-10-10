@@ -15,7 +15,7 @@
  *
  *
  */
-package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.tests;
+package org.corpus_tools.peppermodules.mergingModules.tests;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -27,6 +27,8 @@ import java.util.Vector;
 
 import org.corpus_tools.pepper.modules.MappingSubject;
 import org.corpus_tools.pepper.modules.PepperModuleProperty;
+import org.corpus_tools.peppermodules.mergingModules.MergerMapper;
+import org.corpus_tools.peppermodules.mergingModules.MergerProperties;
 import org.corpus_tools.salt.SaltFactory;
 import org.corpus_tools.salt.common.SCorpusGraph;
 import org.corpus_tools.salt.common.SDocument;
@@ -38,9 +40,6 @@ import org.corpus_tools.salt.samples.SampleGenerator;
 import org.eclipse.emf.common.util.URI;
 import org.junit.Before;
 import org.junit.Test;
-
-import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.MergerMapper;
-import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.MergerProperties;
 
 public class MergerMapper_baseTest extends MergerMapper {
 
