@@ -15,7 +15,7 @@
  *
  *
  */
-package org.corpus_tools.peppermodules.mergingModules.tests;
+package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.tests;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -23,9 +23,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Hashtable;
 
-import org.corpus_tools.peppermodules.mergingModules.MergerProperties;
 import org.junit.Before;
 import org.junit.Test;
+
+import de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules.MergerProperties;
 
 public class MergerPropertiesTest {
 
