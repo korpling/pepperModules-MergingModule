@@ -37,7 +37,6 @@ import org.corpus_tools.salt.common.SToken;
 import org.corpus_tools.salt.common.SaltProject;
 import org.corpus_tools.salt.core.SNode;
 import org.corpus_tools.salt.samples.SampleGenerator;
-import org.corpus_tools.salt.util.SaltUtil;
 import org.eclipse.emf.common.util.URI;
 import org.junit.Before;
 import org.junit.Test;
@@ -463,10 +462,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 	 */
 	@Test
 	public void testChooseBaseDocument_manual() {
-		SaltProject project= SaltFactory.createSaltProject();
-		
 		SCorpusGraph g1 = SaltFactory.createSCorpusGraph();
-		project.addCorpusGraph(g1);
 		SDocument d1_1 = g1.createDocument(URI.createURI("/c1/d1"));
 		d1_1.setDocumentGraph(SaltFactory.createSDocumentGraph());
 		d1_1.getDocumentGraph().createTextualDS("a sample text");
@@ -475,7 +471,6 @@ public class MergerMapper_baseTest extends MergerMapper {
 		getFixture().getMappingSubjects().add(subj_1);
 
 		SCorpusGraph g2 = SaltFactory.createSCorpusGraph();
-		project.addCorpusGraph(g2);
 		SDocument d1_2 = g2.createDocument(URI.createURI("/c1/d1"));
 		d1_2.setDocumentGraph(SaltFactory.createSDocumentGraph());
 		d1_2.getDocumentGraph().createTextualDS("This is a sample text.");
@@ -484,7 +479,6 @@ public class MergerMapper_baseTest extends MergerMapper {
 		getFixture().getMappingSubjects().add(subj_2);
 
 		SCorpusGraph g3 = SaltFactory.createSCorpusGraph();
-		project.addCorpusGraph(g3);
 		SDocument d1_3 = g3.createDocument(URI.createURI("/c1/d1"));
 		d1_3.setDocumentGraph(SaltFactory.createSDocumentGraph());
 		d1_3.getDocumentGraph().createTextualDS("a sample");
@@ -509,6 +503,6 @@ public class MergerMapper_baseTest extends MergerMapper {
 		MappingSubject result = this.chooseBaseDocument();
 
 		assertEquals(subj_3.getIdentifier(), result.getIdentifier());
-		assertEquals(SaltUtil.getGlobalId(d1_3.getIdentifier())+" != "+SaltUtil.getGlobalId(container.getBaseDocument().getIdentifier()), d1_3, container.getBaseDocument());
+		assertEquals(d1_3, this.container.getBaseDocument());
 	}
 }
