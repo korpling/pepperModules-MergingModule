@@ -161,25 +161,31 @@ public class MergerMapper_graphTest extends MergerMapper {
 	@Test
 	public void testMergeSpans() {
 		// set up empty documents
-		SDocument sDoc1 = SaltFactory.createSDocument();
-		sDoc1.setId("sdoc1");
-		sDoc1.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		SDocument fixture = SaltFactory.createSDocument();
+		fixture.setId("sdoc1");
+		fixture.setDocumentGraph(SaltFactory.createSDocumentGraph());
 		MappingSubject sub1 = new MappingSubject();
-		sub1.setIdentifier(sDoc1.getIdentifier());
+		sub1.setIdentifier(fixture.getIdentifier());
 		getFixture().getMappingSubjects().add(sub1);
-		SampleGenerator.createPrimaryData(sDoc1);
-		SampleGenerator.createTokens(sDoc1);
+		SampleGenerator.createPrimaryData(fixture);
+		SampleGenerator.createTokens(fixture);
 
-		SDocument sDoc2 = SaltFactory.createSDocument();
-		sDoc2.setId("sdoc2");
-		sDoc2.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		SDocument other = SaltFactory.createSDocument();
+		other.setId("sdoc2");
+		other.setDocumentGraph(SaltFactory.createSDocumentGraph());
 		MappingSubject sub2 = new MappingSubject();
-		sub2.setIdentifier(sDoc2.getIdentifier());
+		sub2.setIdentifier(other.getIdentifier());
 		getFixture().getMappingSubjects().add(sub2);
-		SampleGenerator.createPrimaryData(sDoc2);
-		SampleGenerator.createTokens(sDoc2);
-		SampleGenerator.createInformationStructureSpan(sDoc2);
-		SampleGenerator.createInformationStructureAnnotations(sDoc2);
+		SampleGenerator.createPrimaryData(other);
+		SampleGenerator.createTokens(other);
+		SampleGenerator.createInformationStructureSpan(other);
+		SampleGenerator.createInformationStructureAnnotations(other);
+
+		assertEquals(0, fixture.getDocumentGraph().getSpans().size());
+		assertEquals(0, fixture.getDocumentGraph().getSpanningRelations().size());
+
+		this.isTestMode = true;
+		this.mergeDocumentStructures(chooseBaseDocument());
 
 		// template document contains all annotations
 		SDocument template = SaltFactory.createSDocument();
@@ -190,23 +196,12 @@ public class MergerMapper_graphTest extends MergerMapper {
 		SampleGenerator.createInformationStructureSpan(template);
 		SampleGenerator.createInformationStructureAnnotations(template);
 
-		assertEquals(0, sDoc1.getDocumentGraph().getSpans().size());
-		assertEquals(0, sDoc1.getDocumentGraph().getSpanningRelations().size());
-
-		this.isTestMode = true;
-		this.mergeDocumentStructures(chooseBaseDocument());
-
-		assertNotNull(sDoc2.getDocumentGraph());
-		assertEquals(template.getDocumentGraph().getTokens().size(), sDoc2.getDocumentGraph().getTokens().size());
-		assertEquals(template.getDocumentGraph().getSpans().size(), sDoc2.getDocumentGraph().getSpans().size());
-		assertEquals(template.getDocumentGraph().getSpanningRelations().size(), sDoc2.getDocumentGraph().getSpanningRelations().size());
-
-		assertEquals(template.getDocumentGraph().getNodes().size(), sDoc2.getDocumentGraph().getNodes().size());
-		assertEquals(template.getDocumentGraph().getRelations().size(), sDoc2.getDocumentGraph().getRelations().size());
+		Set<Difference> diffs = template.getDocumentGraph().findDiffs(fixture.getDocumentGraph());
+		assertEquals(diffs + "", 0, diffs.size());
 	}
 
 	/**
-	 * Tests two {@link SDocumentGraph}s containing {@link SSpan}s. Two equal 
+	 * Tests two {@link SDocumentGraph}s containing {@link SSpan}s. Two equal
 	 * spans, one contains annotations, the other one does not. In the end, both
 	 * shall have the same annotations.
 	 */
@@ -222,20 +217,20 @@ public class MergerMapper_graphTest extends MergerMapper {
 		SampleGenerator.createTokens(fixture);
 		SampleGenerator.createInformationStructureSpan(fixture);
 
-		SDocument biggerDoc = SaltFactory.createSDocument();
-		biggerDoc.setId("sdoc2");
-		biggerDoc.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		SDocument other = SaltFactory.createSDocument();
+		other.setId("sdoc2");
+		other.setDocumentGraph(SaltFactory.createSDocumentGraph());
 		MappingSubject sub2 = new MappingSubject();
-		sub2.setIdentifier(biggerDoc.getIdentifier());
+		sub2.setIdentifier(other.getIdentifier());
 		getFixture().getMappingSubjects().add(sub2);
-		SampleGenerator.createPrimaryData(biggerDoc);
-		SampleGenerator.createTokens(biggerDoc);
-		SampleGenerator.createInformationStructureSpan(biggerDoc);
-		SampleGenerator.createInformationStructureAnnotations(biggerDoc);
+		SampleGenerator.createPrimaryData(other);
+		SampleGenerator.createTokens(other);
+		SampleGenerator.createInformationStructureSpan(other);
+		SampleGenerator.createInformationStructureAnnotations(other);
 
 		this.isTestMode = true;
 		this.mergeDocumentStructures(chooseBaseDocument());
-		
+
 		// template document contains all annotations
 		SDocument template = SaltFactory.createSDocument();
 		template.setId("template");
@@ -245,8 +240,8 @@ public class MergerMapper_graphTest extends MergerMapper {
 		SampleGenerator.createInformationStructureSpan(template);
 		SampleGenerator.createInformationStructureAnnotations(template);
 
-		Set<Difference> diffs= template.getDocumentGraph().findDiffs(fixture.getDocumentGraph());
-		assertEquals(diffs+"", 0, diffs.size());
+		Set<Difference> diffs = template.getDocumentGraph().findDiffs(fixture.getDocumentGraph());
+		assertEquals(diffs + "", 0, diffs.size());
 	}
 
 	/**
@@ -728,7 +723,7 @@ public class MergerMapper_graphTest extends MergerMapper {
 		STextualDS sTextDS1 = sDoc1.getDocumentGraph().createTextualDS("boat");
 		SToken tok1 = sDoc1.getDocumentGraph().createToken(sTextDS1, 0, 3);
 		SSpan span1 = graph1.createSpan(tok1);
-		SSpanningRelation rel1 = (SSpanningRelation) (SRelation)graph1.getInRelations(tok1.getId()).get(0);
+		SSpanningRelation rel1 = (SSpanningRelation) (SRelation) graph1.getInRelations(tok1.getId()).get(0);
 
 		assertEquals(graph1, tok1.getGraph());
 		assertEquals(rel1.getSource(), span1);
