@@ -774,7 +774,7 @@ public class MergerMapper_graphTest extends MergerMapper {
 		for (SToken sTok : d1_1.getDocumentGraph().getTokens()) {
 			sLayer.addNode(sTok);
 		}
-		sLayer.getNodes().add(d1_1.getDocumentGraph().getSpans().get(0));
+		sLayer.addNode(d1_1.getDocumentGraph().getSpans().get(0));
 		for (SSpanningRelation rel : d1_1.getDocumentGraph().getSpanningRelations()) {
 			sLayer.addRelation(rel);
 		}
