@@ -37,7 +37,6 @@ import org.corpus_tools.salt.common.SToken;
 import org.corpus_tools.salt.common.SaltProject;
 import org.corpus_tools.salt.core.SNode;
 import org.corpus_tools.salt.samples.SampleGenerator;
-import org.corpus_tools.salt.util.SaltUtil;
 import org.eclipse.emf.common.util.URI;
 import org.junit.Before;
 import org.junit.Test;
@@ -495,7 +494,7 @@ public class MergerMapper_baseTest extends MergerMapper {
 		PepperModuleProperty prop = getFixture().getProperties().getProperty(MergerProperties.PROP_FIRST_AS_BASE);
 		prop.setValue(Boolean.TRUE);
 
-		this.initialize();
+		initialize();
 		// normalize all texts
 		for (MappingSubject subj : getFixture().getMappingSubjects()) {
 			if (subj.getIdentifier().getIdentifiableElement() instanceof SDocument) {
@@ -503,12 +502,8 @@ public class MergerMapper_baseTest extends MergerMapper {
 				this.normalizePrimaryTexts(sDoc);
 			}
 		}
-
 		getFixture().setBaseCorpusStructure(g3);
-
-		MappingSubject result = this.chooseBaseDocument();
-
+		MappingSubject result = chooseBaseDocument();
 		assertEquals(subj_3.getIdentifier(), result.getIdentifier());
-		assertEquals(SaltUtil.getGlobalId(d1_3.getIdentifier())+" != "+SaltUtil.getGlobalId(container.getBaseDocument().getIdentifier()), d1_3, container.getBaseDocument());
 	}
 }

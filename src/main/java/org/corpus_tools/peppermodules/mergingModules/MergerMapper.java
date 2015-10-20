@@ -34,7 +34,6 @@ import org.corpus_tools.pepper.modules.PepperMapper;
 import org.corpus_tools.pepper.modules.exceptions.PepperModuleDataException;
 import org.corpus_tools.pepper.modules.exceptions.PepperModuleException;
 import org.corpus_tools.pepper.modules.exceptions.PepperModuleInternalException;
-import org.corpus_tools.salt.SaltFactory;
 import org.corpus_tools.salt.common.SCorpus;
 import org.corpus_tools.salt.common.SCorpusGraph;
 import org.corpus_tools.salt.common.SDocument;
@@ -562,7 +561,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			List<STextualDS> sTextualDSs = sDocument.getDocumentGraph().getTextualDSs();
 			for (STextualDS sTextualDS : sTextualDSs) {
 				// normalize all textual datasources
-
 				List<Integer> originalToNormalizedMapping = new ArrayList<Integer>();
 				String normalizedText = createOriginalToNormalizedMapping(sTextualDS, originalToNormalizedMapping);
 				for (STextualRelation textRel : sDocument.getDocumentGraph().getTextualRelations()) {
