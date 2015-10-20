@@ -15,22 +15,20 @@
  *
  *
  */
-package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
+package org.corpus_tools.peppermodules.mergingModules;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.emf.common.util.BasicEList;
-import org.eclipse.emf.common.util.EList;
+import org.corpus_tools.pepper.modules.exceptions.PepperModuleException;
+import org.corpus_tools.salt.common.SDocument;
+import org.corpus_tools.salt.common.STextualDS;
+import org.corpus_tools.salt.common.SToken;
+import org.corpus_tools.salt.util.SaltUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.exceptions.PepperModuleException;
-import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.STextualDS;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sDocumentStructure.SToken;
 
 /**
  * 
@@ -64,8 +62,8 @@ public class TokenMergeContainer {
 		 * 
 		 * @return all contained {@link SToken} objects
 		 */
-		public EList<SToken> getTokens() {
-			return new BasicEList<SToken>(tokenLeftMap.keySet());
+		public List<SToken> getTokens() {
+			return new ArrayList<SToken>(tokenLeftMap.keySet());
 		}
 
 		/**
@@ -141,7 +139,7 @@ public class TokenMergeContainer {
 			if (this.tokenRightMap.containsKey(tok)) {
 				return this.tokenRightMap.get(tok);
 			} else {
-				throw new PepperModuleException("Cannot find token '" + tok.getSId() + "' in token right map");
+				throw new PepperModuleException("Cannot find token '" + tok.getId() + "' in token right map");
 			}
 		}
 	}
@@ -408,8 +406,8 @@ public class TokenMergeContainer {
 		if (otherTextToken.equals(baseTextToken)) {
 			// TODO this condition is a workaround, until corpusgraph id is
 			// included in sid
-			if (SaltFactory.eINSTANCE.getGlobalId(otherTextToken.getSElementId()).equals(SaltFactory.eINSTANCE.getGlobalId(baseTextToken.getSElementId()))) {
-				logger.warn("[Merger] " + "Sorry, you tried to add a token '" + SaltFactory.eINSTANCE.getGlobalId(baseTextToken.getSElementId()) + "' as it's own mapping");
+			if (SaltUtil.getGlobalId(otherTextToken.getIdentifier()).equals(SaltUtil.getGlobalId(baseTextToken.getIdentifier()))) {
+				logger.warn("[Merger] " + "Sorry, you tried to add a token '" + SaltUtil.getGlobalId(baseTextToken.getIdentifier()) + "' as it's own mapping");
 			}
 			return;
 		}
@@ -473,10 +471,10 @@ public class TokenMergeContainer {
 	 *            indexes
 	 */
 	public void finishDocument(SDocument document) {
-		logger.debug("[Merger] " + "Finishing document: {}.", SaltFactory.eINSTANCE.getGlobalId(document.getSElementId()));
-		if (document != null && document.getSDocumentGraph() != null) {
-			if (document.getSDocumentGraph().getSTextualDSs() != null) {
-				for (STextualDS text : document.getSDocumentGraph().getSTextualDSs()) {
+		logger.debug("[Merger] " + "Finishing document: {}.", SaltUtil.getGlobalId(document.getIdentifier()));
+		if (document != null && document.getDocumentGraph() != null) {
+			if (document.getDocumentGraph().getTextualDSs() != null) {
+				for (STextualDS text : document.getDocumentGraph().getTextualDSs()) {
 					alignedTextsMap.remove(text);
 					normalizedTexts.remove(text);
 					normalizedBaseTextToOriginalBaseText.remove(text);
@@ -484,20 +482,5 @@ public class TokenMergeContainer {
 			}
 			this.equivalentToken = new HashMap<>();
 		}
-		// if (this.alignedTextsMap.containsKey(document)) {
-		// this.alignedTextsMap.remove(document);
-		// }
-		// if (this.normalizedTexts.containsKey(document)) {
-		// this.normalizedTexts.remove(document);
-		// }
-		// if (document == this.baseDocument) {
-		// this.normalizedBaseTextToOriginalBaseText.clear();
-		// }
-		// for (SToken tok : this.equivalentToken.keySet()) {
-		// Map<STextualDS, SToken> map = this.equivalentToken.get(tok);
-		// if (map != null && map.containsKey(document)) {
-		// this.equivalentToken.get(tok).remove(document);
-		// }
-		// }
 	}
 }

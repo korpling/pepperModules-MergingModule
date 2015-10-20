@@ -15,7 +15,7 @@
  *
  *
  */
-package de.hu_berlin.german.korpling.saltnpepper.pepperModules.mergingModules;
+package org.corpus_tools.peppermodules.mergingModules;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,29 +32,27 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.corpus_tools.pepper.common.DOCUMENT_STATUS;
+import org.corpus_tools.pepper.common.PepperConfiguration;
+import org.corpus_tools.pepper.exceptions.PepperFWException;
+import org.corpus_tools.pepper.impl.PepperManipulatorImpl;
+import org.corpus_tools.pepper.modules.DocumentController;
+import org.corpus_tools.pepper.modules.MappingSubject;
+import org.corpus_tools.pepper.modules.PepperManipulator;
+import org.corpus_tools.pepper.modules.PepperMapper;
+import org.corpus_tools.pepper.modules.PepperMapperController;
+import org.corpus_tools.pepper.modules.exceptions.PepperModuleException;
+import org.corpus_tools.salt.SaltFactory;
+import org.corpus_tools.salt.common.SCorpus;
+import org.corpus_tools.salt.common.SCorpusGraph;
+import org.corpus_tools.salt.common.SDocument;
+import org.corpus_tools.salt.core.SNode;
+import org.corpus_tools.salt.graph.Identifier;
+import org.corpus_tools.salt.util.SaltUtil;
 import org.eclipse.emf.common.util.URI;
 import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import de.hu_berlin.german.korpling.saltnpepper.pepper.common.DOCUMENT_STATUS;
-import de.hu_berlin.german.korpling.saltnpepper.pepper.common.PepperConfiguration;
-import de.hu_berlin.german.korpling.saltnpepper.pepper.exceptions.PepperFWException;
-import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.DocumentController;
-import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.MappingSubject;
-import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperManipulator;
-import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperMapper;
-import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.PepperMapperController;
-import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.exceptions.PepperModuleException;
-import de.hu_berlin.german.korpling.saltnpepper.pepper.modules.impl.PepperManipulatorImpl;
-import de.hu_berlin.german.korpling.saltnpepper.salt.SaltFactory;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpus;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SCorpusGraph;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCommon.sCorpusStructure.SDocument;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SElementId;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SMetaAnnotatableElement;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SMetaAnnotation;
-import de.hu_berlin.german.korpling.saltnpepper.salt.saltCore.SNode;
 
 /**
  * 
@@ -86,11 +84,11 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 	};
 
 	/**
-	 * A table containing the import order for {@link SElementId} corresponding
+	 * A table containing the import order for {@link Identifier} corresponding
 	 * to {@link SDocument} and {@link SCorpus} nodes corresponding to the
 	 * {@link SCorpusGraph} they are contained in.
 	 **/
-	private Map<SCorpusGraph, List<SElementId>> importOrder = null;
+	private Map<SCorpusGraph, List<Identifier>> importOrder = null;
 
 	/**
 	 * a map containing all mapping partners ({@link SCorpus} and
@@ -137,7 +135,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 						if (i != 0) {
 							retVal.append(", ");
 						}
-						retVal.append(SaltFactory.eINSTANCE.getGlobalId(sNode.getSElementId()));
+						retVal.append(SaltUtil.getGlobalId(sNode.getIdentifier()));
 						i++;
 					}
 				}
@@ -179,40 +177,40 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 
 	/**
 	 * Creates a table of type {@link Multimap}, which contains a slot of
-	 * matching elements as value. The key is the {@link SElementId}. Only real
+	 * matching elements as value. The key is the {@link Identifier}. Only real
 	 * existing elements are contained in table.
 	 */
 	protected synchronized void createMapping() {
 		if (mappingTable == null) {
-			setBaseCorpusStructure(getSaltProject().getSCorpusGraphs().get(0));
+			setBaseCorpusStructure(getSaltProject().getCorpusGraphs().get(0));
 
 			// initialize importOrder
-			importOrder = new HashMap<SCorpusGraph, List<SElementId>>();
-			for (SCorpusGraph graph : getSaltProject().getSCorpusGraphs()) {
-				importOrder.put(graph, new ArrayList<SElementId>());
+			importOrder = new HashMap<SCorpusGraph, List<Identifier>>();
+			for (SCorpusGraph graph : getSaltProject().getCorpusGraphs()) {
+				importOrder.put(graph, new ArrayList<Identifier>());
 			}
 
 			mappingTable = new Multimap();
 			// TODO add mapping properties to table
-			for (SCorpusGraph graph : getSaltProject().getSCorpusGraphs()) {
-				if (graph.getSCorpora().size() != 0) {
-					for (SCorpus sCorpus : graph.getSCorpora()) {
-						// TODO check if sCorpus.getSId() is contained in
+			for (SCorpusGraph graph : getSaltProject().getCorpusGraphs()) {
+				if (graph.getCorpora().size() != 0) {
+					for (SCorpus sCorpus : graph.getCorpora()) {
+						// TODO check if sCorpus.getId() is contained in
 						// mapping properties
-						mappingTable.put(sCorpus.getSId(), sCorpus);
+						mappingTable.put(sCorpus.getId(), sCorpus);
 					}
-					for (SDocument sDocument : graph.getSDocuments()) {
+					for (SDocument sDocument : graph.getDocuments()) {
 
-						// TODO check if sDocument.getSId() is contained in
+						// TODO check if sDocument.getId() is contained in
 						// mapping properties
-						mappingTable.put(sDocument.getSId(), sDocument);
+						mappingTable.put(sDocument.getId(), sDocument);
 					}
 				}
 			}
 			// compute import order
 			// for each corpus graph create an empty list in listOfLists
-			List<List<List<SNode>>> listOfLists = new ArrayList<List<List<SNode>>>(getSaltProject().getSCorpusGraphs().size());
-			for (int i = 0; i < getSaltProject().getSCorpusGraphs().size(); i++) {
+			List<List<List<SNode>>> listOfLists = new ArrayList<List<List<SNode>>>(getSaltProject().getCorpusGraphs().size());
+			for (int i = 0; i < getSaltProject().getCorpusGraphs().size(); i++) {
 				listOfLists.add(new ArrayList<List<SNode>>());
 			}
 			// for each id in mappingTable add their nodes to mappingTable
@@ -222,36 +220,14 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 			}
 
 			// create import order in descending order of listOfLists
-			for (int i = getSaltProject().getSCorpusGraphs().size(); i > 0; i--) {
+			for (int i = getSaltProject().getCorpusGraphs().size(); i > 0; i--) {
 				List<List<SNode>> list = listOfLists.get(i - 1);
 				for (List<SNode> nodes : list) {
 					for (SNode node : nodes) {
 						if (node instanceof SDocument) {
-							importOrder.get(((SDocument) node).getSCorpusGraph()).add(node.getSElementId());
+							importOrder.get(((SDocument) node).getGraph()).add(node.getIdentifier());
 						}
 					}
-				}
-			}
-		}
-	}
-
-	/**
-	 * Moves all {@link SMetaAnnotation}s from <em>source</em> object to passed
-	 * <em>target</em> object.
-	 * 
-	 * @param source
-	 * @param target
-	 */
-	protected static void moveSMetaAnnotations(SMetaAnnotatableElement source, SMetaAnnotatableElement target) {
-		if ((source != null) && (target != null)) {
-			SMetaAnnotation sMeta = null;
-			int offset = 0;
-			while (source.getSMetaAnnotations().size() > offset) {
-				sMeta = source.getSMetaAnnotations().get(0);
-				if (target.getSMetaAnnotation(SaltFactory.eINSTANCE.createQName(sMeta.getSNS(), sMeta.getSName())) == null) {
-					target.addSMetaAnnotation(sMeta);
-				} else {
-					offset++;
 				}
 			}
 		}
@@ -263,10 +239,10 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 	 * they contain the same {@link SDocument}s (the ones to be merged).
 	 */
 	@Override
-	public List<SElementId> proposeImportOrder(SCorpusGraph sCorpusGraph) {
-		List<SElementId> retVal = null;
+	public List<Identifier> proposeImportOrder(SCorpusGraph sCorpusGraph) {
+		List<Identifier> retVal = null;
 		if (sCorpusGraph != null) {
-			if (getSaltProject().getSCorpusGraphs().size() > 1) {
+			if (getSaltProject().getCorpusGraphs().size() > 1) {
 				createMapping();
 				if (importOrder != null) {
 					retVal = importOrder.get(sCorpusGraph);
@@ -276,8 +252,8 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		return (retVal);
 	}
 
-	/** This table stores all corresponding mergable {@link SElementId}. */
-	private Map<String, List<SElementId>> givenSlots = null;
+	/** This table stores all corresponding mergable {@link Identifier}. */
+	private Map<String, List<Identifier>> givenSlots = null;
 
 	/**
 	 * For each {@link SCorpus} and {@link SDocument} in mapping table which has
@@ -294,13 +270,13 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 					if (node != null) {
 						if (node instanceof SCorpus) {
 							isDoc = false;
-							if (((SCorpus) node).getSCorpusGraph().equals(getBaseCorpusStructure())) {
+							if (((SCorpus) node).getGraph().equals(getBaseCorpusStructure())) {
 								noBase = false;
 								break;
 							}
 						} else if (node instanceof SDocument) {
 							isDoc = true;
-							if (((SDocument) node).getSCorpusGraph().equals(getBaseCorpusStructure())) {
+							if (((SDocument) node).getGraph().equals(getBaseCorpusStructure())) {
 								noBase = false;
 								break;
 							}
@@ -309,11 +285,11 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				}
 				if (noBase) {
 					if (isDoc) {
-						getBaseCorpusStructure().createSCorpus(URI.createURI(key).trimSegments(1));
-						SDocument doc = getBaseCorpusStructure().createSDocument(URI.createURI(key));
-						doc.setSDocumentGraph(SaltFactory.eINSTANCE.createSDocumentGraph());
+						getBaseCorpusStructure().createCorpus(URI.createURI(key).trimSegments(1));
+						SDocument doc = getBaseCorpusStructure().createDocument(URI.createURI(key));
+						doc.setDocumentGraph(SaltFactory.createSDocumentGraph());
 					} else {
-						getBaseCorpusStructure().createSCorpus(URI.createURI(key));
+						getBaseCorpusStructure().createCorpus(URI.createURI(key));
 					}
 				}
 			}
@@ -367,7 +343,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 
 	// ===========================< synchronization to avoid deadlocks in mapper
 	/**
-	 * a set of {@link SElementId} corresponding to documents for which the
+	 * a set of {@link Identifier} corresponding to documents for which the
 	 * merging have not been started
 	 **/
 	private Set<String> documentsToMerge = new HashSet<String>();
@@ -388,7 +364,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 			logger.warn("[Merger] Cannot merge corpora or documents, since only one corpus structure is given. ");
 
 			boolean isStart = true;
-			SElementId sElementId = null;
+			Identifier sElementId = null;
 			DocumentController documentController = null;
 			while ((isStart) || (sElementId != null)) {
 				isStart = false;
@@ -418,7 +394,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 					} else {
 						isFirst = false;
 					}
-					mergerMapping.append(SaltFactory.eINSTANCE.getGlobalId(partner.getSElementId()));
+					mergerMapping.append(SaltUtil.getGlobalId(partner.getIdentifier()));
 				}
 				mergerMapping.append(")");
 				mergerMapping.append("\n");
@@ -427,9 +403,9 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		}
 		// creating new thread group for mapper threads
 		setMapperThreadGroup(new ThreadGroup(Thread.currentThread().getThreadGroup(), this.getName() + "_mapperGroup"));
-		givenSlots = new Hashtable<String, List<SElementId>>();
+		givenSlots = new Hashtable<String, List<Identifier>>();
 		boolean isStart = true;
-		SElementId sElementId = null;
+		Identifier sElementId = null;
 		DocumentController documentController = null;
 		while ((isStart) || (sElementId != null)) {
 			isStart = false;
@@ -438,17 +414,17 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				break;
 			}
 			sElementId = documentController.getsDocumentId();
-			getDocumentId2DC().put(SaltFactory.eINSTANCE.getGlobalId(sElementId), documentController);
+			getDocumentId2DC().put(SaltUtil.getGlobalId(sElementId), documentController);
 
-			List<SNode> mappableSlot = mappingTable.get(sElementId.getSId());
-			List<SElementId> givenSlot = givenSlots.get(sElementId.getSId());
+			List<SNode> mappableSlot = mappingTable.get(sElementId.getId());
+			List<Identifier> givenSlot = givenSlots.get(sElementId.getId());
 			if (givenSlot == null) {
-				givenSlot = new Vector<SElementId>();
-				givenSlots.put(sElementId.getSId(), givenSlot);
+				givenSlot = new Vector<Identifier>();
+				givenSlots.put(sElementId.getId(), givenSlot);
 			}
 			givenSlot.add(sElementId);
-			logger.trace("[Merger] New document has arrived {}. ", SaltFactory.eINSTANCE.getGlobalId(sElementId));
-			documentsToMerge.add(SaltFactory.eINSTANCE.getGlobalId(sElementId));
+			logger.trace("[Merger] New document has arrived {}. ", SaltUtil.getGlobalId(sElementId));
+			documentsToMerge.add(SaltUtil.getGlobalId(sElementId));
 
 			// send all documents to sleep
 			if (logger.isTraceEnabled()) {
@@ -464,10 +440,10 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 			}
 			if (givenSlot.size() == mappableSlot.size()) {
 				try {
-					for (SElementId sDocumentId : givenSlot) {
-						DocumentController docController = getDocumentId2DC().get(SaltFactory.eINSTANCE.getGlobalId(sDocumentId));
+					for (Identifier sDocumentId : givenSlot) {
+						DocumentController docController = getDocumentId2DC().get(SaltUtil.getGlobalId(sDocumentId));
 						if (docController == null) {
-							throw new PepperModuleException(this, "Cannot find a document controller for document '" + SaltFactory.eINSTANCE.getGlobalId(sDocumentId) + "' in list: " + getDocumentId2DC() + ". ");
+							throw new PepperModuleException(this, "Cannot find a document controller for document '" + SaltUtil.getGlobalId(sDocumentId) + "' in list: " + getDocumentId2DC() + ". ");
 						}
 						documentsToMerge.remove(docController.getGlobalId());
 					}
@@ -495,9 +471,9 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 			}
 		}
 
-		Collection<SCorpus> corpora = Collections.synchronizedCollection(getBaseCorpusStructure().getSCorpora());
+		Collection<SCorpus> corpora = Collections.synchronizedCollection(getBaseCorpusStructure().getCorpora());
 		for (SCorpus sCorpus : corpora) {
-			start(sCorpus.getSElementId());
+			start(sCorpus.getIdentifier());
 		}
 
 		end();
@@ -521,7 +497,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 	@Override
 	public void end() throws PepperModuleException {
 		List<SCorpusGraph> removeCorpusStructures = new ArrayList<SCorpusGraph>();
-		Iterator<SCorpusGraph> it = getSaltProject().getSCorpusGraphs().iterator();
+		Iterator<SCorpusGraph> it = getSaltProject().getCorpusGraphs().iterator();
 		while (it.hasNext()) {
 			SCorpusGraph graph = it.next();
 			if (graph != getBaseCorpusStructure()) {
@@ -530,10 +506,10 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		}
 		if (removeCorpusStructures.size() > 0) {
 			for (SCorpusGraph graph : removeCorpusStructures) {
-				getSaltProject().getSCorpusGraphs().remove(graph);
+				getSaltProject().removeCorpusGraph(graph);
 			}
 		}
-		if (getSaltProject().getSCorpusGraphs().size() != 1) {
+		if (getSaltProject().getCorpusGraphs().size() != 1) {
 			logger.warn("Could not remove all corpus-structures from salt project which are not the base corpus-structure. Left structures are: '" + removeCorpusStructures + "'. ");
 		}
 	}
@@ -541,66 +517,66 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 	/**
 	 * Creates a {@link PepperMapper} of type {@link MergerMapper}. Therefore
 	 * the table {@link #givenSlots} must contain an entry for the given
-	 * {@link SElementId}. The create methods passes all documents and corpora
+	 * {@link Identifier}. The create methods passes all documents and corpora
 	 * given in the entire slot to the {@link MergerMapper}.
 	 **/
 	@Override
-	public PepperMapper createPepperMapper(SElementId sElementId) {
+	public PepperMapper createPepperMapper(Identifier sElementId) {
 		MergerMapper mapper = new MergerMapper();
-		if (sElementId.getSIdentifiableElement() instanceof SDocument) {
+		if (sElementId.getIdentifiableElement() instanceof SDocument) {
 			mapper.setMerger(this);
 			if ((givenSlots == null) || (givenSlots.size() == 0)) {
 				throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that 'givenSlots' is null or empty in method 'createPepperMapper()'");
 			}
-			List<SElementId> givenSlot = givenSlots.get(sElementId.getSId());
+			List<Identifier> givenSlot = givenSlots.get(sElementId.getId());
 			if (givenSlot == null) {
 				throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that a 'givenSlot' in 'givenSlots' is null or empty in method 'createPepperMapper()'. The sElementId '" + sElementId + "' was not contained in list: " + givenSlots);
 			}
 			boolean noBase = true;
-			for (SElementId id : givenSlot) {
+			for (Identifier id : givenSlot) {
 				MappingSubject mappingSubject = new MappingSubject();
-				mappingSubject.setSElementId(id);
+				mappingSubject.setIdentifier(id);
 				mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
 
-				if (sElementId.getSIdentifiableElement() instanceof SDocument) {
-					DocumentController documentController = getDocumentId2DC().get(SaltFactory.eINSTANCE.getGlobalId(id));
+				if (sElementId.getIdentifiableElement() instanceof SDocument) {
+					DocumentController documentController = getDocumentId2DC().get(SaltUtil.getGlobalId(id));
 					mappingSubject.setDocumentController(documentController);
 				}
 				mapper.getMappingSubjects().add(mappingSubject);
-				if (getBaseCorpusStructure() == (((SDocument) id.getSIdentifiableElement()).getSCorpusGraph())) {
+				if (getBaseCorpusStructure() == (((SDocument) id.getIdentifiableElement()).getGraph())) {
 					noBase = false;
 				}
 			}
 			if (noBase) {// no corpus in slot containing in base
 							// corpus-structure was found
 				MappingSubject mappingSubject = new MappingSubject();
-				SNode baseSNode = getBaseCorpusStructure().getSNode(sElementId.getSId());
+				SNode baseSNode = getBaseCorpusStructure().getNode(sElementId.getId());
 				if (baseSNode == null) {
-					throw new PepperModuleException(this, "Cannot create a mapper for '" + SaltFactory.eINSTANCE.getGlobalId(sElementId) + "', since no base SNode was found. ");
+					throw new PepperModuleException(this, "Cannot create a mapper for '" + SaltUtil.getGlobalId(sElementId) + "', since no base SNode was found. ");
 				}
-				mappingSubject.setSElementId(baseSNode.getSElementId());
+				mappingSubject.setIdentifier(baseSNode.getIdentifier());
 				mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
 				mapper.getMappingSubjects().add(mappingSubject);
 			}
-		} else if (sElementId.getSIdentifiableElement() instanceof SCorpus) {
-			List<SNode> givenSlot = mappingTable.get(sElementId.getSId());
+		} else if (sElementId.getIdentifiableElement() instanceof SCorpus) {
+			List<SNode> givenSlot = mappingTable.get(sElementId.getId());
 			if (givenSlot == null) {
 				throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that a 'givenSlot' in 'givenSlots' is null or empty in method 'createPepperMapper()'. The sElementId '" + sElementId + "' was not contained in list: " + givenSlots);
 			}
 			boolean noBase = true;
 			for (SNode sCorpus : givenSlot) {
 				MappingSubject mappingSubject = new MappingSubject();
-				mappingSubject.setSElementId(sCorpus.getSElementId());
+				mappingSubject.setIdentifier(sCorpus.getIdentifier());
 				mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
 				mapper.getMappingSubjects().add(mappingSubject);
-				if (getBaseCorpusStructure().equals(((SCorpus) sCorpus).getSCorpusGraph())) {
+				if (getBaseCorpusStructure().equals(((SCorpus) sCorpus).getGraph())) {
 					noBase = false;
 				}
 			}
 			if (noBase) {// no corpus in slot containing in base
 							// corpus-structure was found
 				MappingSubject mappingSubject = new MappingSubject();
-				mappingSubject.setSElementId(getBaseCorpusStructure().getSNode(sElementId.getSId()).getSElementId());
+				mappingSubject.setIdentifier(getBaseCorpusStructure().getNode(sElementId.getId()).getIdentifier());
 				mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
 				mapper.getMappingSubjects().add(mappingSubject);
 			}
