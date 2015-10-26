@@ -183,7 +183,6 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 	protected synchronized void createMapping() {
 		if (mappingTable == null) {
 			setBaseCorpusStructure(getSaltProject().getCorpusGraphs().get(0));
-
 			// initialize importOrder
 			importOrder = new HashMap<SCorpusGraph, List<Identifier>>();
 			for (SCorpusGraph graph : getSaltProject().getCorpusGraphs()) {
@@ -460,7 +459,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 
 		Collection<PepperMapperController> controllers = null;
 		HashSet<PepperMapperController> alreadyWaitedFor = new HashSet<PepperMapperController>();
-		// wait for all SDocuments to be finished
+		// wait until all documents are processed
 		controllers = Collections.synchronizedCollection(this.getMapperControllers().values());
 		for (PepperMapperController controller : controllers) {
 			try {
@@ -475,20 +474,28 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		for (SCorpus sCorpus : corpora) {
 			start(sCorpus.getIdentifier());
 		}
-
-		end();
-
-		// only wait for controllers which have been added by end()
-		for (PepperMapperController controller : this.getMapperControllers().values()) {
-			if (!alreadyWaitedFor.contains(controller)) {
-				try {
-					controller.join();
-				} catch (InterruptedException e) {
-					throw new PepperFWException("Cannot wait for mapper thread '" + controller + "' in " + this.getName() + " to end. ", e);
-				}
-				this.done(controller);
+		// wait until all corpora are processed
+		for (PepperMapperController controller : controllers) {
+			try {
+				controller.join();
+				alreadyWaitedFor.add(controller);
+			} catch (InterruptedException e) {
+				throw new PepperFWException("Cannot wait for mapper thread '" + controller + "' in " + this.getName() + " to end. ", e);
 			}
 		}
+		end();
+
+//		// only wait for controllers which have been added by end()
+//		for (PepperMapperController controller : this.getMapperControllers().values()) {
+//			if (!alreadyWaitedFor.contains(controller)) {
+//				try {
+//					controller.join();
+//				} catch (InterruptedException e) {
+//					throw new PepperFWException("Cannot wait for mapper thread '" + controller + "' in " + this.getName() + " to end. ", e);
+//				}
+//				this.done(controller);
+//			}
+//		}
 	}
 
 	/**
