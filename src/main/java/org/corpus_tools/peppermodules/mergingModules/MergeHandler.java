@@ -181,7 +181,7 @@ class MergeHandler implements GraphTraverseHandler {
 	 * set of already visited {@link SRelation}s while traversing, this is
 	 * necessary to avoid cycles
 	 **/
-	private Set<SRelation> visitedRelations = new HashSet<SRelation>();
+	private Set<SRelation> visitedRelations = new HashSet<>();
 
 	/**
 	 * Called by Pepper as callback, when otherGraph is traversed. Currently
@@ -250,7 +250,7 @@ class MergeHandler implements GraphTraverseHandler {
 			// do not copy all nodes, merge instead
 
 			// list all parents in base document sharing the children
-			List<SNode> sharedParents = new ArrayList<SNode>();
+			List<SNode> sharedParents = new ArrayList<>();
 			if (childrens.size() > 0) {
 				sharedParents = getSharedParent(childrens, sTypeNode);
 			}
@@ -289,7 +289,7 @@ class MergeHandler implements GraphTraverseHandler {
 				break;
 			}
 			case SSPAN: {
-				List<SToken> toSTokens = new ArrayList<SToken>();
+				List<SToken> toSTokens = new ArrayList<>();
 				for (SNode sNode : childrens) {
 					toSTokens.add((SToken) sNode);
 				}
@@ -297,7 +297,7 @@ class MergeHandler implements GraphTraverseHandler {
 				break;
 			}
 			case SSTRUCTURE: {
-				List<SStructuredNode> baseStructureNodes = new ArrayList<SStructuredNode>();
+				List<SStructuredNode> baseStructureNodes = new ArrayList<>();
 				for (SNode sNode : childrens) {
 					baseStructureNodes.add((SStructuredNode) sNode);
 				}
@@ -417,7 +417,7 @@ class MergeHandler implements GraphTraverseHandler {
 	 * @return a list of children nodes
 	 */
 	private List<SNode> getChildren(SNode parent, SALT_TYPE sTypeRelation) {
-		List<SNode> children = new ArrayList<SNode>();
+		List<SNode> children = new ArrayList<>();
 		List<SRelation> relations = parent.getOutRelations();
 		if (relations != null) {
 			for (SRelation<SNode, SNode> relation : relations) {
@@ -446,7 +446,7 @@ class MergeHandler implements GraphTraverseHandler {
 	 * @return a list of parents
 	 */
 	private List<SNode> getSharedParent(List<SNode> children, SALT_TYPE sTypeNode) {
-		ArrayList<SNode> sharedParents = new ArrayList<SNode>();
+		List<SNode> sharedParents = new ArrayList<>();
 		if ((children.size() > 0) && (children.get(0) != null)) {
 			List<SRelation> rels = children.get(0).getInRelations();
 			if ((rels != null) && (rels.size() > 0)) {
@@ -455,7 +455,7 @@ class MergeHandler implements GraphTraverseHandler {
 					sharedParents.add(baseRelation.getSource());
 				}
 				for (SNode baseNode : children) {
-					ArrayList<SNode> parents = new ArrayList<SNode>();
+					List<SNode> parents = new ArrayList<>();
 					for (SRelation<SNode, SNode> sRelation : baseNode.getInRelations()) {
 						SNode parent = sRelation.getSource();
 						if (SALT_TYPE.class2SaltType(parent.getClass()).contains(sTypeNode)) {

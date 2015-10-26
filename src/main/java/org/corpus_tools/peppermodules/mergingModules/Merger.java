@@ -106,13 +106,13 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		private Map<String, List<SNode>> map = null;
 
 		public Multimap() {
-			map = new HashMap<String, List<SNode>>();
+			map = new HashMap<>();
 		}
 
 		public void put(String sId, SNode sNode) {
 			List<SNode> slot = map.get(sId);
 			if (slot == null) {
-				slot = new ArrayList<SNode>();
+				slot = new ArrayList<>();
 				map.put(sId, slot);
 			}
 			slot.add(sNode);
@@ -184,7 +184,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		if (mappingTable == null) {
 			setBaseCorpusStructure(getSaltProject().getCorpusGraphs().get(0));
 			// initialize importOrder
-			importOrder = new HashMap<SCorpusGraph, List<Identifier>>();
+			importOrder = new HashMap<>();
 			for (SCorpusGraph graph : getSaltProject().getCorpusGraphs()) {
 				importOrder.put(graph, new ArrayList<Identifier>());
 			}
@@ -208,7 +208,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 			}
 			// compute import order
 			// for each corpus graph create an empty list in listOfLists
-			List<List<List<SNode>>> listOfLists = new ArrayList<List<List<SNode>>>(getSaltProject().getCorpusGraphs().size());
+			List<List<List<SNode>>> listOfLists = new ArrayList<>(getSaltProject().getCorpusGraphs().size());
 			for (int i = 0; i < getSaltProject().getCorpusGraphs().size(); i++) {
 				listOfLists.add(new ArrayList<List<SNode>>());
 			}
@@ -345,7 +345,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 	 * a set of {@link Identifier} corresponding to documents for which the
 	 * merging have not been started
 	 **/
-	private Set<String> documentsToMerge = new HashSet<String>();
+	private Set<String> documentsToMerge = new HashSet<>();
 
 	/**
 	 * {@inheritDoc PepperModule#start()} Overrides parent method, to enable the
@@ -402,7 +402,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		}
 		// creating new thread group for mapper threads
 		setMapperThreadGroup(new ThreadGroup(Thread.currentThread().getThreadGroup(), this.getName() + "_mapperGroup"));
-		givenSlots = new Hashtable<String, List<Identifier>>();
+		givenSlots = new Hashtable<>();
 		boolean isStart = true;
 		Identifier sElementId = null;
 		DocumentController documentController = null;
@@ -418,7 +418,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 			List<SNode> mappableSlot = mappingTable.get(sElementId.getId());
 			List<Identifier> givenSlot = givenSlots.get(sElementId.getId());
 			if (givenSlot == null) {
-				givenSlot = new Vector<Identifier>();
+				givenSlot = new ArrayList<>();
 				givenSlots.put(sElementId.getId(), givenSlot);
 			}
 			givenSlot.add(sElementId);
@@ -458,7 +458,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		}
 
 		Collection<PepperMapperController> controllers = null;
-		HashSet<PepperMapperController> alreadyWaitedFor = new HashSet<PepperMapperController>();
+		Set<PepperMapperController> alreadyWaitedFor = new HashSet<>();
 		// wait until all documents are processed
 		controllers = Collections.synchronizedCollection(this.getMapperControllers().values());
 		for (PepperMapperController controller : controllers) {
@@ -503,7 +503,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 	 */
 	@Override
 	public void end() throws PepperModuleException {
-		List<SCorpusGraph> removeCorpusStructures = new ArrayList<SCorpusGraph>();
+		List<SCorpusGraph> removeCorpusStructures = new ArrayList<>();
 		Iterator<SCorpusGraph> it = getSaltProject().getCorpusGraphs().iterator();
 		while (it.hasNext()) {
 			SCorpusGraph graph = it.next();

@@ -47,9 +47,9 @@ public class TokenMergeContainer {
 	 */
 	public class AlignedTokensMap {
 		public AlignedTokensMap() {
-			this.tokenLeftMap = new HashMap<SToken, Integer>();
-			this.tokenRightMap = new HashMap<SToken, Integer>();
-			this.tokensByStart = new HashMap<Integer, SToken>();
+			this.tokenLeftMap = new HashMap<>();
+			this.tokenRightMap = new HashMap<>();
+			this.tokensByStart = new HashMap<>();
 		}
 
 		private Map<SToken, Integer> tokenLeftMap = null;
@@ -63,7 +63,7 @@ public class TokenMergeContainer {
 		 * @return all contained {@link SToken} objects
 		 */
 		public List<SToken> getTokens() {
-			return new ArrayList<SToken>(tokenLeftMap.keySet());
+			return new ArrayList<>(tokenLeftMap.keySet());
 		}
 
 		/**
@@ -191,10 +191,10 @@ public class TokenMergeContainer {
 	private Map<STextualDS, List<Integer>> normalizedBaseTextToOriginalBaseText = null;
 
 	public TokenMergeContainer() {
-		this.equivalentToken = new HashMap<SToken, Map<STextualDS, SToken>>();
-		this.alignedTextsMap = new HashMap<STextualDS, AlignedTokensMap>();
-		this.normalizedTexts = new HashMap<STextualDS, String>();
-		this.normalizedBaseTextToOriginalBaseText = new HashMap<STextualDS, List<Integer>>();
+		this.equivalentToken = new HashMap<>();
+		this.alignedTextsMap = new HashMap<>();
+		this.normalizedTexts = new HashMap<>();
+		this.normalizedBaseTextToOriginalBaseText = new HashMap<>();
 	}
 
 	/**
@@ -422,7 +422,7 @@ public class TokenMergeContainer {
 			}
 		} else {// there is currently no mapping for the specified base text
 				// token
-			Map<STextualDS, SToken> newMapping = new HashMap<STextualDS, SToken>();
+			Map<STextualDS, SToken> newMapping = new HashMap<>();
 			newMapping.put(otherSText, otherTextToken);
 			this.equivalentToken.put(baseTextToken, newMapping);
 		}

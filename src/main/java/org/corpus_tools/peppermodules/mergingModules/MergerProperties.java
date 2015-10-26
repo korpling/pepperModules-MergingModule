@@ -25,13 +25,8 @@ import java.util.Set;
 import org.corpus_tools.pepper.modules.PepperModuleProperties;
 import org.corpus_tools.pepper.modules.PepperModuleProperty;
 
+@SuppressWarnings("serial")
 public class MergerProperties extends PepperModuleProperties {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 4689923498383429801L;
-
 	public static final String PROP_PUNCTUATIONS = "punctuations";
 	public static final String PROP_ESCAPE_MAPPING = "escapeMapping";
 	public static final String PROP_COPY_NODES = "copyNodes";
