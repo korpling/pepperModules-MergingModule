@@ -191,7 +191,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 */
 	@Override
 	public DOCUMENT_STATUS mapSDocument() {
-		try{
 		this.initialize();
 		if (this.getMappingSubjects().size() > 1) {
 
@@ -227,7 +226,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				}
 			}
 			mergeDocumentStructures(baseSubject);
-			// store base subject to delete others from list, since they already
+			// store base subject to delete others from list, since they
+			// already
 			// have been deleted
 			MappingSubject baseSubj = null;
 			// set base document to completed and remove all the others
@@ -246,17 +246,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		if (getMerger() != null) {
 			getMerger().releaseMergerMapper();
 		}
-		}catch(Exception e){
-			System.out.println("--------------------> ANY EXCEPTION OCCURED: ");
-			e.printStackTrace();
-		}finally{
-			
-		System.out.println("---------------------> RETURN ");
-		for (MappingSubject subj : getMappingSubjects()) {
-			System.out.println("---------------------> RETURN "+SaltUtil.getGlobalId(subj.getIdentifier()));
-		}
-		}
-		
+
 		return (DOCUMENT_STATUS.COMPLETED);
 	}
 
@@ -296,7 +286,6 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 			// for all documents
 			SDocument otherDocument = (SDocument) subj.getIdentifier().getIdentifiableElement();
 			if (otherDocument != getBaseDocument()) {
-				try{
 				if ((subj.getDocumentController() != null) && (getPepperMapperController() != null)) {
 					logger.trace("[Merger] Try to wake up other document {}. ", subj.getDocumentController().getGlobalId());
 					// awake document
@@ -310,15 +299,13 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 				logger.debug("[Merger] Start merging of base document '{}' with {}. ", SaltUtil.getGlobalId(baseDocument.getIdentifier()), SaltUtil.getGlobalId(subj.getIdentifier()));
 				// merge the document content
 				mergeDocumentStructures(baseDocument, otherDocument);
+
 				// frees memory from other document
 				if (!isTestMode) {
 					getContainer().finishDocument(otherDocument);
 				}
 				if (subj.getDocumentController() != null) {
 					getMerger().done(otherDocument.getIdentifier(), DOCUMENT_STATUS.DELETED);
-				}
-				}catch (Exception e){
-					e.printStackTrace();
 				}
 			}
 		}
@@ -470,15 +457,15 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		Set<SNode> notRootElements = new HashSet<>();
 		for (SRelation<SNode, SNode> relation : relations) {
 			// mark destination as no root
-			if (!notRootElements.contains(relation.getTarget())){
+			if (!notRootElements.contains(relation.getTarget())) {
 				notRootElements.add(relation.getTarget());
 			}
 			// if source is not also a destination
-			if ((!notRootElements.contains(relation.getSource())) && (!retSet.contains(relation.getSource()))){
+			if ((!notRootElements.contains(relation.getSource())) && (!retSet.contains(relation.getSource()))) {
 				retSet.add(relation.getSource());
 			}
 			// remove wrong stored nodes in retList
-			if (retSet.contains(relation.getTarget())){
+			if (retSet.contains(relation.getTarget())) {
 				retSet.remove(relation.getTarget());
 			}
 		}
@@ -674,9 +661,18 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 */
 	protected List<Integer> createBaseTextNormOriginalMapping(STextualDS sTextualDS) {
 		/**
-		 * Example1: dipl: " this is" 01234567 norm: "thisis" 012345 0->1
+		 * Example1:
+		 * 
+		 * <pre>
+		 * dipl:	" this is" 
+		 * 		 01234567 
+		 * norm: 	"thisis" 
+		 * 			 012345 
+		 * 
+		 * 0->1
 		 * 1->2,... Example2: dipl: " thäs is" 01234567 norm: "thaesis" 0123456
 		 * 0->1 1->2 2->3 3->3 4->4 5->6 6->7
+		 * </pre>
 		 */
 		List<Integer> normalizedToOriginalMapping = new ArrayList<>();
 		int start = 0;
