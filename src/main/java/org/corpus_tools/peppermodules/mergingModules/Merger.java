@@ -371,7 +371,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				if (documentController == null) {
 					break;
 				}
-				sElementId = documentController.getsDocumentId();
+				sElementId = documentController.getDocumentId();
 				getModuleController().complete(documentController);
 			}
 			this.end();
@@ -412,7 +412,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 			if (documentController == null) {
 				break;
 			}
-			sElementId = documentController.getsDocumentId();
+			sElementId = documentController.getDocumentId();
 			getDocumentId2DC().put(SaltUtil.getGlobalId(sElementId), documentController);
 
 			List<SNode> mappableSlot = mappingTable.get(sElementId.getId());

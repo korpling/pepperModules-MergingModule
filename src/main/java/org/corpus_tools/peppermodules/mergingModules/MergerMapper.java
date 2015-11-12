@@ -39,6 +39,7 @@ import org.corpus_tools.salt.common.SCorpusGraph;
 import org.corpus_tools.salt.common.SDocument;
 import org.corpus_tools.salt.common.SDocumentGraph;
 import org.corpus_tools.salt.common.SDominanceRelation;
+import org.corpus_tools.salt.common.SSpan;
 import org.corpus_tools.salt.common.SSpanningRelation;
 import org.corpus_tools.salt.common.STextualDS;
 import org.corpus_tools.salt.common.STextualRelation;
@@ -225,7 +226,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					}
 				}
 			}
+			
 			mergeDocumentStructures(baseSubject);
+			
 			// store base subject to delete others from list, since they
 			// already
 			// have been deleted
