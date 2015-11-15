@@ -278,12 +278,12 @@ class MergeHandler implements GraphTraverseHandler {
 					}
 					// Find the alignment of the current token to create a new
 					// one
-					Integer sStart = container.getAlignedTokenStart((STextualDS) node2NodeMap.get(textRel.getTarget()), (SToken) currNode);
-					Integer sLength = container.getAlignedTokenLength((STextualDS) node2NodeMap.get(textRel.getTarget()), (SToken) currNode);
-					if ((sStart != -1) && (sLength != -1)) {
-						baseNode = baseGraph.createToken((STextualDS) node2NodeMap.get(textRel.getTarget()), sStart, sStart + sLength);
+					Integer start = container.getAlignedTokenStart((STextualDS) node2NodeMap.get(textRel.getTarget()), (SToken) currNode);
+					Integer length = container.getAlignedTokenLength((STextualDS) node2NodeMap.get(textRel.getTarget()), (SToken) currNode);
+					if ((start != -1) && (length != -1)) {
+						baseNode = baseGraph.createToken((STextualDS) node2NodeMap.get(textRel.getTarget()), start, start + length);
 					} else {
-						logger.warn("[Merger] Could not create token in target graph matching to node '" + SaltUtil.getGlobalId(currNode.getIdentifier()) + "', because sStart-value (" + sStart + ") or sLength-value (" + sLength + ") was empty. ");
+						logger.warn("[Merger] Could not create token in target graph matching to node '" + SaltUtil.getGlobalId(currNode.getIdentifier()) + "', because start (" + start + ") or length (" + length + ") was empty. ");
 					}
 				}
 				break;
