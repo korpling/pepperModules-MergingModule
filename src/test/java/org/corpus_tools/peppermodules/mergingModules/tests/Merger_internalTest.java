@@ -119,28 +119,26 @@ public class Merger_internalTest extends Merger {
 		getFixture().getSaltProject().addCorpusGraph(graph2);
 		getFixture().getSaltProject().addCorpusGraph(graph3);
 
-		
 		List<Identifier> importOrder1 = this.proposeImportOrder(graph1);
-        List<Identifier> importOrder2 = this.proposeImportOrder(graph2);
+		List<Identifier> importOrder2 = this.proposeImportOrder(graph2);
 		List<Identifier> importOrder3 = this.proposeImportOrder(graph3);
-		
-        assertNotNull(importOrder1);
+
+		assertNotNull(importOrder1);
 		assertNotNull(importOrder2);
-        assertNotNull(importOrder3);
-        
+		assertNotNull(importOrder3);
+
 		assertEquals(1, importOrder1.size());
 		assertEquals(3, importOrder2.size());
 		assertEquals(3, importOrder3.size());
-        
-        // check that there are the documents with the same ID at the same
-        // index at each import
-        
-        assertEquals(d1.getIdentifier(), importOrder1.get(0));
+
+		// check that there are the documents with the same ID at the same
+		// index at each import
+		assertEquals(d1.getIdentifier(), importOrder1.get(0));
 		assertEquals(d1_2.getIdentifier(), importOrder2.get(0));
 		assertEquals(d1_3.getIdentifier(), importOrder3.get(0));
 
 		assertEquals(d2_2.getIdentifier(), importOrder2.get(1));
-   		assertEquals(d2_3.getIdentifier(), importOrder3.get(1));
+		assertEquals(d2_3.getIdentifier(), importOrder3.get(1));
 
 		assertEquals(d3_2.getIdentifier(), importOrder2.get(2));
 		assertEquals(d3_3.getIdentifier(), importOrder3.get(2));
