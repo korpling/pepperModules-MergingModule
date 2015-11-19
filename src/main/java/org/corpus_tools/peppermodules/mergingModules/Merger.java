@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -106,7 +107,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		private Map<String, List<SNode>> map = null;
 
 		public Multimap() {
-			map = new HashMap<>();
+			map = new LinkedHashMap<>();
 		}
 
 		public void put(String sId, SNode sNode) {
@@ -192,7 +193,7 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 			mappingTable = new Multimap();
 			// TODO add mapping properties to table
 			for (SCorpusGraph graph : getSaltProject().getCorpusGraphs()) {
-				if (graph.getCorpora().size() != 0) {
+				if (!graph.getCorpora().isEmpty()) {
 					for (SCorpus sCorpus : graph.getCorpora()) {
 						// TODO check if sCorpus.getId() is contained in
 						// mapping properties
