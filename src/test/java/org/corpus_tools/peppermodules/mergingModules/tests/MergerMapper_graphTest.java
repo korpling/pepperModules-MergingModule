@@ -593,9 +593,9 @@ public class MergerMapper_graphTest extends MergerMapper {
 		SToken tok14 = doc1.getDocumentGraph().createToken(text11, 19, 20);
 		SToken tok15 = doc1.getDocumentGraph().createToken(text11, 20, 22);
 		SToken tok16 = doc1.getDocumentGraph().createToken(text11, 22, 23);
-		SStructure struct11 = doc1.getDocumentGraph().createSStructure(tok11);
+		SStructure struct11 = doc1.getDocumentGraph().createStructure(tok11);
 		struct11.createAnnotation(null, "cat", "ADVX");
-		SStructure struct12 = doc1.getDocumentGraph().createSStructure(tok12);
+		SStructure struct12 = doc1.getDocumentGraph().createStructure(tok12);
 		struct12.createAnnotation(null, "cat", "NSU");
 		structures = new ArrayList<SStructuredNode>();
 		structures.add(struct11);
@@ -603,7 +603,7 @@ public class MergerMapper_graphTest extends MergerMapper {
 		SStructure struct13 = doc1.getDocumentGraph().createStructure(structures);
 		struct13.createAnnotation(null, "cat", "VROOT");
 
-		SStructure struct14 = doc1.getDocumentGraph().createSStructure(tok13);
+		SStructure struct14 = doc1.getDocumentGraph().createStructure(tok13);
 		struct14.createAnnotation(null, "cat", "FRAG");
 		structures = new ArrayList<SStructuredNode>();
 		structures.add(struct14);
@@ -611,7 +611,7 @@ public class MergerMapper_graphTest extends MergerMapper {
 		SStructure struct15 = doc1.getDocumentGraph().createStructure(structures);
 		struct15.createAnnotation(null, "cat", "VROOT");
 
-		SStructure struct16 = doc1.getDocumentGraph().createSStructure(tok15);
+		SStructure struct16 = doc1.getDocumentGraph().createStructure(tok15);
 		struct16.createAnnotation(null, "cat", "DM");
 		structures = new ArrayList<SStructuredNode>();
 		structures.add(struct16);
@@ -639,9 +639,9 @@ public class MergerMapper_graphTest extends MergerMapper {
 		SToken tok213 = doc2.getDocumentGraph().createToken(text22, 42, 46);
 		SToken tok214 = doc2.getDocumentGraph().createToken(text22, 46, 50);
 		SToken tok215 = doc2.getDocumentGraph().createToken(text22, 50, 51);
-		SStructure struct01 = doc2.getDocumentGraph().createSStructure(tok21);
+		SStructure struct01 = doc2.getDocumentGraph().createStructure(tok21);
 		struct01.createAnnotation(null, "cat", "NX");
-		SStructure struct02 = doc2.getDocumentGraph().createSStructure(tok22);
+		SStructure struct02 = doc2.getDocumentGraph().createStructure(tok22);
 		struct02.createAnnotation(null, "cat", "DM");
 		structures = new ArrayList<SStructuredNode>();
 		structures.add(struct01);
@@ -649,11 +649,11 @@ public class MergerMapper_graphTest extends MergerMapper {
 		SStructure struct03 = doc2.getDocumentGraph().createStructure(structures);
 		struct03.createAnnotation(null, "cat", "VROOT");
 
-		SStructure struct04 = doc2.getDocumentGraph().createSStructure(tok23);
+		SStructure struct04 = doc2.getDocumentGraph().createStructure(tok23);
 		struct04.createAnnotation(null, "cat", "C");
-		SStructure struct05 = doc2.getDocumentGraph().createSStructure(tok24);
+		SStructure struct05 = doc2.getDocumentGraph().createStructure(tok24);
 		struct05.createAnnotation(null, "cat", "NX");
-		SStructure struct06 = doc2.getDocumentGraph().createSStructure(tok25);
+		SStructure struct06 = doc2.getDocumentGraph().createStructure(tok25);
 		struct06.createAnnotation(null, "cat", "NX");
 		structures = new ArrayList<SStructuredNode>();
 		structures.add(tok26);
@@ -675,7 +675,7 @@ public class MergerMapper_graphTest extends MergerMapper {
 		STextualDS text31 = doc3.getDocumentGraph().createTextualDS("Nein.");
 		SToken tok31 = doc3.getDocumentGraph().createToken(text31, 0, 4);
 		SToken tok32 = doc3.getDocumentGraph().createToken(text31, 4, 5);
-		SStructure struct31 = doc3.getDocumentGraph().createSStructure(tok31);
+		SStructure struct31 = doc3.getDocumentGraph().createStructure(tok31);
 		struct31.createAnnotation(null, "cat", "DM");
 		structures = new ArrayList<SStructuredNode>();
 		structures.add(struct31);
