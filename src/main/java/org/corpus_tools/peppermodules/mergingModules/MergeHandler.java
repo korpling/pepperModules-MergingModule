@@ -165,8 +165,8 @@ class MergeHandler implements GraphTraverseHandler {
 				}
 				if (!skip) {
 					SPointingRelation baseRel = SaltFactory.createSPointingRelation();
-					baseRel.setSource((SStructuredNode)baseSourceNode);
-					baseRel.setTarget((SStructuredNode)baseTargetNode);
+					baseRel.setSource((SStructuredNode) baseSourceNode);
+					baseRel.setTarget((SStructuredNode) baseTargetNode);
 					baseRel.setType(otherRel.getType());
 					SaltUtil.moveAnnotations(otherRel, baseRel);
 					SaltUtil.moveMetaAnnotations(otherRel, baseRel);
@@ -335,9 +335,9 @@ class MergeHandler implements GraphTraverseHandler {
 			SRelation baseRel = (SRelation) base;
 			if ((otherRel.getLayers() != null) && (otherRel.getLayers().size() != 0)) {
 				SDocumentGraph baseGraph = ((SDocumentGraph) baseRel.getGraph());
-				Iterator<SLayer> it= otherRel.getLayers().iterator();
-				while (it.hasNext()){
-					SLayer otherLayer= it.next();
+				Iterator<SLayer> it = otherRel.getLayers().iterator();
+				while (it.hasNext()) {
+					SLayer otherLayer = it.next();
 					List<SLayer> layers = baseGraph.getLayerByName(otherLayer.getName());
 					SLayer baseLayer = null;
 					if ((layers != null) && (!layers.isEmpty())) {

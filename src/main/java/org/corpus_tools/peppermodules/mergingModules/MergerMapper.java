@@ -39,7 +39,6 @@ import org.corpus_tools.salt.common.SCorpusGraph;
 import org.corpus_tools.salt.common.SDocument;
 import org.corpus_tools.salt.common.SDocumentGraph;
 import org.corpus_tools.salt.common.SDominanceRelation;
-import org.corpus_tools.salt.common.SSpan;
 import org.corpus_tools.salt.common.SSpanningRelation;
 import org.corpus_tools.salt.common.STextualDS;
 import org.corpus_tools.salt.common.STextualRelation;
@@ -64,7 +63,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	private static final Logger logger = LoggerFactory.getLogger(Merger.MODULE_NAME);
 
 	protected boolean isTestMode = false;
-	/** A reference to the {@link Merger} object which has invoked this mapper. **/
+	/**
+	 * A reference to the {@link Merger} object which has invoked this mapper.
+	 **/
 	private Merger merger = null;
 
 	/**
@@ -226,9 +227,9 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					}
 				}
 			}
-			
+
 			mergeDocumentStructures(baseSubject);
-			
+
 			// store base subject to delete others from list, since they
 			// already
 			// have been deleted
@@ -486,7 +487,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		return container;
 	}
 
-	/* *******************************************************************
+	/*
+	 * *******************************************************************
 	 * Choosing base SDocument and base STextualDS
 	 * ******************************************************************
 	 */
@@ -893,7 +895,8 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		return returnVal;
 	}
 
-	/* *******************************************************************
+	/*
+	 * *******************************************************************
 	 * Alignment and Normalization Helper Methods
 	 * ******************************************************************
 	 */
@@ -1122,7 +1125,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					SaltUtil.moveMetaAnnotations(otherTextToken, baseTextToken);
 				} // there already is an equivalent token or a token was created
 			} // for every token in the other text
-		}// one of the texts is alignable to the other
+		} // one of the texts is alignable to the other
 			// move the annotations from the other text to the base text
 		SaltUtil.moveAnnotations(otherText, baseText);
 		SaltUtil.moveMetaAnnotations(otherText, baseText);

@@ -28,7 +28,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -486,17 +485,19 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		}
 		end();
 
-//		// only wait for controllers which have been added by end()
-//		for (PepperMapperController controller : this.getMapperControllers().values()) {
-//			if (!alreadyWaitedFor.contains(controller)) {
-//				try {
-//					controller.join();
-//				} catch (InterruptedException e) {
-//					throw new PepperFWException("Cannot wait for mapper thread '" + controller + "' in " + this.getName() + " to end. ", e);
-//				}
-//				this.done(controller);
-//			}
-//		}
+		// // only wait for controllers which have been added by end()
+		// for (PepperMapperController controller :
+		// this.getMapperControllers().values()) {
+		// if (!alreadyWaitedFor.contains(controller)) {
+		// try {
+		// controller.join();
+		// } catch (InterruptedException e) {
+		// throw new PepperFWException("Cannot wait for mapper thread '" +
+		// controller + "' in " + this.getName() + " to end. ", e);
+		// }
+		// this.done(controller);
+		// }
+		// }
 	}
 
 	/**

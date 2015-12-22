@@ -462,8 +462,8 @@ public class MergerMapper_baseTest extends MergerMapper {
 	 */
 	@Test
 	public void testChooseBaseDocument_manual() {
-		SaltProject project= SaltFactory.createSaltProject();
-		
+		SaltProject project = SaltFactory.createSaltProject();
+
 		SCorpusGraph g1 = SaltFactory.createSCorpusGraph();
 		project.addCorpusGraph(g1);
 		SDocument d1_1 = g1.createDocument(URI.createURI("/c1/d1"));
