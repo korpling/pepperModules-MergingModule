@@ -1,30 +1,17 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.corpus-tools</groupId>
 		<artifactId>pepper-parentModule</artifactId>
-		<version>3.0.0-SNAPSHOT</version>
+		<version>3.0.0</version>
 	</parent>
 	<artifactId>pepperModules-MergingModules</artifactId>
 	<name>${project.groupId}.${project.artifactId}</name>
 	<version>1.0.2-SNAPSHOT</version>
 	<packaging>bundle</packaging>
-	<distributionManagement>
-		<repository>
-			<id>korpling</id>
-			<name>korpling maven repo</name>
-			<url>file:///srv/www/maven2/</url>
-		</repository>
-	</distributionManagement>
-	<repositories>
-		<repository>
-			<id>korpling</id>
-			<name>korpling maven repo</name>
-			<url>http://korpling.german.hu-berlin.de/maven2</url>
-		</repository>
-	</repositories>
 	<description>This project provides a Pepper module for the merging of data on several possible levels.</description>
-	<url>https://korpling.german.hu-berlin.de/p/projects/peppermodules-mergingmodules</url>
+	<url>https://github.com/korpling/pepperModules-MergingModule</url>
 	<issueManagement>
 		<system>Redmine</system>
 		<url>https://korpling.german.hu-berlin.de/p/projects/peppermodules-mergingmodules/issues</url>
@@ -37,17 +24,9 @@
 		<connection>scm:git:git://github.com/korpling/pepperModules-MergingModule.git</connection>
 		<developerConnection>scm:git:git@github.com:korpling/pepperModules-MergingModule.git</developerConnection>
 		<url>https://github.com/korpling/pepperModules-MergingModule</url>
-    </scm>
+	</scm>
 	<inceptionYear>2014</inceptionYear>
 	<organization>
 		<name>Humboldt-Universität zu Berlin</name>
 	</organization>
-	<dependencies>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.11</version>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
 </project>
