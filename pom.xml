@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.corpus-tools</groupId>
@@ -8,7 +7,7 @@
 	</parent>
 	<artifactId>pepperModules-MergingModules</artifactId>
 	<name>${project.groupId}.${project.artifactId}</name>
-	<version>1.0.2-SNAPSHOT</version>
+	<version>1.0.2</version>
 	<packaging>bundle</packaging>
 	<description>This project provides a Pepper module for the merging of data on several possible levels.</description>
 	<url>https://github.com/korpling/pepperModules-MergingModule</url>
@@ -24,7 +23,8 @@
 		<connection>scm:git:git://github.com/korpling/pepperModules-MergingModule.git</connection>
 		<developerConnection>scm:git:git@github.com:korpling/pepperModules-MergingModule.git</developerConnection>
 		<url>https://github.com/korpling/pepperModules-MergingModule</url>
-	</scm>
+	  <tag>pepperModules-MergingModules-1.0.2</tag>
+  </scm>
 	<inceptionYear>2014</inceptionYear>
 	<organization>
 		<name>Humboldt-Universität zu Berlin</name>
