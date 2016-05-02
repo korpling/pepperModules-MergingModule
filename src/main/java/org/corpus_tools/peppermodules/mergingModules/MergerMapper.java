@@ -429,6 +429,10 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					handler.mergeSPointingRelations(otherGraph, baseGraph);
 					logger.trace("[Merger] Done with merging higher document-structure for [{}, {}]", SaltUtil.getGlobalId(baseDoc.getIdentifier()), SaltUtil.getGlobalId(otherDoc.getIdentifier()));
 				}
+			} else {
+				logger.warn("Could not align any text for documents {} and {}", 
+						SaltUtil.getGlobalId(getBaseDocument().getIdentifier()),
+						SaltUtil.getGlobalId(otherDoc.getIdentifier()));
 			}
 		}
 	}
