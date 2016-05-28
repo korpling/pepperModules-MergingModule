@@ -145,7 +145,7 @@ class MergeHandler implements GraphTraverseHandler {
 			} else if (baseTargetNode == null) {
 				logger.warn("[Merger] Cannot merge SPointingRelation '" + otherRel.getId() + "', because no matching node was found in source graph for source node '" + otherRel.getTarget() + "'. ");
 			} else {
-				List<SRelation<SNode, SNode>> rels = baseGraph.getRelations(baseSourceNode.getId(), baseTargetNode.getId());
+				List<SRelation<?, ?>> rels = baseGraph.getRelations(baseSourceNode.getId(), baseTargetNode.getId());
 				boolean skip = false;
 				if ((rels != null) && (rels.size() > 0)) {
 					for (Relation rel : rels) {
@@ -350,7 +350,7 @@ class MergeHandler implements GraphTraverseHandler {
 						SaltUtil.moveMetaAnnotations(otherLayer, baseLayer);
 						baseGraph.addLayer(baseLayer);
 					}
-					baseRel.addLayer(baseLayer);
+					baseLayer.addRelation(baseRel);
 				}
 			}
 		} else if ((other instanceof SNode) && (base instanceof SNode)) {
@@ -372,7 +372,7 @@ class MergeHandler implements GraphTraverseHandler {
 						SaltUtil.moveMetaAnnotations(otherLayer, baseLayer);
 						baseGraph.addLayer(baseLayer);
 					}
-					baseNode.addLayer(baseLayer);
+					baseLayer.addNode(baseNode);
 				}
 			}
 		}
@@ -418,9 +418,9 @@ class MergeHandler implements GraphTraverseHandler {
 	 */
 	private List<SNode> getChildren(SNode parent, SALT_TYPE sTypeRelation) {
 		List<SNode> children = new ArrayList<>();
-		List<SRelation> relations = parent.getOutRelations();
+		List<SRelation<?,?>> relations = parent.getOutRelations();
 		if (relations != null) {
-			for (SRelation<SNode, SNode> relation : relations) {
+			for (SRelation<?, ?> relation : relations) {
 				if (SALT_TYPE.class2SaltType(relation.getClass()).contains(sTypeRelation)) {
 					SNode otherNode = relation.getTarget();
 					if (otherNode == null) {
@@ -448,15 +448,15 @@ class MergeHandler implements GraphTraverseHandler {
 	private List<SNode> getSharedParent(List<SNode> children, SALT_TYPE sTypeNode) {
 		List<SNode> sharedParents = new ArrayList<>();
 		if ((children.size() > 0) && (children.get(0) != null)) {
-			List<SRelation> rels = children.get(0).getInRelations();
+			List<SRelation<?,?>> rels = children.get(0).getInRelations();
 			if ((rels != null) && (rels.size() > 0)) {
 				// A merge candidate has to be connected to every base node
-				for (SRelation<SNode, SNode> baseRelation : rels) {
+				for (SRelation<?, ?> baseRelation : rels) {
 					sharedParents.add(baseRelation.getSource());
 				}
 				for (SNode baseNode : children) {
 					List<SNode> parents = new ArrayList<>();
-					for (SRelation<SNode, SNode> sRelation : baseNode.getInRelations()) {
+					for (SRelation<?, ?> sRelation : baseNode.getInRelations()) {
 						SNode parent = sRelation.getSource();
 						if (SALT_TYPE.class2SaltType(parent.getClass()).contains(sTypeNode)) {
 							parents.add(parent);

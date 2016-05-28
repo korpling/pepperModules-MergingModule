@@ -729,15 +729,15 @@ public class MergerMapper_graphTest extends MergerMapper {
 		assertEquals(rel1.getSource(), span1);
 		assertEquals(rel1.getTarget(), tok1);
 
-		tok1.setGraph(graph2);
+		graph2.addNode(tok1);
 
 		assertEquals(graph2, tok1.getGraph());
 		assertEquals(graph1, span1.getGraph());
 		assertEquals(rel1.getSource(), span1);
 		assertEquals(rel1.getTarget(), tok1);
 		// move all node before the relation
-		span1.setGraph(graph2);
-		rel1.setGraph(graph2);
+		graph2.addNode(span1);
+		graph2.addRelation(rel1);
 		assertEquals(rel1.getSource(), span1);
 		assertEquals(rel1.getTarget(), tok1);
 	}
