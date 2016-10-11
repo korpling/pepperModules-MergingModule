@@ -452,7 +452,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 	 * the nodes:
 	 * 
 	 * struct1 and span2 are returned, even if a pointing relation connects
-	 * struct1 and span2.
+	 * struct1 and span2. Note that undominated tokens are also treated as roots.
 	 * 
 	 * @return
 	 */
@@ -463,6 +463,7 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 		relations.addAll((List<SRelation>) (List<? extends SRelation>) other.getSpanningRelations());
 		relations.addAll((List<SRelation>) (List<? extends SRelation>) other.getDominanceRelations());
 		Set<SNode> notRootElements = new HashSet<>();
+		retSet.addAll(other.getTokens()); // initially assume all tokens are roots, they will be removed if found to be dominated
 		for (SRelation<SNode, SNode> relation : relations) {
 			// mark destination as no root
 			if (!notRootElements.contains(relation.getTarget())) {
