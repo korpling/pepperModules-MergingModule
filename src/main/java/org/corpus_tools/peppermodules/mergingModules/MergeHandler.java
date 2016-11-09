@@ -456,10 +456,12 @@ class MergeHandler implements GraphTraverseHandler {
 				}
 				for (SNode baseNode : children) {
 					List<SNode> parents = new ArrayList<>();
-					for (SRelation<SNode, SNode> sRelation : baseNode.getInRelations()) {
-						SNode parent = sRelation.getSource();
-						if (SALT_TYPE.class2SaltType(parent.getClass()).contains(sTypeNode)) {
-							parents.add(parent);
+					if(baseNode != null && baseNode.getInRelations() != null) {
+						for (SRelation<SNode, SNode> sRelation : baseNode.getInRelations()) {
+							SNode parent = sRelation.getSource();
+							if (SALT_TYPE.class2SaltType(parent.getClass()).contains(sTypeNode)) {
+								parents.add(parent);
+							}
 						}
 					}
 					sharedParents.retainAll(parents);
