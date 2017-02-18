@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.corpus-tools</groupId>
 		<artifactId>pepper-parentModule</artifactId>
-		<version>3.0.0</version>
+		<version>3.1.0</version>
 	</parent>
 	<artifactId>pepperModules-MergingModules</artifactId>
 	<name>${project.groupId}.${project.artifactId}</name>
@@ -27,6 +27,6 @@
   </scm>
 	<inceptionYear>2014</inceptionYear>
 	<organization>
-		<name>Humboldt-Universität zu Berlin</name>
+		<name>Humboldt-Universit&#228;t zu Berlin</name>
 	</organization>
 </project>
