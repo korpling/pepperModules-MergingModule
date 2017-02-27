@@ -7,7 +7,7 @@
 	</parent>
 	<artifactId>pepperModules-MergingModules</artifactId>
 	<name>${project.groupId}.${project.artifactId}</name>
-	<version>1.0.3</version>
+	<version>1.0.4-SNAPSHOT</version>
 	<packaging>bundle</packaging>
 	<description>This project provides a Pepper module for the merging of data on several possible levels.</description>
 	<url>https://github.com/korpling/pepperModules-MergingModule</url>
@@ -23,7 +23,7 @@
 		<connection>scm:git:git://github.com/korpling/pepperModules-MergingModule.git</connection>
 		<developerConnection>scm:git:git@github.com:korpling/pepperModules-MergingModule.git</developerConnection>
 		<url>https://github.com/korpling/pepperModules-MergingModule</url>
-	  <tag>pepperModules-MergingModules-1.0.3</tag>
+	  <tag>HEAD</tag>
   </scm>
 	<inceptionYear>2014</inceptionYear>
 	<organization>
