@@ -13,7 +13,6 @@
 	<url>https://github.com/korpling/pepperModules-MergingModule</url>
 	<issueManagement>
 		<system>Redmine</system>
-		<url>https://korpling.german.hu-berlin.de/p/projects/peppermodules-mergingmodules/issues</url>
 	</issueManagement>
 	<ciManagement>
 		<system>Jenkins</system>
