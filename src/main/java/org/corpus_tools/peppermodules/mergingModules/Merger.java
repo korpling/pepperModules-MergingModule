@@ -34,6 +34,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.corpus_tools.pepper.common.DOCUMENT_STATUS;
 import org.corpus_tools.pepper.common.PepperConfiguration;
+import org.corpus_tools.pepper.core.SelfTestDesc;
 import org.corpus_tools.pepper.exceptions.PepperFWException;
 import org.corpus_tools.pepper.impl.PepperManipulatorImpl;
 import org.corpus_tools.pepper.modules.DocumentController;
@@ -78,10 +79,24 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 	@Override
 	public boolean isReadyToStart() {
 		if (getModuleController().getJob().getMaxNumberOfDocuments() < 2) {
-			throw new PepperModuleException(this, "The merger cannot work with less than 2 documents in main memory in parallel. Please check the property '" + PepperConfiguration.PROP_MAX_AMOUNT_OF_SDOCUMENTS + "' in the Pepper configuration. ");
+			throw new PepperModuleException(this,
+					"The merger cannot work with less than 2 documents in main memory in parallel. Please check the property '"
+							+ PepperConfiguration.PROP_MAX_AMOUNT_OF_SDOCUMENTS + "' in the Pepper configuration. ");
 		}
 		return (true);
 	};
+
+	@Override
+	public SelfTestDesc getSelfTestDesc() {
+		final URI baseInputCorpus = getResources().appendSegment("selfTests").appendSegment("in");
+		final URI morphCorpus = baseInputCorpus.appendSegment("morph");
+		final URI rstCorpus = baseInputCorpus.appendSegment("rst");
+		final URI syntaxCorpus = baseInputCorpus.appendSegment("syntax");
+		final URI expectedCorpus = getResources().appendSegment("selfTests").appendSegment("expected");
+
+		return SelfTestDesc.create().withInputCorpusPath(morphCorpus).withInputCorpusPath(rstCorpus)
+				.withInputCorpusPath(syntaxCorpus).withExpectedCorpusPath(expectedCorpus).build();
+	}
 
 	/**
 	 * A table containing the import order for {@link Identifier} corresponding
@@ -313,13 +328,15 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		mergerMappersLock.lock();
 		try {
 			if (getModuleController() != null && getModuleController().getJob() != null) {
-				while (numberOfMergerMappers >= Double.valueOf(Math.floor(getModuleController().getJob().getMaxNumberOfDocuments() / 2)).intValue()) {
+				while (numberOfMergerMappers >= Double
+						.valueOf(Math.floor(getModuleController().getJob().getMaxNumberOfDocuments() / 2)).intValue()) {
 					mergerMappersCondition.await();
 				}
 			}
 			numberOfMergerMappers++;
 		} catch (InterruptedException e) {
-			throw new PepperModuleException(this, "A problem occured in deadlock permission for merger mapper processes. ", e);
+			throw new PepperModuleException(this,
+					"A problem occured in deadlock permission for merger mapper processes. ", e);
 		} finally {
 			mergerMappersLock.unlock();
 		}
@@ -427,7 +444,8 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 
 			// send all documents to sleep
 			if (logger.isTraceEnabled()) {
-				logger.trace("[Merger] " + "Waiting for further documents, {} documents are in queue. ", documentsToMerge.size());
+				logger.trace("[Merger] " + "Waiting for further documents, {} documents are in queue. ",
+						documentsToMerge.size());
 			}
 			documentController.sendToSleep_FORCE();
 			// this is a bit hacky, but necessary
@@ -442,7 +460,8 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 					for (Identifier sDocumentId : givenSlot) {
 						DocumentController docController = getDocumentId2DC().get(SaltUtil.getGlobalId(sDocumentId));
 						if (docController == null) {
-							throw new PepperModuleException(this, "Cannot find a document controller for document '" + SaltUtil.getGlobalId(sDocumentId) + "' in list: " + getDocumentId2DC() + ". ");
+							throw new PepperModuleException(this, "Cannot find a document controller for document '"
+									+ SaltUtil.getGlobalId(sDocumentId) + "' in list: " + getDocumentId2DC() + ". ");
 						}
 						documentsToMerge.remove(docController.getGlobalId());
 					}
@@ -452,7 +471,8 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 
 					start(sElementId);
 				} catch (Exception e) {
-					throw new PepperModuleException("Any exception occured while merging documents corresponding to '" + sElementId + "'. ", e);
+					throw new PepperModuleException(
+							"Any exception occured while merging documents corresponding to '" + sElementId + "'. ", e);
 				}
 			}
 		}
@@ -466,7 +486,8 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				controller.join();
 				alreadyWaitedFor.add(controller);
 			} catch (InterruptedException e) {
-				throw new PepperFWException("Cannot wait for mapper thread '" + controller + "' in " + this.getName() + " to end. ", e);
+				throw new PepperFWException(
+						"Cannot wait for mapper thread '" + controller + "' in " + this.getName() + " to end. ", e);
 			}
 		}
 
@@ -480,7 +501,8 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				controller.join();
 				alreadyWaitedFor.add(controller);
 			} catch (InterruptedException e) {
-				throw new PepperFWException("Cannot wait for mapper thread '" + controller + "' in " + this.getName() + " to end. ", e);
+				throw new PepperFWException(
+						"Cannot wait for mapper thread '" + controller + "' in " + this.getName() + " to end. ", e);
 			}
 		}
 		end();
@@ -519,7 +541,9 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 			}
 		}
 		if (getSaltProject().getCorpusGraphs().size() != 1) {
-			logger.warn("Could not remove all corpus-structures from salt project which are not the base corpus-structure. Left structures are: '" + removeCorpusStructures + "'. ");
+			logger.warn(
+					"Could not remove all corpus-structures from salt project which are not the base corpus-structure. Left structures are: '"
+							+ removeCorpusStructures + "'. ");
 		}
 	}
 
@@ -535,11 +559,14 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		if (sElementId.getIdentifiableElement() instanceof SDocument) {
 			mapper.setMerger(this);
 			if ((givenSlots == null) || (givenSlots.size() == 0)) {
-				throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that 'givenSlots' is null or empty in method 'createPepperMapper()'");
+				throw new PepperModuleException(this,
+						"This should not have been happend and seems to be a bug of module. The problem is, that 'givenSlots' is null or empty in method 'createPepperMapper()'");
 			}
 			List<Identifier> givenSlot = givenSlots.get(sElementId.getId());
 			if (givenSlot == null) {
-				throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that a 'givenSlot' in 'givenSlots' is null or empty in method 'createPepperMapper()'. The sElementId '" + sElementId + "' was not contained in list: " + givenSlots);
+				throw new PepperModuleException(this,
+						"This should not have been happend and seems to be a bug of module. The problem is, that a 'givenSlot' in 'givenSlots' is null or empty in method 'createPepperMapper()'. The sElementId '"
+								+ sElementId + "' was not contained in list: " + givenSlots);
 			}
 			boolean noBase = true;
 			for (Identifier id : givenSlot) {
@@ -561,7 +588,8 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 				MappingSubject mappingSubject = new MappingSubject();
 				SNode baseSNode = getBaseCorpusStructure().getNode(sElementId.getId());
 				if (baseSNode == null) {
-					throw new PepperModuleException(this, "Cannot create a mapper for '" + SaltUtil.getGlobalId(sElementId) + "', since no base SNode was found. ");
+					throw new PepperModuleException(this, "Cannot create a mapper for '"
+							+ SaltUtil.getGlobalId(sElementId) + "', since no base SNode was found. ");
 				}
 				mappingSubject.setIdentifier(baseSNode.getIdentifier());
 				mappingSubject.setMappingResult(DOCUMENT_STATUS.IN_PROGRESS);
@@ -570,7 +598,9 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 		} else if (sElementId.getIdentifiableElement() instanceof SCorpus) {
 			List<SNode> givenSlot = mappingTable.get(sElementId.getId());
 			if (givenSlot == null) {
-				throw new PepperModuleException(this, "This should not have been happend and seems to be a bug of module. The problem is, that a 'givenSlot' in 'givenSlots' is null or empty in method 'createPepperMapper()'. The sElementId '" + sElementId + "' was not contained in list: " + givenSlots);
+				throw new PepperModuleException(this,
+						"This should not have been happend and seems to be a bug of module. The problem is, that a 'givenSlot' in 'givenSlots' is null or empty in method 'createPepperMapper()'. The sElementId '"
+								+ sElementId + "' was not contained in list: " + givenSlots);
 			}
 			boolean noBase = true;
 			for (SNode sCorpus : givenSlot) {
