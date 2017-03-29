@@ -88,14 +88,16 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 
 	@Override
 	public SelfTestDesc getSelfTestDesc() {
+		getProperties().setPropertyValue(MergerProperties.PROP_FIRST_AS_BASE, true);
+		getProperties().setPropertyValue(MergerProperties.PROP_COPY_NODES, true);
 		final URI baseInputCorpus = getResources().appendSegment("selfTests").appendSegment("in");
 		final URI morphCorpus = baseInputCorpus.appendSegment("morph");
 		final URI rstCorpus = baseInputCorpus.appendSegment("rst");
 		final URI syntaxCorpus = baseInputCorpus.appendSegment("syntax");
 		final URI expectedCorpus = getResources().appendSegment("selfTests").appendSegment("expected");
 
-		return SelfTestDesc.create().withInputCorpusPath(morphCorpus).withInputCorpusPath(rstCorpus)
-				.withInputCorpusPath(syntaxCorpus).withExpectedCorpusPath(expectedCorpus).build();
+		return SelfTestDesc.create().withInputCorpusPath(rstCorpus).withInputCorpusPath(syntaxCorpus)
+				.withInputCorpusPath(morphCorpus).withExpectedCorpusPath(expectedCorpus).build();
 	}
 
 	/**

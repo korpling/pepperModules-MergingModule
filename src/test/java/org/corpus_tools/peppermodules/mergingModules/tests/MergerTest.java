@@ -19,38 +19,19 @@ package org.corpus_tools.peppermodules.mergingModules.tests;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
-
 import org.corpus_tools.pepper.testFramework.PepperManipulatorTest;
 import org.corpus_tools.peppermodules.mergingModules.Merger;
 import org.corpus_tools.salt.SaltFactory;
 import org.corpus_tools.salt.common.SCorpus;
 import org.corpus_tools.salt.common.SCorpusGraph;
 import org.corpus_tools.salt.common.SDocument;
-import org.eclipse.emf.common.util.URI;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * 
- * @author Florian Zipser
- *
- */
 public class MergerTest extends PepperManipulatorTest {
 
-	private Merger fixture = null;
-
-	public Merger getFixture() {
-		return fixture;
-	}
-
-	public void setFixture(Merger fixture) {
-		this.fixture = fixture;
-		super.setResourcesURI(URI.createFileURI(new File(".").getAbsolutePath()));
-	}
-
 	@Before
-	public void setUp() {
+	public void beforeEach() {
 		setFixture(new Merger());
 		getFixture().setSaltProject(SaltFactory.createSaltProject());
 	}
