@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +42,7 @@ import org.corpus_tools.pepper.modules.PepperManipulator;
 import org.corpus_tools.pepper.modules.PepperMapper;
 import org.corpus_tools.pepper.modules.PepperMapperController;
 import org.corpus_tools.pepper.modules.exceptions.PepperModuleException;
+import org.corpus_tools.peppermodules.mergingModules.util.Multimap;
 import org.corpus_tools.salt.SaltFactory;
 import org.corpus_tools.salt.common.SCorpus;
 import org.corpus_tools.salt.common.SCorpusGraph;
@@ -55,16 +55,9 @@ import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * 
- * @author Florian Zipser
- * @version 1.0
- * 
- */
 @Component(name = "MergerComponent", factory = "PepperManipulatorComponentFactory")
 public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 	public static final String MODULE_NAME = "Merger";
-
 	private static final Logger logger = LoggerFactory.getLogger(MODULE_NAME);
 
 	public Merger() {
@@ -112,59 +105,6 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 	 * {@link SDocument} nodes) corresponding to their sId.
 	 **/
 	protected Multimap mappingTable = null;
-
-	/**
-	 * similar to guavas multimap, but can contain values twice (this is
-	 * because, equal method of two {@link SDocument}s having the same path but
-	 * belong to different {@link SCorpusGraph}s are the same for equals(), but
-	 * shouldn't be.)
-	 **/
-	class Multimap {
-		private Map<String, List<SNode>> map = null;
-
-		public Multimap() {
-			map = new LinkedHashMap<>();
-		}
-
-		public void put(String sId, SNode sNode) {
-			List<SNode> slot = map.get(sId);
-			if (slot == null) {
-				slot = new ArrayList<>();
-				map.put(sId, slot);
-			}
-			slot.add(sNode);
-		}
-
-		public List<SNode> get(String sId) {
-			return (map.get(sId));
-		}
-
-		@Override
-		public String toString() {
-			StringBuilder retVal = new StringBuilder();
-			for (String key : map.keySet()) {
-				retVal.append(key);
-				retVal.append("=");
-				List<SNode> sNodes = map.get(key);
-				if (sNodes != null) {
-					int i = 0;
-					for (SNode sNode : sNodes) {
-						if (i != 0) {
-							retVal.append(", ");
-						}
-						retVal.append(SaltUtil.getGlobalId(sNode.getIdentifier()));
-						i++;
-					}
-				}
-				retVal.append("; ");
-			}
-			return (retVal.toString());
-		}
-
-		public Set<String> keySet() {
-			return (map.keySet());
-		}
-	}
 
 	/**
 	 * Determines which {@link SCorpusGraph} is the base corpus graph, in which
@@ -508,20 +448,6 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 			}
 		}
 		end();
-
-		// // only wait for controllers which have been added by end()
-		// for (PepperMapperController controller :
-		// this.getMapperControllers().values()) {
-		// if (!alreadyWaitedFor.contains(controller)) {
-		// try {
-		// controller.join();
-		// } catch (InterruptedException e) {
-		// throw new PepperFWException("Cannot wait for mapper thread '" +
-		// controller + "' in " + this.getName() + " to end. ", e);
-		// }
-		// this.done(controller);
-		// }
-		// }
 	}
 
 	/**
