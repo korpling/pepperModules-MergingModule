@@ -395,7 +395,11 @@ class MergeHandler implements GraphTraverseHandler {
 					if (baseRel.getTarget().equals(baseChildNode)) {
 						SaltUtil.moveAnnotations(otherRel, baseRel);
 						SaltUtil.moveMetaAnnotations(otherRel, baseRel);
-						baseRel.setType(otherRel.getType());
+						if(baseRel.getType() == null) {
+							// Only copy base type if the base relation does 
+							// not already has a type.
+							baseRel.setType(otherRel.getType());
+						}
 						copySLayers(otherRel, baseRel);
 						break;
 					}
