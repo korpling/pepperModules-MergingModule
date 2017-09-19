@@ -89,7 +89,7 @@ The merging can be customized by using the properties listed in the following ta
 |name of property			|possible values		|default value|	
 |---------------------------|-----------------------|-------------|
 |punctuations			    |String	                |'.',',',':',';','!','?','(',')','{','}','<','>'|
-|escapeMapping				|String	                ||
+|escapeMapping				|String	                |" ": "", "	": "", "	": "", " ": "", "&#xA;": "", "ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss", "Ä": "Ae", "Ö": "Oe", "Ü": "Ue", |
 |copyNodes				    |true, false			|false|
 |firstAsBase	            |true, false			|false|
 
