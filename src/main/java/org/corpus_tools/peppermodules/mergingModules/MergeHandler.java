@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.corpus_tools.pepper.modules.exceptions.PepperModuleException;
@@ -392,7 +393,9 @@ class MergeHandler implements GraphTraverseHandler {
 			for (SRelation otherRel : otherNode.getOutRelations()) {
 				SNode baseChildNode = node2NodeMap.get(otherRel.getTarget());
 				for (SRelation baseRel : baseNode.getOutRelations()) {
-					if (baseRel.getTarget().equals(baseChildNode)) {
+					// check if this is the same relation
+					if (baseRel.getTarget().equals(baseChildNode)
+							&& Objects.equals(baseRel.getClass(), otherRel.getClass())) {
 						SaltUtil.moveAnnotations(otherRel, baseRel);
 						SaltUtil.moveMetaAnnotations(otherRel, baseRel);
 						if(baseRel.getType() == null) {
