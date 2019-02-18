@@ -30,10 +30,12 @@ public class MergerProperties extends PepperModuleProperties {
 	public static final String PROP_PUNCTUATIONS = "punctuations";
 	public static final String PROP_ESCAPE_MAPPING = "escapeMapping";
 	public static final String PROP_COPY_NODES = "copyNodes";
+	public static final String PROP_ONLY_MERGE_TEXTS_WITH_SAME_NAME = "onlyMergeTextsWithSameName";
+
 	/**
-	 * If this property is set to 'true', the base document is always the one,
-	 * which belongs to the first SCorpusGraph (the first importer in Pepper
-	 * workflow description). The value either could be 'true' or false.
+	 * If this property is set to 'true', the base document is always the one, which
+	 * belongs to the first SCorpusGraph (the first importer in Pepper workflow
+	 * description). The value either could be 'true' or false.
 	 **/
 	public static final String PROP_FIRST_AS_BASE = "firstAsBase";
 
@@ -54,21 +56,32 @@ public class MergerProperties extends PepperModuleProperties {
 			+ "\"Ü\": \"Ue\", ";
 
 	public MergerProperties() {
-		this.addProperty(new PepperModuleProperty<String>(PROP_PUNCTUATIONS, String.class, "Determines the punctuation characters used to be ignored for detecting equal textual data. The value is a comma separated list, each entry must be surrounded by a quot: 'PUNCTUATION' (, 'PUNCTUATION')* .", PUNCTUATION_DEFAULT));
-		this.addProperty(new PepperModuleProperty<String>(PROP_ESCAPE_MAPPING, String.class, "Determines the mapping used in normalization step, to map special characters like umlauts. This value is a comma separated list of mappings: \"REPLACED_CHARACTER\" : \"REPLACEMENT\" (, \"REPLACED_CHARACTER\" : \"REPLACEMENT\")*", ESCAPE_MAPPING_DEFAULT));
-		this.addProperty(new PepperModuleProperty<Boolean>(PROP_FIRST_AS_BASE, Boolean.class, "If this property is set to 'true', the base document is always the one, which belongs to the first SCorpusGraph (the first importer in Pepper workflow description). The value either could be 'true' or 'false'. If this value is set to false, the base document is computed automically (normally the one with the largest primary text).", false, false));
-		this.addProperty(new PepperModuleProperty<Boolean>(PROP_COPY_NODES, Boolean.class, "Determines if SSpan and SStructure nodes should be copied or merged. Merged means to move all annotations to the equivalent in base document. If value is true they will be copied.", false, false));
+		this.addProperty(new PepperModuleProperty<String>(PROP_PUNCTUATIONS, String.class,
+				"Determines the punctuation characters used to be ignored for detecting equal textual data. The value is a comma separated list, each entry must be surrounded by a quot: 'PUNCTUATION' (, 'PUNCTUATION')* .",
+				PUNCTUATION_DEFAULT));
+		this.addProperty(new PepperModuleProperty<String>(PROP_ESCAPE_MAPPING, String.class,
+				"Determines the mapping used in normalization step, to map special characters like umlauts. This value is a comma separated list of mappings: \"REPLACED_CHARACTER\" : \"REPLACEMENT\" (, \"REPLACED_CHARACTER\" : \"REPLACEMENT\")*",
+				ESCAPE_MAPPING_DEFAULT));
+		this.addProperty(new PepperModuleProperty<Boolean>(PROP_FIRST_AS_BASE, Boolean.class,
+				"If this property is set to 'true', the base document is always the one, which belongs to the first SCorpusGraph (the first importer in Pepper workflow description). The value either could be 'true' or 'false'. If this value is set to false, the base document is computed automically (normally the one with the largest primary text).",
+				false, false));
+		this.addProperty(new PepperModuleProperty<Boolean>(PROP_COPY_NODES, Boolean.class,
+				"Determines if SSpan and SStructure nodes should be copied or merged. Merged means to move all annotations to the equivalent in base document. If value is true they will be copied.",
+				false, false));
+
+		this.addProperty(PepperModuleProperty.create().withName(PROP_ONLY_MERGE_TEXTS_WITH_SAME_NAME).withType(Boolean.class)
+				.withDescription("If \"true\", only merge texts that have the same name").withDefaultValue(false)
+				.isRequired(false).build());
 	}
 
 	/**
-	 * punctuation characters specified by the user. If the user didn't specify
-	 * any
+	 * punctuation characters specified by the user. If the user didn't specify any
 	 **/
 	private Set<Character> punctuations = null;
 
 	/**
-	 * Returns all punctuation characters specified by the user. If the user
-	 * didn't specify any punctuations, the defaults are used
+	 * Returns all punctuation characters specified by the user. If the user didn't
+	 * specify any punctuations, the defaults are used
 	 * 
 	 * @return
 	 */
@@ -97,16 +110,15 @@ public class MergerProperties extends PepperModuleProperties {
 	}
 
 	/**
-	 * a map of characters to be escaped and the corresponding replacement
-	 * String.
+	 * a map of characters to be escaped and the corresponding replacement String.
 	 **/
 	private Map<String, String> escapeMapping = null;
 
 	/**
-	 * Returns a map of characters to be escaped and the corresponding
-	 * replacement String. This map is computed from the property
-	 * {@link #PROP_ESCAPE_MAPPING}, which has the form: \"REPLACED_CHARACTER\"
-	 * : \"REPLACEMENT\" (, \"REPLACED_CHARACTER\" : \"REPLACEMENT\").
+	 * Returns a map of characters to be escaped and the corresponding replacement
+	 * String. This map is computed from the property {@link #PROP_ESCAPE_MAPPING},
+	 * which has the form: \"REPLACED_CHARACTER\" : \"REPLACEMENT\" (,
+	 * \"REPLACED_CHARACTER\" : \"REPLACEMENT\").
 	 * 
 	 * @return
 	 */
@@ -135,9 +147,9 @@ public class MergerProperties extends PepperModuleProperties {
 	}
 
 	/**
-	 * If this property is set to 'true', the base document is always the one,
-	 * which belongs to the first SCorpusGraph (the first importer in Pepper
-	 * workflow description). The value either could be 'true' or false.
+	 * If this property is set to 'true', the base document is always the one, which
+	 * belongs to the first SCorpusGraph (the first importer in Pepper workflow
+	 * description). The value either could be 'true' or false.
 	 * 
 	 * @return
 	 */
@@ -147,9 +159,9 @@ public class MergerProperties extends PepperModuleProperties {
 	}
 
 	/**
-	 * Determines if SSpan and SStructure nodes should be copied or merged.
-	 * Merged means to move all annotations to the equivalent in base document.
-	 * If value is true they will be copied .
+	 * Determines if SSpan and SStructure nodes should be copied or merged. Merged
+	 * means to move all annotations to the equivalent in base document. If value is
+	 * true they will be copied .
 	 * 
 	 * @return
 	 */
@@ -157,4 +169,10 @@ public class MergerProperties extends PepperModuleProperties {
 		PepperModuleProperty<Boolean> prop = (PepperModuleProperty<Boolean>) getProperty(PROP_COPY_NODES);
 		return (Boolean.valueOf(prop.getValue()));
 	}
+	
+	public Boolean isOnlyMergeTextWithSameName() {
+		PepperModuleProperty<Boolean> prop = (PepperModuleProperty<Boolean>) getProperty(PROP_ONLY_MERGE_TEXTS_WITH_SAME_NAME);
+		return (Boolean.valueOf(prop.getValue()));
+	}
+
 }
