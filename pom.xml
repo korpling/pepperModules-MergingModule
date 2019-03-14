@@ -7,7 +7,7 @@
 	</parent>
 	<artifactId>pepperModules-MergingModules</artifactId>
 	<name>${project.groupId}.${project.artifactId}</name>
-	<version>1.0.4-SNAPSHOT</version>
+	<version>1.1.0</version>
 	<packaging>bundle</packaging>
 	<description>This project provides a Pepper module for the merging of data on several possible levels.</description>
 	<url>https://github.com/korpling/pepperModules-MergingModule</url>
