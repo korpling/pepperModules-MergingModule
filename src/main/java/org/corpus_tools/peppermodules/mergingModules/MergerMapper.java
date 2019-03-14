@@ -51,6 +51,8 @@ import org.corpus_tools.salt.util.SaltUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Objects;
+
 /**
  * This class does the real merging, the main task is to merge a set of document
  * graphs.
@@ -751,25 +753,31 @@ public class MergerMapper extends PepperMapperImpl implements PepperMapper {
 					nonEquivalentTokenInOtherTexts.addAll(otherDoc.getDocumentGraph().getTokens());
 				}
 				for (STextualDS otherText : otherDoc.getDocumentGraph().getTextualDSs()) {
-					// align the current base text with all texts of
-					// the other document
-					boolean isAlignable = alignTexts(baseText, otherText, nonEquivalentTokenInOtherTexts, node2NodeMap);
-					if (isAlignable) {
-						retVal = true;
-						Pair<String, String> base = new ImmutablePair<>(baseText.getId(), "<base>" + baseText.getText());
-						Pair<String, String> other = new ImmutablePair<>(otherText.getId(), otherText.getText());
-						matchingTexts.add(new ImmutablePair<>(base, other));
-						matchingTextsIdx.add(SaltUtil.getGlobalId(otherText.getIdentifier()));
-						matchingTextsIdx.add(SaltUtil.getGlobalId(baseText.getIdentifier()));
-						noMatchingTexts.remove(other);
-						noMatchingTexts.remove(base);
-
-						// add matching texts to a list of all matching nodes
-						node2NodeMap.put(otherText, baseText);
-						mergeTokens(baseText, otherText, node2NodeMap);
+					boolean tryMerge = true;
+					if(((MergerProperties) getProperties()).isOnlyMergeTextWithSameName()) {
+						tryMerge = Objects.equal(otherText.getName(), baseText.getName());
 					}
-					if (!matchingTextsIdx.contains(SaltUtil.getGlobalId(otherText.getIdentifier()))) {
-						noMatchingTexts.add(new ImmutablePair<>(otherText.getId(), otherText.getText()));
+					if(tryMerge) {
+						// align the current base text with all texts of
+						// the other document
+						boolean isAlignable = alignTexts(baseText, otherText, nonEquivalentTokenInOtherTexts, node2NodeMap);
+						if (isAlignable) {
+							retVal = true;
+							Pair<String, String> base = new ImmutablePair<>(baseText.getId(), "<base>" + baseText.getText());
+							Pair<String, String> other = new ImmutablePair<>(otherText.getId(), otherText.getText());
+							matchingTexts.add(new ImmutablePair<>(base, other));
+							matchingTextsIdx.add(SaltUtil.getGlobalId(otherText.getIdentifier()));
+							matchingTextsIdx.add(SaltUtil.getGlobalId(baseText.getIdentifier()));
+							noMatchingTexts.remove(other);
+							noMatchingTexts.remove(base);
+	
+							// add matching texts to a list of all matching nodes
+							node2NodeMap.put(otherText, baseText);
+							mergeTokens(baseText, otherText, node2NodeMap);
+						}
+						if (!matchingTextsIdx.contains(SaltUtil.getGlobalId(otherText.getIdentifier()))) {
+							noMatchingTexts.add(new ImmutablePair<>(otherText.getId(), otherText.getText()));
+						}
 					}
 				}
 				if (!matchingTextsIdx.contains(SaltUtil.getGlobalId(baseText.getIdentifier()))) {
