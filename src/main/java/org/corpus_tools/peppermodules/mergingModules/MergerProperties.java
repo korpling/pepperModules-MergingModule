@@ -31,7 +31,9 @@ public class MergerProperties extends PepperModuleProperties {
 	public static final String PROP_ESCAPE_MAPPING = "escapeMapping";
 	public static final String PROP_COPY_NODES = "copyNodes";
 	public static final String PROP_ONLY_MERGE_TEXTS_WITH_SAME_NAME = "onlyMergeTextsWithSameName";
-
+	/** Throw exception when merging failes on paired documents instead of simply warning. */
+	public static final String PROP_THROW_EXCEPTION = "throw.exception";
+	
 	/**
 	 * If this property is set to 'true', the base document is always the one, which
 	 * belongs to the first SCorpusGraph (the first importer in Pepper workflow
@@ -72,6 +74,12 @@ public class MergerProperties extends PepperModuleProperties {
 		this.addProperty(PepperModuleProperty.create().withName(PROP_ONLY_MERGE_TEXTS_WITH_SAME_NAME).withType(Boolean.class)
 				.withDescription("If \"true\", only merge texts that have the same name").withDefaultValue(false)
 				.isRequired(false).build());
+		this.addProperty(PepperModuleProperty.create()
+				.withName(PROP_THROW_EXCEPTION)
+				.withType(Boolean.class)
+				.withDescription("Throw exception when merging failes on paired documents instead of simply warning.")
+				.withDefaultValue(false)
+				.build());
 	}
 
 	/**
@@ -172,6 +180,11 @@ public class MergerProperties extends PepperModuleProperties {
 	
 	public Boolean isOnlyMergeTextWithSameName() {
 		PepperModuleProperty<Boolean> prop = (PepperModuleProperty<Boolean>) getProperty(PROP_ONLY_MERGE_TEXTS_WITH_SAME_NAME);
+		return (Boolean.valueOf(prop.getValue()));
+	}
+	
+	public Boolean throwException() {
+		PepperModuleProperty<Boolean> prop = (PepperModuleProperty<Boolean>) getProperty(PROP_THROW_EXCEPTION);
 		return (Boolean.valueOf(prop.getValue()));
 	}
 

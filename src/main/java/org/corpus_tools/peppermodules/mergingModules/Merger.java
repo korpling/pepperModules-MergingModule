@@ -41,6 +41,7 @@ import org.corpus_tools.pepper.modules.MappingSubject;
 import org.corpus_tools.pepper.modules.PepperManipulator;
 import org.corpus_tools.pepper.modules.PepperMapper;
 import org.corpus_tools.pepper.modules.PepperMapperController;
+import org.corpus_tools.pepper.modules.exceptions.PepperModuleDataException;
 import org.corpus_tools.pepper.modules.exceptions.PepperModuleException;
 import org.corpus_tools.salt.SaltFactory;
 import org.corpus_tools.salt.common.SCorpus;
@@ -519,7 +520,11 @@ public class Merger extends PepperManipulatorImpl implements PepperManipulator {
 			}
 		}
 		if (getSaltProject().getCorpusGraphs().size() != 1) {
-			logger.warn("Could not remove all corpus-structures from salt project which are not the base corpus-structure. Left structures are: '" + removeCorpusStructures + "'. ");
+			String mergeWarning = "Could not remove all corpus-structures from salt project which are not the base corpus-structure. Left structures are: '" + removeCorpusStructures + "'. ";
+			if (((MergerProperties) getProperties()).throwException()) {
+				throw new PepperModuleException(this, mergeWarning);
+			}
+			logger.warn(mergeWarning);
 		}
 	}
 
