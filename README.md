@@ -93,6 +93,7 @@ The merging can be customized by using the properties listed in the following ta
 |copyNodes				    |true, false			|false|
 |firstAsBase	            |true, false			|false|
 |onlyMergeTextsWithSameName	            |true, false			|false|
+| throw.exception           | true, false           | false       |
 
 ### punctuations
 Determines the punctuation characters used to be ignored for detecting equal textual data. The value is a comma separated list, each entry must be surrounded by a quot: 'PUNCTUATION' (, 'PUNCTUATION')* . For instance:
@@ -134,6 +135,10 @@ If this property is set to 'true', the base document is always the one, which be
 If this property is set to 'true', only texts that have the same name are merged, even if the normalized base text
 is the same.
 If the normalized base text is different, the texts are **not** not merged, even if this property is 'true'.
+
+### throw.exception
+
+If this property is set to true, the merger throws an exception when unable to merge paired documents. If false, a simple warning will be displayed. Default behaviour is throwing a warning.
 
 ## Identification of mergable documents
 To give an example of the identification of merging partners for documents, imagine two corpus structures comming from different sources, one for instance from a TIGER XML corpus and the other one from a EXMARaLDA corpus. Since neither TIGER XML nor EXMARaLDA encode the corpus structure explicitly, it is taken from the folder structure, the corpus is organized in. For our example, the root folder, which is addressed by the importer is both times the folder 'myCorpus'. This folder contains two sub-folders 'subCorpus1' and 'subCorpus2'. Each folder further contains two documents, the TIGER XML or EXMARaLDA files.
