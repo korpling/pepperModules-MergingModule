@@ -48,6 +48,7 @@ import org.corpus_tools.salt.common.SToken;
 import org.corpus_tools.salt.core.SLayer;
 import org.corpus_tools.salt.core.SNode;
 import org.corpus_tools.salt.core.SRelation;
+import org.corpus_tools.salt.exceptions.SaltException;
 import org.corpus_tools.salt.samples.SampleGenerator;
 import org.corpus_tools.salt.util.Difference;
 import org.eclipse.emf.common.util.URI;
@@ -858,5 +859,40 @@ public class MergerMapper_graphTest extends MergerMapper {
 			assertNotNull(rels);
 			assertEquals(1, rels.size());
 		}
+	}
+
+	@Test(expected = SaltException.class)
+	public void testFailTwoTimelines() throws Exception {
+		SDocument sDoc1 = SaltFactory.createSDocument();
+		sDoc1.setId("doc1");
+		sDoc1.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		SampleGenerator.createPrimaryData(sDoc1);
+		SampleGenerator.createTokens(sDoc1);
+		STimeline timeline1 = sDoc1.getDocumentGraph().createTimeline();
+
+		SDocument sDoc2 = SaltFactory.createSDocument();
+		sDoc2.setId("doc2");
+		sDoc2.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		SampleGenerator.createPrimaryData(sDoc2);
+		SampleGenerator.createTokens(sDoc2);
+		STimeline timeline2 = sDoc2.getDocumentGraph().createTimeline();
+
+		int tokens = sDoc1.getDocumentGraph().getTokens().size();
+
+		// create mapping subjects for documents
+		MappingSubject sub1 = new MappingSubject();
+		sub1.setIdentifier(sDoc1.getIdentifier());
+		getFixture().getMappingSubjects().add(sub1);
+
+		MappingSubject sub2 = new MappingSubject();
+		sub2.setIdentifier(sDoc2.getIdentifier());
+		getFixture().getMappingSubjects().add(sub2);
+
+		MergerProperties props = new MergerProperties();
+		PepperModuleProperty<Boolean> prop = (PepperModuleProperty<Boolean>) props
+				.getProperty(MergerProperties.PROP_FIRST_AS_BASE);
+		prop.setValue(true);
+		this.setProperties(props);
+		this.mergeDocumentStructures(sub1);
 	}
 }
