@@ -41,6 +41,9 @@ import org.corpus_tools.salt.common.SSpanningRelation;
 import org.corpus_tools.salt.common.SStructure;
 import org.corpus_tools.salt.common.SStructuredNode;
 import org.corpus_tools.salt.common.STextualDS;
+import org.corpus_tools.salt.common.STimeOverlappingRelation;
+import org.corpus_tools.salt.common.STimeline;
+import org.corpus_tools.salt.common.STimelineRelation;
 import org.corpus_tools.salt.common.SToken;
 import org.corpus_tools.salt.core.SLayer;
 import org.corpus_tools.salt.core.SNode;
@@ -135,14 +138,18 @@ public class MergerMapper_graphTest extends MergerMapper {
 		// second document must be the base document
 		assertEquals(sDoc2, container.getBaseDocument());
 		// the text of the first document must be the base text
-		assertEquals(sDoc2.getDocumentGraph().getTextualDSs().get(0), container.getBaseDocument().getDocumentGraph().getTextualDSs().get(0));
+		assertEquals(sDoc2.getDocumentGraph().getTextualDSs().get(0),
+				container.getBaseDocument().getDocumentGraph().getTextualDSs().get(0));
 
 		// the count of tokens in sDoc1 must be the same as before!
 		assertEquals(template.getDocumentGraph().getTokens().size(), sDoc2.getDocumentGraph().getTokens().size());
 		assertEquals(template.getDocumentGraph().getSpans().size(), sDoc2.getDocumentGraph().getSpans().size());
-		assertEquals(template.getDocumentGraph().getSpanningRelations().size(), sDoc2.getDocumentGraph().getSpanningRelations().size());
-		assertEquals(template.getDocumentGraph().getStructures().size(), sDoc2.getDocumentGraph().getStructures().size());
-		assertEquals(template.getDocumentGraph().getDominanceRelations().size(), sDoc2.getDocumentGraph().getDominanceRelations().size());
+		assertEquals(template.getDocumentGraph().getSpanningRelations().size(),
+				sDoc2.getDocumentGraph().getSpanningRelations().size());
+		assertEquals(template.getDocumentGraph().getStructures().size(),
+				sDoc2.getDocumentGraph().getStructures().size());
+		assertEquals(template.getDocumentGraph().getDominanceRelations().size(),
+				sDoc2.getDocumentGraph().getDominanceRelations().size());
 
 		assertEquals(template.getDocumentGraph().getNodes().size(), sDoc2.getDocumentGraph().getNodes().size());
 		assertEquals(template.getDocumentGraph().getRelations().size(), sDoc2.getDocumentGraph().getRelations().size());
@@ -154,8 +161,8 @@ public class MergerMapper_graphTest extends MergerMapper {
 
 	/**
 	 * Tests one {@link SDocumentGraph} containing {@link SSpan}s and one
-	 * {@link SDocumentGraph}, which does not. In the end, the one which does
-	 * not should contain all spans, which are contained by the other
+	 * {@link SDocumentGraph}, which does not. In the end, the one which does not
+	 * should contain all spans, which are contained by the other
 	 * {@link SDocumentGraph}.
 	 */
 	@Test
@@ -201,9 +208,9 @@ public class MergerMapper_graphTest extends MergerMapper {
 	}
 
 	/**
-	 * Tests two {@link SDocumentGraph}s containing {@link SSpan}s. Two equal
-	 * spans, one contains annotations, the other one does not. In the end, both
-	 * shall have the same annotations.
+	 * Tests two {@link SDocumentGraph}s containing {@link SSpan}s. Two equal spans,
+	 * one contains annotations, the other one does not. In the end, both shall have
+	 * the same annotations.
 	 */
 	@Test
 	public void testMergeSpans2() {
@@ -245,9 +252,8 @@ public class MergerMapper_graphTest extends MergerMapper {
 	}
 
 	/**
-	 * Tests the document status after the mapping of three documents containing
-	 * the same primary data and same tokenization, but different annotation
-	 * layers:
+	 * Tests the document status after the mapping of three documents containing the
+	 * same primary data and same tokenization, but different annotation layers:
 	 * <ol>
 	 * <li>document1: anaphoric relations (pointing relations)</li>
 	 * <li>document2: syntactic annotations</li>
@@ -371,7 +377,8 @@ public class MergerMapper_graphTest extends MergerMapper {
 		// test 2 : align must return true
 		HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 		Hashtable<SNode, SNode> equivalenceMap = new Hashtable<SNode, SNode>();
-		assertTrue(this.alignTexts(sDoc2.getDocumentGraph().getTextualDSs().get(0), sDoc1.getDocumentGraph().getTextualDSs().get(0), nonEquivalentTokenInOtherTexts, equivalenceMap));
+		assertTrue(this.alignTexts(sDoc2.getDocumentGraph().getTextualDSs().get(0),
+				sDoc1.getDocumentGraph().getTextualDSs().get(0), nonEquivalentTokenInOtherTexts, equivalenceMap));
 		assertEquals(otherTextToken.size(), equivalenceMap.size());
 
 		// test 3 : the token alignment is correct : the equivalence classes are
@@ -381,13 +388,17 @@ public class MergerMapper_graphTest extends MergerMapper {
 			SToken base = baseTextToken.get(i);
 			SToken otherToken = otherTextToken.get(j);
 			STextualDS otherText = sDoc1.getDocumentGraph().getTextualDSs().get(0);
-			assertEquals("Base Token " + base.getName() + "  and other token " + otherToken.getName() + " (start: " + this.container.getAlignedTokenStart(otherText, otherToken) + ") should be equal.", this.container.getTokenMapping(base, otherText), otherToken);
+			assertEquals(
+					"Base Token " + base.getName() + "  and other token " + otherToken.getName() + " (start: "
+							+ this.container.getAlignedTokenStart(otherText, otherToken) + ") should be equal.",
+					this.container.getTokenMapping(base, otherText), otherToken);
 			j++;
 		}
 
 		int equivalenceMapSize = equivalenceMap.size();
 		// assert that the merging did not change something
-		this.mergeTokens(sDoc2.getDocumentGraph().getTextualDSs().get(0), sDoc1.getDocumentGraph().getTextualDSs().get(0), equivalenceMap);
+		this.mergeTokens(sDoc2.getDocumentGraph().getTextualDSs().get(0),
+				sDoc1.getDocumentGraph().getTextualDSs().get(0), equivalenceMap);
 		assertEquals(equivalenceMapSize, equivalenceMap.size());
 
 		j = 0;
@@ -395,7 +406,10 @@ public class MergerMapper_graphTest extends MergerMapper {
 			SToken base = baseTextToken.get(i);
 			SToken otherToken = otherTextToken.get(j);
 			STextualDS otherText = sDoc1.getDocumentGraph().getTextualDSs().get(0);
-			assertEquals("Base Token " + base.getName() + ") and other token " + otherToken.getName() + " (start: " + this.container.getAlignedTokenStart(otherText, otherToken) + ") should be equal.", this.container.getTokenMapping(base, otherText), otherToken);
+			assertEquals(
+					"Base Token " + base.getName() + ") and other token " + otherToken.getName() + " (start: "
+							+ this.container.getAlignedTokenStart(otherText, otherToken) + ") should be equal.",
+					this.container.getTokenMapping(base, otherText), otherToken);
 			j++;
 		}
 	}
@@ -412,8 +426,8 @@ public class MergerMapper_graphTest extends MergerMapper {
 	 * <li>Well. {@value SampleGenerator#PRIMARY_TEXT_EN} I am not sure!</li>
 	 * </ol>
 	 * 
-	 * In this test, the first text is used as base text and one token of the
-	 * first text is removed
+	 * In this test, the first text is used as base text and one token of the first
+	 * text is removed
 	 */
 	@Test
 	public void testMergeTokens_case2() {
@@ -458,7 +472,8 @@ public class MergerMapper_graphTest extends MergerMapper {
 		// test 2 : align must return true
 		HashSet<SToken> nonEquivalentTokenInOtherTexts = new HashSet<SToken>();
 		Hashtable<SNode, SNode> equivalenceMap = new Hashtable<SNode, SNode>();
-		assertTrue(this.alignTexts(sDoc1.getDocumentGraph().getTextualDSs().get(0), sDoc2.getDocumentGraph().getTextualDSs().get(0), nonEquivalentTokenInOtherTexts, equivalenceMap));
+		assertTrue(this.alignTexts(sDoc1.getDocumentGraph().getTextualDSs().get(0),
+				sDoc2.getDocumentGraph().getTextualDSs().get(0), nonEquivalentTokenInOtherTexts, equivalenceMap));
 		assertEquals(baseTextToken.size(), equivalenceMap.size());
 
 		// the token alignment is correct : the equivalence classes are correct
@@ -478,15 +493,16 @@ public class MergerMapper_graphTest extends MergerMapper {
 
 		int equivalenceMapSize = equivalenceMap.size();
 		// assert that the merging did not change something
-		this.mergeTokens(sDoc1.getDocumentGraph().getTextualDSs().get(0), sDoc2.getDocumentGraph().getTextualDSs().get(0), equivalenceMap);
+		this.mergeTokens(sDoc1.getDocumentGraph().getTextualDSs().get(0),
+				sDoc2.getDocumentGraph().getTextualDSs().get(0), equivalenceMap);
 		assertTrue(equivalenceMapSize != equivalenceMap.size());
 		assertEquals(baseTextToken.size() + 1, equivalenceMap.size());
 		assertNotNull(equivalenceMap.get(otherTextToken.get(6)));
 	}
 
 	/**
-	 * Merges 2 documents by merging texts and tokens, but not spans and
-	 * structures, they should be copied.
+	 * Merges 2 documents by merging texts and tokens, but not spans and structures,
+	 * they should be copied.
 	 */
 	@Test
 	public void testCopyNodes() {
@@ -520,7 +536,8 @@ public class MergerMapper_graphTest extends MergerMapper {
 		getFixture().getMappingSubjects().add(sub2);
 
 		MergerProperties props = new MergerProperties();
-		PepperModuleProperty<Boolean> prop = (PepperModuleProperty<Boolean>) props.getProperty(MergerProperties.PROP_COPY_NODES);
+		PepperModuleProperty<Boolean> prop = (PepperModuleProperty<Boolean>) props
+				.getProperty(MergerProperties.PROP_COPY_NODES);
 		prop.setValue(true);
 		this.setProperties(props);
 		this.mergeDocumentStructures(sub1);
@@ -561,7 +578,8 @@ public class MergerMapper_graphTest extends MergerMapper {
 		SToken tok05 = doc0.getDocumentGraph().createToken(text01, 20, 22);
 		SToken tok06 = doc0.getDocumentGraph().createToken(text01, 22, 23);
 
-		STextualDS text02 = doc0.getDocumentGraph().createTextualDS("SPK3!Wenndumehrals50Stundenhast,bekommstdumehrGeld.");
+		STextualDS text02 = doc0.getDocumentGraph()
+				.createTextualDS("SPK3!Wenndumehrals50Stundenhast,bekommstdumehrGeld.");
 		SToken tok07 = doc0.getDocumentGraph().createToken(text02, 0, 4);
 		SToken tok08 = doc0.getDocumentGraph().createToken(text02, 4, 5);
 		SToken tok09 = doc0.getDocumentGraph().createToken(text02, 5, 9);
@@ -623,7 +641,8 @@ public class MergerMapper_graphTest extends MergerMapper {
 		SDocument doc2 = SaltFactory.createSDocument();
 		doc2.setId("doc2");
 		doc2.setDocumentGraph(SaltFactory.createSDocumentGraph());
-		STextualDS text22 = doc2.getDocumentGraph().createTextualDS("SPK3!Wenndumehrals50Stundenhast,bekommstdumehrGeld.");
+		STextualDS text22 = doc2.getDocumentGraph()
+				.createTextualDS("SPK3!Wenndumehrals50Stundenhast,bekommstdumehrGeld.");
 		SToken tok21 = doc2.getDocumentGraph().createToken(text22, 0, 4);
 		SToken tok22 = doc2.getDocumentGraph().createToken(text22, 4, 5);
 		SToken tok23 = doc2.getDocumentGraph().createToken(text22, 5, 9);
@@ -788,5 +807,56 @@ public class MergerMapper_graphTest extends MergerMapper {
 		assertEquals(4, fixSLayer.getNodes().size());
 		assertNotNull(fixSLayer.getRelations());
 		assertEquals(3, fixSLayer.getRelations().size());
+	}
+
+	@Test
+	/**
+	 * If a timeline exists in in the first of the to be merged documents (and only
+	 * in this one), test that this timeline is part to the resulting document.
+	 * 
+	 * @throws Exception
+	 */
+	public void testSingleTimelineInBaseDocument() throws Exception {
+		SDocument sDoc1 = SaltFactory.createSDocument();
+		sDoc1.setId("doc1");
+		sDoc1.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		SampleGenerator.createPrimaryData(sDoc1);
+		SampleGenerator.createTokens(sDoc1);
+		STimeline timeline = sDoc1.getDocumentGraph().createTimeline();
+
+		SDocument sDoc2 = SaltFactory.createSDocument();
+		sDoc2.setId("doc2");
+		sDoc2.setDocumentGraph(SaltFactory.createSDocumentGraph());
+		SampleGenerator.createPrimaryData(sDoc2);
+		SampleGenerator.createTokens(sDoc2);
+
+		int tokens = sDoc1.getDocumentGraph().getTokens().size();
+
+		// create mapping subjects for documents
+		MappingSubject sub1 = new MappingSubject();
+		sub1.setIdentifier(sDoc1.getIdentifier());
+		getFixture().getMappingSubjects().add(sub1);
+
+		MappingSubject sub2 = new MappingSubject();
+		sub2.setIdentifier(sDoc2.getIdentifier());
+		getFixture().getMappingSubjects().add(sub2);
+
+		MergerProperties props = new MergerProperties();
+		PepperModuleProperty<Boolean> prop = (PepperModuleProperty<Boolean>) props
+				.getProperty(MergerProperties.PROP_FIRST_AS_BASE);
+		prop.setValue(true);
+		this.setProperties(props);
+		this.mergeDocumentStructures(sub1);
+
+		assertEquals(tokens, getDocument().getDocumentGraph().getTokens().size());
+		assertEquals(timeline, getDocument().getDocumentGraph().getTimeline());
+		List<SToken> doc1Tokens = getDocument().getDocumentGraph().getSortedTokenByText();
+		for (int i = 0; i < timeline.getEnd(); i++) {
+			SToken t = doc1Tokens.get(0);
+			List<SRelation<SNode, SNode>> rels = getDocument().getDocumentGraph().getRelations(t.getId(),
+					timeline.getId());
+			assertNotNull(rels);
+			assertEquals(1, rels.size());
+		}
 	}
 }
